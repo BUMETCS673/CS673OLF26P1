@@ -4,7 +4,7 @@
 Hi, I am Andy, trying to complete the lab1, have a nice day!
 
 ## Kimleng Lim
-Hi, I am Kimleng, I am your teammate. :wink:
+Hi, I am Kimleng, I am your teammate.
 
 ## Krizma Nagi
 

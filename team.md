@@ -7,6 +7,10 @@ Hi, I am Andy, trying to complete the lab1, have a nice day!
 Hi, I am Kimleng, I am your teammate.
 
 ## Krizma Nagi
+Hi, I am Krizma Nagi. I am currently working on my MSCS. I have only a few years of 
+software engineering experience, and am looking foward to learning more during this 
+class. 
+
 
 ## Sara Orion
 Hi, I am Sara Orion. I am in the middle of completing my MSSD with focus on 

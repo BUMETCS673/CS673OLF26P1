@@ -21,3 +21,6 @@ experience with React frontend development. I look forward to working on this
 team project.
 
 ## Italia Tran
+Hi, my name is Italia Tran. I am currently an MSSD student with a focus on AI.
+I am looking forward to learning more about Java framework and working with all
+of every one here on this project!

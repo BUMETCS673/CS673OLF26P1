@@ -46,11 +46,11 @@ Small-to-medium retail businesses frequently struggle with fragmented software, 
 
 ## 👥 Team & Roles
 
-* **Sara Orion** – *Team Leader & Security Leader* (`srorion@bu.edu`)
-* **Krizma Nagi** – *Requirement Leader* (`nagikriz@bu.edu`)
-* **Kimleng Lim** – *Design & Implementation Leader* (`kimleng@bu.edu`)
-* **Andy Chang** – *Configuration Leader* (`achang3@bu.edu`)
-* **Italia Tran** – *QA Leader* (`intran@bu.edu`)
+* **Sara Orion** – *Team Leader & Security Leader* 
+* **Krizma Nagi** – *Requirement Leader* 
+* **Kimleng Lim** – *Design & Implementation Leader* 
+* **Andy Chang** – *Configuration Leader* 
+* **Italia Tran** – *QA Leader* 
 
 ---
 

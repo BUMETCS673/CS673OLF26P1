@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # 1. MySQL 8.4 Database Container
+  db:
+    image: mysql:8.4
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: app_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # 2. Spring Boot Backend Container (Java 21)
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: spring_api
+    ports:
+      - "8080:8080"
+    environment:
+      # Updated connection flags for MySQL 8.4 authentication & TLS rules
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/app_db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 3. Angular + NGINX Frontend Container (To Be Setup Still)
+#  web:
+#    build:
+#      context: ./web
+#      dockerfile: Dockerfile
+#    container_name: angular_web
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - api
+
+volumes:
+  mysql_data:

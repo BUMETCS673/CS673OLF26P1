@@ -4,10 +4,12 @@ services:
   # 1. MySQL 8.4 Database Container
   db:
     image: mysql:8.4
-    container_name: mysql_db
+    container_name: bluejay_mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: app_db
+      MYSQL_DATABASE: bluejay_db
+      MYSQL_USER: bluejay_user
+      MYSQL_PASSWORD: bluejay_password
     ports:
       - "3306:3306"
     volumes:
@@ -23,17 +25,23 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: spring_api
+    container_name: bluejay_api
     ports:
       - "8080:8080"
     environment:
       # Updated connection flags for MySQL 8.4 authentication & TLS rules
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/app_db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bluejay_db?allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: rootpassword
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+        test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || curl -f http://localhost:8080/actuator/health || exit 1" ]
+        interval: 15s
+        timeout: 5s
+        retries: 3
+        start_period: 40s
 
   # 3. Angular + NGINX Frontend Container (To Be Setup Still)
 #  web:

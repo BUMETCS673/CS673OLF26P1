@@ -26,11 +26,11 @@ WHERE r.name = 'ROLE_CASHIER'
   AND p.name IN ('INVENTORY_READ', 'SALE_EXECUTE');
 
 -- 3. Seed Default Test Accounts (Password: Password123!)
--- Hash: $2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.AQubh4a
+-- Hash: $2a$10$vI8aWBnW3fID.ZQ4/OO17.TPZirkM6j2rN3A.U4VPc/QlhSB0.wZS
 INSERT INTO users (id, username, password_hash, enabled) VALUES
-    ('11111111-1111-1111-1111-111111111111', 'admin', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.AQubh4a', TRUE),
-    ('22222222-2222-2222-2222-222222222222', 'manager', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.AQubh4a', TRUE),
-    ('33333333-3333-3333-3333-333333333333', 'cashier', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.AQubh4a', TRUE);
+    ('11111111-1111-1111-1111-111111111111', 'admin', '$2a$10$vI8aWBnW3fID.ZQ4/OO17.TPZirkM6j2rN3A.U4VPc/QlhSB0.wZS', TRUE),
+    ('22222222-2222-2222-2222-222222222222', 'manager', '$2a$10$vI8aWBnW3fID.ZQ4/OO17.TPZirkM6j2rN3A.U4VPc/QlhSB0.wZS', TRUE),
+    ('33333333-3333-3333-3333-333333333333', 'cashier', '$2a$10$vI8aWBnW3fID.ZQ4/OO17.TPZirkM6j2rN3A.U4VPc/QlhSB0.wZS', TRUE);
 
 -- 4. Map Users to Roles
 INSERT INTO user_roles (user_id, role_id)

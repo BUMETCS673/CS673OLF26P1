@@ -64,50 +64,160 @@ Execute `BluejayApplication.java` directly from IntelliJ. The application binds 
 docker stop bluejay_api
 ```
 
+
+### 3. Containerized Deployment (Full Docker Stack)
+
+To run both the Spring Boot API and MySQL database entirely within containerized environments:
+
+```bash
+# Build fresh Java binaries and launch all containers
+./mvnw clean package -DskipTests
+docker compose up -d --build
+```
+
+To tear down containers, wipe persistent database volumes (forces fresh Flyway migrations), and prune local images:
+
+```bash
+docker compose down -v --rmi local
+```
+
+---
+
+## 🛠️ IntelliJ Docker Run Configuration
+
+To prevent stale code caching and enforce smooth local builds directly inside IntelliJ:
+
+1. Open **Run/Debug Configurations** $\rightarrow$ **Docker** $\rightarrow$ **Compose**.
+2. Set **Compose files** to `./docker-compose.yml`.
+3. Under **Modify options** (top right):
+   * Enable **Remove orphans on 'down'**.
+   * Enable **Remove volumes on 'down'**.
+4. Set **Remove images on 'down'** to **`Local`** *(preserves the official MySQL 8.4 image while forcing local code image rebuilds)*.
+5. Under **Before launch**, click **`+`** $\rightarrow$ **Run Maven Goal** and set:
+```text
+clean package -DskipTests
+```
+---
+
+## 🔒 Authentication & API Testing
+
+Testing the system health & api endpoints can be done via **cURL** or using **Postman**.
+
+### Postman Setup
+* Open Postman $\rightarrow$ **Import** both `Bluejay-API.postman_collection.json` and `Bluejay-Local.postman_environment.json` from `api/docs/postman/`.
+* Select the **Bluejay-Local** environment.
+
+
+### Health Check
+
+Verify system status and database connectivity.
+
+#### cURL:
+```bash
+curl -X GET http://localhost:8080/actuator/health
+```
+
+#### Postman: 
+Run `Health -> GET Actuator Health` in the `Bluejay-API` collection.
+
+#### Expected Response (`200 OK`):
+```json
+{ "status": "UP" }
+```
+
+### User Login (Obtain JWT Token)
+
+Authenticate against the service to generate a Bearer token.
+
+#### cURL:
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "Password123!"
+  }'
+```
+
+#### Postman
+Open the `Auth -> POST Login` request. Under the **Body** tab, select `raw` and add the following JSON:
+
+```json
+{
+  "username": "admin",
+  "password": "Password123!"
+}
+```
+
+Under the **Scripts** tab, select `post-response` add the following javascript:
+
+```javascript
+if (pm.response.code === 200) {
+    var response = pm.response.json();
+    if (response.success && response.data && response.data.token) {
+        pm.environment.set("jwtToken", response.data.token);
+        console.log("JWT token successfully set in environment.");
+    }
+}
+```
+
+Send the `POST` request.
+
+#### Expected Response (`200 OK`):
+```json
+{
+  "success": true,
+  "message": "Authentication successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzUxMiJ9...",
+    "tokenType": "Bearer",
+    "username": "admin",
+    "expiresIn": 86400000
+  }
+}
+```
+
+---
+
+### Access Protected Endpoints
+
+Pass the retrieved JWT in the `Authorization` header to access RBAC-protected routes.
+
+#### cURL:
+```bash
+curl -X GET http://localhost:8080/api/v1/protected-resource \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN_HERE>"
+```
+
+#### Postman: 
+Any request executed under the `Bluejay-API` collection will automatically inherit the token stored in `{{jwtToken}}` via collection-level Bearer Auth.
+
+---
+
+## 🧪 Junit Testing
+
+Run unit and integration tests using Maven:
+
+```bash
+# Run all tests
+./mvnw test
+
+# Run a specific test class
+./mvnw test -Dtest=AuthServiceTest
+```
 ---
 
 ## 🔑 Environment Variables
 
 The application relies on the following environment variables (with defaults configured in `application.yaml`):
 
-| Variable                     | Description                 | Default Value                            |
-|------------------------------|-----------------------------|------------------------------------------|
-| `SPRING_DATASOURCE_URL`      | JDBC Connection String      | `jdbc:mysql://localhost:3306/bluejay_db` |
-| `SPRING_DATASOURCE_USERNAME` | Database User               | `bluejay_user`                           |
-| `SPRING_DATASOURCE_PASSWORD` | Database Password           | `bluejay_password`                       |
-| `JWT_SECRET`                 | Secret key for signing JWTs | *(Required in Production)*               |
-| `JWT_EXPIRATION_MS`          | Token validity duration     | `86400000` (24 Hours)                    |
-
----
-
-## 🏥 Observability & Health Check
-
-Application and database health are exposed via **Spring Boot Actuator**.
-
-**Localhost URL:** http://localhost:8080/actuator/health
-
-### Health Endpoint
-
-```http
-GET /actuator/health
-```
-
-### Sample of Healthy Response (`200 OK`)
-
-```json
-{
-  "components": {
-    "db": {
-      "details": {
-        "database": "MySQL",
-        "validationQuery": "isValid()"
-      },
-      "status": "UP"
-    }
-  },
-  "status": "UP"
-}
-```
+| Variable                     | Description                 | Default Value                                |
+|------------------------------|-----------------------------|----------------------------------------------|
+| `SPRING_DATASOURCE_URL`      | JDBC Connection String      | `jdbc:mysql://bluejay_mysql:3306/bluejay_db` |
+| `SPRING_DATASOURCE_USERNAME` | Database User               | `bluejay_user`                               |
+| `SPRING_DATASOURCE_PASSWORD` | Database Password           | `bluejay_password`                           |
+| `JWT_SECRET`                 | Secret key for signing JWTs | *(Required in Production)*                   |
+| `JWT_EXPIRATION_MS`          | Token validity duration     | `86400000` (24 Hours)                        |
 
 ---
 
@@ -123,25 +233,11 @@ Flyway handles versioned database migrations located in `src/main/resources/db/m
 ```
 
 ---
-
-## 🧪 Testing
-
-Run unit and integration tests using Maven:
-
-```bash
-# Run all tests
-./mvnw test
-
-# Run a specific test class
-./mvnw test -Dtest=AuthServiceTest
-```
-
----
 ## 🎨 Code Style & Standards
 
 To maintain consistency across the entire codebase, the project follows standard Java formatting rules backed by our shared code style scheme in `api/docs/`.
 
-### 1. IntelliJ Code Style Setup
+### IntelliJ Code Style Setup
 1. Go to **Settings/Preferences** > **Editor** > **Code Style** > **Java**.
 2. Click the **Gear Icon** next to *Scheme* > **Import Scheme** > **IntelliJ IDEA code style XML**.
 3. Select the code style XML file located at:
@@ -150,12 +246,12 @@ api/docs/bu-code-style.xml
 ```
 4. Click **Apply** to ensure line wrapping, indentation (4 spaces), and import ordering match team standards.
 
-### 2. Auto-Formatting Rules
+### Auto-Formatting Rules
 Before committing code, run the native formatter:
 * **Mac:** `Cmd + Option + L` (Reformat Code) + `Control + Option + O` (Optimize Imports)
 * **Windows/Linux:** `Ctrl + Alt + L` + `Ctrl + Alt + O`
 
-### 3. Key Design Conventions
+### Key Design Conventions
 * **Imports:** Do not use wildcard imports (`import java.util.*`). If wildcard imports are still occurring after importing the code style scheme, manually set the threshold: 
   * Go to **Settings/Preferences** > **Editor** > **Code Style** > **Java** > **Imports** tab. 
   * Set **Class count to use import with '\*'** and **Names count to use static import with '\*'** to `99`.
@@ -166,22 +262,28 @@ Before committing code, run the native formatter:
 
 ---
 
-## 🛠️ Docker Troubleshooting & Resets
+## 🛠️ Troubleshooting & Environment Resets
 
-### Access Denied (SQL State 28000 / Error 1045)
+### Lombok & Compilation Errors (`variable not initialized`)
 
-MySQL stores credentials in its initial volume creation. If database credentials or host permissions change in `docker-compose.yml`, reset the volume to initialize a fresh database:
+If running `./mvnw clean package` throws errors about uninitialized `final` fields:
+
+* **IDE Setup:** Verify that **Enable annotation processing** is checked under **Settings $\rightarrow$ Build, Execution, Deployment $\rightarrow$ Compiler $\rightarrow$ Annotation Processors** in IntelliJ.
+
+### Database Access Denied / Stale Credentials (`SQLState: 28000`)
+
+MySQL stores credentials during initial volume creation. If database passwords or seed scripts change, reset the volume to initialize a fresh database:
 
 ```bash
 docker compose down -v
 docker compose up -d db
 ```
 
-### Running Full Stack in Docker
+### Full Stack Docker Validation
 
-To validate end-to-end containerized execution (app + DB):
+To test end-to-end containerized execution (app + database) with a completely fresh build:
 
 ```bash
+./mvnw clean package -DskipTests
 docker compose up -d --build
 ```
-

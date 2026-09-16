@@ -10,6 +10,7 @@ package edu.bu.metcs673.bluejay.auth.service.impl;
 
 import edu.bu.metcs673.bluejay.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 //   - Verified Spring Security bean registration and dependency injection
 // Confidence: High
 @Service
+@NullMarked
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
@@ -35,7 +37,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username)
         throws UsernameNotFoundException {
-        return userRepository.findByUsername(username)
+        return userRepository.findByUsernameWithRolesAndPermissions(username)
             .map(CustomUserDetails::new)
             .orElseThrow(() -> new UsernameNotFoundException(
                 "User not found with username: " + username

@@ -1,0 +1,30 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+      <h1>Hello World!</h1>
+      <p>Welcome to your secure dashboard.</p>
+
+      <!-- Optional: Logout button to make testing easy -->
+      <button (click)="onLogout()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">
+        Log Out
+      </button>
+    </div>
+  `,
+})
+export class DashboardComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  onLogout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+}

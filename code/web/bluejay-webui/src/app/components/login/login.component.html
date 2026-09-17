@@ -21,6 +21,8 @@
       <p class="error">{{ errorMessage }}</p>
     }
 
-    <button type="submit" [disabled]="loginForm.invalid">Sign In</button>
+    <button type="submit" [disabled]="loginForm.invalid || isLoading">
+      {{ isLoading ? 'Signing In...' : 'Sign In' }}
+    </button>
   </form>
 </div>

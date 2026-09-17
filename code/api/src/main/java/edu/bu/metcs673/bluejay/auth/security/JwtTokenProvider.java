@@ -12,6 +12,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,6 +36,7 @@ import java.util.List;
 public class JwtTokenProvider {
 
     private final SecretKey key;
+    @Getter
     private final long expirationMs;
 
     public JwtTokenProvider(
@@ -87,9 +89,5 @@ public class JwtTokenProvider {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
-    }
-
-    public long getExpirationMs() {
-        return expirationMs;
     }
 }

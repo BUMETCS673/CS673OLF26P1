@@ -44,6 +44,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
 
+    // AI-ASSISTED: YES
+    // Tool: Gemini
+    // Prompt Summary: "Analyze PR reviewer comment about early return in Spring Security JWT filter and provide refactored method"
+    // AI Contribution: Code refactoring (~60%)
+    // Modifications:
+    //  - Replaced nested if block with a guard clause checking !StringUtils.hasText(token) || !tokenProvider.validateToken(token)
+    //  - Added explicit return statement after filterChain.doFilter in the guard clause to prevent duplicate chain executions
+    // Verification:
+    //  - Manual code walkthrough of filter flow
+    //  - Security integration testing with valid, invalid, and missing JWT tokens
+    // Confidence: High
     @Override
     protected void doFilterInternal(
         @NonNull HttpServletRequest request,
@@ -53,27 +64,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = parseJwt(request);
 
-        if (StringUtils.hasText(token)
-            && tokenProvider.validateToken(token)) {
-            String username = tokenProvider.getUsernameFromToken(token);
+        if (!StringUtils.hasText(token) || !tokenProvider.validateToken(token)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            UserDetails userDetails =
-                userDetailsService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    null,
-                    userDetails.getAuthorities()
-                );
+        String username = tokenProvider.getUsernameFromToken(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            authentication.setDetails(
-                new WebAuthenticationDetailsSource()
-                    .buildDetails(request)
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
             );
 
-            SecurityContextHolder.getContext()
-                .setAuthentication(authentication);
-        }
+        authentication.setDetails(
+            new WebAuthenticationDetailsSource().buildDetails(request)
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         filterChain.doFilter(request, response);
     }

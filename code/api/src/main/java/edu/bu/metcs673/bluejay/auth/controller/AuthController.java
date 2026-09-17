@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 //   - Verified REST response structure against global API standards
 // Confidence: High
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/auth")
 @NullMarked
 public class AuthController {
 

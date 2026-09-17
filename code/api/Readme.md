@@ -80,7 +80,25 @@ To tear down containers, wipe persistent database volumes (forces fresh Flyway m
 ```bash
 docker compose down -v --rmi local
 ```
+---
 
+### 🔍 Troubleshooting: Flyway "Unknown database 'bluejay_db'" (Error Code 1049)
+
+If the application crashes during deployment with `SQL State : 42000 / Error Code : 1049 (Unknown database 'bluejay_db')`, it means a stale Docker volume exists on your machine from a previous run.
+
+MySQL **only** triggers the automatic database creation (`MYSQL_DATABASE`) on its **very first boot**. If an old data volume is present, MySQL skips initialization entirely, causing Flyway to fail.
+
+#### The Fix:
+Do not just restart the containers. You must explicitly purge the persistent data state using our standard tear-down command:
+
+```bash
+docker compose down -v --rmi local
+```
+
+**Why this fixes it:**
+The **`-v` flag** is the critical piece here—it destroys the cached local MySQL volumes. On the next `docker compose up`, Docker will be forced to create a brand new database instance and automatically provision `bluejay_db` for Flyway.
+
+*(Alternatively, you can manually delete the volume via the **Volumes** menu bar inside **Docker Desktop** before restarting the services).*
 ---
 
 ## 🛠️ IntelliJ Docker Run Configuration

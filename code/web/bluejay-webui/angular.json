@@ -29,9 +29,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -64,7 +62,8 @@
               "buildTarget": "bluejay-webui:build:production"
             },
             "development": {
-              "buildTarget": "bluejay-webui:build:development"
+              "buildTarget": "bluejay-webui:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

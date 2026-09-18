@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
   imports: [CommonModule],
   template: `
     <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
-      <h1>Hello World!</h1>
+      <h1>Welcome{{ username ? ', ' + username : '' }}!</h1>
       <p>Welcome to your secure dashboard.</p>
 
       <!-- Optional: Logout button to make testing easy -->
@@ -22,6 +22,8 @@ import { AuthService } from '../../services/auth.service';
 export class DashboardComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+
+  username = this.authService.getUsername();
 
   onLogout(): void {
     this.authService.logout();

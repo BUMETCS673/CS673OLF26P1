@@ -1,3 +1,13 @@
+// AI-ASSISTED: YES
+// Tool: Github Copilot
+// Prompt Summary: "Create a reactive login component with validation, authentication, and error handling"
+// AI Contribution: Login component logic (~80%)
+// Modifications:
+//   - Added form validation, loading state, authentication submission, and navigation/error handling
+// Verification:
+//   - Verified by Angular build validation
+// Confidence: High
+
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';

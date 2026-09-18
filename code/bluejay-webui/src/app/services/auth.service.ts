@@ -1,3 +1,13 @@
+// AI-ASSISTED: YES
+// Tool: Github Copilot
+// Prompt Summary: "Create an authentication service for login, token access, persistence, and logout"
+// AI Contribution: Authentication service logic (~80%)
+// Modifications:
+//   - Added HTTP login handling and localStorage-backed authentication helpers
+// Verification:
+//   - Verified by Angular build validation
+// Confidence: High
+
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';

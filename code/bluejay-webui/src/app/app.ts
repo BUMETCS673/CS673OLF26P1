@@ -1,3 +1,8 @@
+// AI-ASSISTED: NO
+// Tool: Angular CLI scaffold
+// Prompt Summary: "N/A"
+// AI Contribution: None
+
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 

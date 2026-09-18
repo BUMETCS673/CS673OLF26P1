@@ -1,3 +1,13 @@
+// AI-ASSISTED: YES
+// Tool: Github Copilot
+// Prompt Summary: "Create a dashboard component that displays the user and supports logout"
+// AI Contribution: Dashboard component logic and template (~75%)
+// Modifications:
+//   - Added authenticated username display and logout navigation to the login route
+// Verification:
+//   - Verified by Angular build validation
+// Confidence: High
+
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';

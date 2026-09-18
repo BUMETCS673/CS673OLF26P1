@@ -8,26 +8,29 @@ import { Observable, tap } from 'rxjs';
 export class AuthService {
   private http = inject(HttpClient);
   private readonly API_URL = '/api/v1/auth';
-  private readonly TOKEN_KEY = 'auth-token';
+  private readonly AUTH_DATA_KEY = 'auth-data';
 
   login(credentials: { username: string; password: string }): Observable<any> {
     return this.http.post<any>(`${this.API_URL}/login`, credentials).pipe(
       tap((response) => {
-        // Adapt according to your Spring Boot response structure (e.g., response.token)
-        if (response && response.token) {
-          this.saveToken(response.token);
+        if (response?.data) {
+          localStorage.setItem(this.AUTH_DATA_KEY, JSON.stringify(response.data));
         }
       }),
     );
   }
 
-  saveToken(token: string): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.setItem(this.TOKEN_KEY, token);
+  getAuthData(): any | null {
+    const value = localStorage.getItem(this.AUTH_DATA_KEY);
+    return value ? JSON.parse(value) : null;
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.getAuthData()?.token ?? null;
+  }
+
+  getUsername(): string | null {
+    return this.getAuthData()?.username ?? null;
   }
 
   isLoggedIn(): boolean {
@@ -35,6 +38,6 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.AUTH_DATA_KEY);
   }
 }

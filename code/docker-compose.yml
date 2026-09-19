@@ -41,7 +41,7 @@ services:
         retries: 3
         start_period: 40s
 
-  # 3. Angular + NGINX Frontend Container (To Be Setup Still)
+  # 3. Angular + NGINX Frontend Container
   web:
     build:
       context: ./bluejay-webui
@@ -49,8 +49,15 @@ services:
     container_name: angular_web
     ports:
       - "4200:4200"
+    volumes:
+      - ./bluejay-webui:/app
+      - /app/node_modules       # Anonymous volume: protects container node_modules from host pollution
+      - /app/.angular           # Anonymous volume: prevents local .angular cache conflicts
+    environment:
+        - CHOKIDAR_USEPOLLING=true # Ensures file changes trigger hot-reload inside Docker volumes
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   mysql_data:

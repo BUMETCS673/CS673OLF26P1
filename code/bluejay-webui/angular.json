@@ -63,8 +63,7 @@
               "buildTarget": "bluejay-webui:build:production"
             },
             "development": {
-              "buildTarget": "bluejay-webui:build:development",
-              "proxyConfig": "proxy.conf.json"
+              "buildTarget": "bluejay-webui:build:development"
             }
           },
           "defaultConfiguration": "development"

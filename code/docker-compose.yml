@@ -42,15 +42,15 @@ services:
         start_period: 40s
 
   # 3. Angular + NGINX Frontend Container (To Be Setup Still)
-#  web:
-#    build:
-#      context: ./web
-#      dockerfile: Dockerfile
-#    container_name: angular_web
-#    ports:
-#      - "80:80"
-#    depends_on:
-#      - api
+  web:
+    build:
+      context: ./bluejay-webui
+      dockerfile: Dockerfile
+    container_name: angular_web
+    ports:
+      - "4200:4200"
+    depends_on:
+      - api
 
 volumes:
   mysql_data:

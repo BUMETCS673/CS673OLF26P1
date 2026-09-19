@@ -17,23 +17,76 @@ A production-ready Spring Boot 4.1 backend built with Java 21, Spring Security, 
 
 ## 🏛️ Architecture & Domain-Driven Design (DDD)
 
-The application follows Domain-Driven Design principles organized by distinct bounded contexts under `edu.bu.metcs673.bluejay`. Each domain package encapsulates its own web layer, application/service layer, and persistence components:
+Our backend follows a **Clean Architecture (Ports & Adapters)** pattern organized around **Vertical Feature Slices**. Each business module (such as `auth`) isolates its core business domain from framework and persistence infrastructure.
 
 ```text
 edu.bu.metcs673.bluejay/
-├── auth/                      # Authentication & Identity Domain
-│   ├── controller/            # REST controllers (auth endpoints)
-│   ├── dto/                   # Request/Response Data Transfer Objects
-│   ├── entity/                # Domain entities (User, Role)
-│   ├── repository/            # JPA repositories (UserRepository)
-│   ├── security/              # Security filters & JWT handling
-│   └── service/               # Authentication domain logic & UserDetailsService
-├── common/                      # Cross-cutting concerns & shared infrastructure
-│   ├── config/                # Global SecurityFilterChain & App configurations
-│   ├── dto/                   # Unified response wrappers (ApiResponse<T>)
-│   └── exception/             # Global error handlers
-└── [domain]/                  # Future domains (e.g., sales, products)
+├── auth/                      # Authentication & Identity Vertical Slice
+│   ├── controller/            # Driving Adapter: REST Endpoints & Request Validation (@Valid)
+│   ├── dto/                   # Middle Layer: API Transport Contracts (*Request.java, *Response.java)
+│   ├── entity/                # Driven Adapter: JPA Database Entities & Relational Schemas
+│   ├── repository/            # Driven Adapter: Spring Data JPA Interfaces
+│   ├── security/              # Driving Adapter: Web Security, JWT Filters & Auth Infrastructure
+│   └── service/               # Middle Layer: Application Use Cases & Auth Orchestration
+├── common/                    # Cross-Cutting Concerns & Shared Infrastructure
+│   ├── config/                # Framework Configuration Beans
+│   ├── dto/                   # Unified API Response Wrappers (ApiResponse<T>)
+│   └── exception/             # Global RestControllerAdvice Exception Handlers
+└── [domain]/                  # Future Domain Slices (e.g., sales, inventory)
+    └── domain/                # Inner Core: Pure Framework-Agnostic Value Objects & Enums
 ```
+
+### 📐 Domain Guidelines & Architectural Rules
+
+To maintain consistency across all feature slices (e.g., `sales`, `inventory`, `catalog`), every new domain must adhere to the following Clean Architecture (Ports & Adapters) boundaries:
+
+#### 1. Clean Architecture Package Mapping
+
+```text
+    +-------------------------------------------------------------+
+    |                  OUTER LAYER (Infrastructure)               |
+    |                                                             |
+    |   [ DRIVING ADAPTERS ]           [ DRIVEN ADAPTERS ]        |
+    |   ├── controller/                ├── repository/            |
+    |   └── security/                  └── entity/                |
+    |                                                             |
+    |    +---------------------------------------------------+    |
+    |    |            MIDDLE LAYER (Application Use Cases)   |    |
+    |    |                                                   |    |
+    |    |    ├── service/                                   |    |
+    |    |    └── dto/                                       |    |
+    |    |                                                   |    |
+    |    |    +-----------------------------------------+    |    |
+    |    |    |      INNER CORE (Pure Domain)           |    |    |
+    |    |    |                                         |    |    |
+    |    |    |      └── domain/                        |    |    |
+    |    |    |                                         |    |    |
+    |    |    +-----------------------------------------+    |    |
+    |    +---------------------------------------------------+    |
+    +-------------------------------------------------------------+
+```
+
+#### 2. Standard Sub-Package Responsibilities & Allowed Dependencies
+
+| Clean Architecture Layer                        | Package Location             | Architectural Role & Primary Purpose                                                                                                                                                        | Allowed Dependencies                         |
+|-------------------------------------------------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| **Inner Core** *(Pure Domain)*                  | `domain/`                    | Business enums, core value objects, and pure domain model contracts. **Must remain framework-agnostic** (no `@Entity`, `@RestController`, or `@Autowired`).                                 | None (Java standard library only)            |
+| **Middle Layer** *(Application Use Cases)*      | `service/`<br>`dto/`         | • `service/`: Business use-cases, orchestration, and domain rules.<br>• `dto/`: Request payload objects (`*Request.java`) and Response objects (`*Response.java`) for API transport.        | `domain/`, `dto/`, `repository/`<br>         |
+| **Driving Adapters** *(Inbound Infrastructure)* | `controller/`<br>`security/` | • `controller/`: REST endpoints, HTTP request validation (`@Valid`), and response mapping.<br>• `security/`: Infrastructure for Web Security, JWT filtering, and authentication mechanisms. | `service/`, `dto/`, `common/`<br>            |
+| **Driven Adapters** *(Outbound Infrastructure)* | `repository/`<br>`entity/`   | • `entity/`: JPA/Hibernate entities mapping database tables and relational schemas.<br>• `repository/`: Spring Data JPA interfaces extending `JpaRepository`.                               | `entity/`, `domain/` (for enums/value types) |
+
+#### 3. Boundary & Dependency Rules
+
+* **Fundamental Dependency Direction:** Dependencies must **always point inward**:
+$$\text{controller / repository / entity / security} \longrightarrow \text{service / dto} \longrightarrow \text{domain}$$
+* **No Direct Repository Access Across Domains:** A domain (e.g., `sales`) must **never** autowire or call another domain's repository (`inventory/repository`). Communication between domains must occur through public interfaces in the target domain’s `service/` package.
+* **Domain Autonomy:** A domain should be able to function independently as a logical module. Avoid tight foreign-key constraints across distinct domain entities whenever possible to keep boundaries soft for future microservice extraction.
+
+#### 4. Cross-Cutting Concerns & Common Utilities
+
+* **Unified API Responses:** Every REST endpoint must wrap its output in `common.dto.ApiResponse<T>`.
+* **Exception Handling:** Throw domain-specific exceptions (e.g., `InsufficientInventoryException`) and handle them globally using `@RestControllerAdvice` in `common.exception`.
+* **Money & Precision:** Always use `BigDecimal` for monetary amounts (prices, discounts, taxes) across DTOs, domain models, and entities—never `double` or `float`.
 
 ---
 

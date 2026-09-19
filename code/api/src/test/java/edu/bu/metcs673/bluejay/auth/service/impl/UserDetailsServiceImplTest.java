@@ -121,7 +121,7 @@ class UserDetailsServiceImplTest {
                 () -> userDetailsService.loadUserByUsername(username)
             );
 
-            assertEquals("User not found with username: " + username, exception.getMessage());
+            assertEquals("user not found", exception.getMessage());
             verify(userRepository, times(1)).findByUsernameWithRolesAndPermissions(username);
         }
     }

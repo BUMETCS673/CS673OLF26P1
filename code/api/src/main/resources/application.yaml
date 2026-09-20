@@ -33,6 +33,7 @@ app:
     secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
     expiration-ms: 86400000 # 24 hours
 
+# Actuator Health Endpoint
 management:
   endpoints:
     web:
@@ -41,3 +42,32 @@ management:
   endpoint:
     health:
       show-details: always
+
+# Scalar OpenAPI Docs
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  # Instructs SpringDoc to bind OpenAPI/Scalar to Actuator management routes
+  use-management-port: false # Set to true ONLY if management.server.port is set
+  show-actuator: true
+
+scalar:
+  enabled: true
+  path: /scalar
+  url: /v3/api-docs
+  actuatorEnabled: true
+
+  # Hides the interactive "Test Request" / API client panel in Scalar
+  hideTestRequestButton: true
+
+  # Allows readers to download the openapi.json or openapi.yaml directly from Scalar UI
+  documentDownloadType: both
+
+  # Built-in Themes: default, alternate, moon, purple, solarized,
+  # blue_planet, saturn, kepler, mars, deepSpace, laserwave, none
+  theme: blue_planet
+
+  # Control theme mode and UI controls
+  darkMode: true
+  hideDarkModeToggle: false

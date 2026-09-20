@@ -145,11 +145,10 @@ To prevent stale code caching and enforce smooth local builds directly inside In
 3. Under **Modify options** (top right):
    * Enable **Remove orphans on 'down'**.
    * Enable **Remove volumes on 'down'**.
-4. Set **Remove images on 'down'** to **`Local`** *(preserves the official MySQL 8.4 image while forcing local code image rebuilds)*.
-5. Under **Before launch**, click **`+`** $\rightarrow$ **Run Maven Goal** and set:
-```text
-clean package -DskipTests
-```
+4. Set **Remove images on 'down'** to **`Local`** *(preserves the official MySQL 8.4 image while forcing local code image rebuilds)*. 
+5. **Before launch:** Remove any automatic `mvn clean package` host tasks. 
+   * Stage 1 of the multi-stage `Dockerfile` handles compilation inside the container using Docker layer caching.
+
 ---
 
 ## 🔒 Authentication & API Testing
@@ -258,6 +257,23 @@ Run unit and integration tests using Maven:
 # Run a specific test class
 ./mvnw test -Dtest=AuthServiceTest
 ```
+
+---
+
+## 📖 API Documentation (Scalar UI)
+
+The application provides interactive, human-readable API documentation rendered by **Scalar**, powered by our live OpenAPI 3.0 specification.
+
+### Accessing Scalar UI
+* **Interactive Web Docs:** `http://localhost:8080/scalar`
+* **Raw OpenAPI JSON Spec:** `http://localhost:8080/v3/api-docs`
+
+### Postman Integration via OpenAPI
+Instead of manually building requests in Postman, you can directly sync or import the live schema:
+1. Open Postman $\rightarrow$ Click **Import**.
+2. Paste the live spec URL: `http://localhost:8080/v3/api-docs` (or upload the `.json` file).
+3. Postman will automatically generate a complete request collection matching all application endpoints and DTO schemas.
+
 ---
 
 ## 🔑 Environment Variables

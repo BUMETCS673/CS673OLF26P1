@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+
+title Bluejay High-Level Architecture
+
+' External Client
+node "Bluejay Web UI" {
+    component [Angular Frontend] as angular
+}
+
+' Monolith Backend
+node "Bluejay Web API" {
+
+    package "Infrastructure" #LightCoral {
+        component [RestControllers\n(e.g., SaleRestController)] as rest_ctrl
+        component [Spring Security\n& JWT Filters] as security
+        component [Persistence\n(Spring Data JPA Entities)] as jpa_repo
+    }
+
+    package "Interface Adapters" #LightBlue {
+        component [Request/Response Mappers\n(Controllers/Presenters)] as adapters
+        component [Repository Implementations] as repo_impl
+    }
+
+    package "Use Case" #LightGreen {
+        component [Use Case Services\n(e.g., ProcessSaleUseCase)] as usecase_service
+
+        interface "Inbound Ports\n(Use Case Interfaces)" as in_port
+        interface "Outbound Ports\n(Repository Gateways)" as out_port
+
+        usecase_service -up-|> in_port
+        usecase_service ..> out_port
+    }
+
+    package "Domain" #Gold {
+        component [Domain Models\n(Sale, Product, Customer)] as domain_model
+        component [Domain Exceptions] as domain_ex
+    }
+}
+
+' Relationships & Dependencies (Pointing Inward)
+
+' Angular communicates via HTTP/JSON to Infrastructure
+angular ==> security : 1. HTTP Request (JWT)
+security ==> rest_ctrl : 2. Validated Request
+
+' Infrastructure uses Interface Adapters
+rest_ctrl --> adapters : 3. Pass Web DTO
+
+' Interface Adapters interact with Use Cases via Ports
+adapters --> in_port : 4. Invoke Core Business
+
+' Use Cases interact with Domain Entities
+usecase_service --> domain_model : 5. Apply Enterprise Rules
+
+' Data persistence flow via Dependency Inversion
+repo_impl -up-|> out_port : Implements
+repo_impl --> jpa_repo : Saves to Database
+
+@enduml

@@ -64,8 +64,13 @@ public class SecurityConfig {
                     response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied"))
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/actuator/**",
+                    "/api/v1/auth/**",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs",
+                    "/scalar/**",
+                    "/scalar",
+                    "/scalar-html").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
             )

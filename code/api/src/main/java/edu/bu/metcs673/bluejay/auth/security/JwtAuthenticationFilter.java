@@ -1,10 +1,10 @@
 // AI-USAGE SUMMARY
-// Tools: Gemini
+// Tools: Gemini, Claude
 // Overall AI Contribution: ~70%
-// AI-Assisted Areas: OncePerRequestFilter structure, SecurityContext insertion
+// AI-Assisted Areas: OncePerRequestFilter structure, SecurityContext insertion, revoked-token check
 // Human Contributions: Bearer string extraction, explicit import optimization
-// Notes: Intercepts request to load principal from token if valid.
-// Authors: Sara Orion
+// Notes: Intercepts request to load principal from token if valid and not revoked.
+// Authors: Sara Orion, Krizma Nagi
 
 package edu.bu.metcs673.bluejay.auth.security;
 
@@ -31,6 +31,7 @@ import java.io.IOException;
 // AI Contribution: Filter template and context setting (~75%)
 // Modifications:
 //   - Extracted constants and applied CS112 method parameter wrapping
+//   - Feature 18 (Claude): added TokenBlacklistService so revoked tokens are rejected
 // Verification:
 //   - Tested against Spring Security FilterChain execution order
 // Confidence: High
@@ -43,6 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     // AI-ASSISTED: YES
     // Tool: Gemini
@@ -51,6 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // Modifications:
     //  - Replaced nested if block with a guard clause checking !StringUtils.hasText(token) || !tokenProvider.validateToken(token)
     //  - Added explicit return statement after filterChain.doFilter in the guard clause to prevent duplicate chain executions
+    //  - Feature 18 (Claude): guard clause also skips tokens found in the blacklist
     // Verification:
     //  - Manual code walkthrough of filter flow
     //  - Security integration testing with valid, invalid, and missing JWT tokens
@@ -64,7 +67,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = parseJwt(request);
 
-        if (!StringUtils.hasText(token) || !tokenProvider.validateToken(token)) {
+        if (!StringUtils.hasText(token)
+            || !tokenProvider.validateToken(token)
+            || tokenBlacklistService.isRevoked(token)) {
             filterChain.doFilter(request, response);
             return;
         }

@@ -4,7 +4,7 @@
 // AI-Assisted Areas: REST controller mapping, ResponseEntity wrapping with ApiResponse, logout endpoint
 // Human Contributions: API endpoint route design (/api/v1/auth/login)
 // Notes: Auth slice entry point returning standardized ApiResponse wrapper.
-// Authors: Sara Orion, (your name)
+// Authors: Sara Orion, Krizma Nagi
 
 package edu.bu.metcs673.bluejay.auth.controller;
 

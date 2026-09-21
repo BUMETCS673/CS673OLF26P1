@@ -1,9 +1,9 @@
 // AI-USAGE SUMMARY
 // Tools: Github Copilot, Claude
 // Overall AI Contribution: ~80%
-// AI-Assisted Areas: Reactive login form, validation, submission and error handling (Copilot); session-expired message from the idle-timer redirect (Claude)
-// Human Contributions: Wrote the exact "Session Expired due to inactivity" wording from the Feature 18 acceptance criteria, reviewed the query-parameter logic, and verified it with a manual browser test
-// Notes: Feature 18 reads the reason=inactivity query parameter set by IdleTimerService and shows an info message on the login page.
+// AI-Assisted Areas: Reactive login form, validation, submission and error handling (Copilot); session-expired and logged-out info messages (Claude)
+// Human Contributions: Wrote the exact "Session Expired due to inactivity" wording from the Feature 18 acceptance criteria, added the logged-out confirmation after a reviewer suggestion, reviewed the query-parameter logic, and verified it with unit tests and a manual browser test
+// Notes: Feature 18 reads the reason query parameter (inactivity or logout) and shows a matching info message on the login page.
 // authors: Krizma Nagi
 
 import { Component, inject } from '@angular/core';
@@ -18,9 +18,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 // AI Contribution: Login component logic (~80%)
 // Modifications:
 // - Added form validation, loading state, authentication submission, and navigation/error handling
-// - Feature 18: injects ActivatedRoute and shows "Session Expired due to inactivity" when redirected by the idle timer
+// - Feature 18: injects ActivatedRoute and shows an info message when redirected by the idle timer or after a manual logout
 // Verification:
-// - Verified by Angular build validation and manual browser test
+// - Verified by Angular build validation, login.component.spec.ts and manual browser test
 // Confidence: High
 @Component({
   selector: 'app-login',
@@ -45,17 +45,22 @@ export class LoginComponent {
 
   // AI-ASSISTED: YES
   // Tool: Claude
-  // Prompt Summary: "Show a session-expired message on the login page when redirected by the idle timer"
-  // AI Contribution: Query-parameter check and message (~80%)
+  // Prompt Summary: "Show info messages on the login page for idle-timeout and manual-logout redirects"
+  // AI Contribution: Query-parameter lookup and messages (~80%)
   // Modifications:
-  // - Reads reason=inactivity from the route snapshot and sets the exact message text from the Feature 18 acceptance criteria
+  // - Maps reason=inactivity to "Session Expired due to inactivity" (exact text from the Feature 18 acceptance criteria)
+  // - Maps reason=logout to "You have been logged out successfully" after a reviewer suggestion
+  // - Uses a Map so unknown reason values show no message
   // Verification:
-  // - Manual browser test with a shortened idle timeout
+  // - login.component.spec.ts and manual browser test
   // Confidence: High
+  private readonly reasonMessages = new Map<string, string>([
+    ['inactivity', 'Session Expired due to inactivity'],
+    ['logout', 'You have been logged out successfully'],
+  ]);
+
   infoMessage: string | null =
-    this.route.snapshot.queryParamMap.get('reason') === 'inactivity'
-      ? 'Session Expired due to inactivity'
-      : null;
+    this.reasonMessages.get(this.route.snapshot.queryParamMap.get('reason') ?? '') ?? null;
 
   // AI-ASSISTED: YES
   // Tool: Github Copilot

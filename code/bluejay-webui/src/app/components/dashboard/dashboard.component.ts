@@ -1,9 +1,9 @@
 // AI-USAGE SUMMARY
 // Tools: Github Copilot, Claude
 // Overall AI Contribution: ~75%
-// AI-Assisted Areas: Dashboard component and template (Copilot); idle-timer lifecycle hooks (Claude)
-// Human Contributions: Decided the idle timer should run while an authenticated page is open, reviewed the lifecycle wiring, and verified it with a manual browser test
-// Notes: Feature 18 starts the idle timer in ngOnInit and stops it in ngOnDestroy, so the timer also stops after a manual logout.
+// AI-Assisted Areas: Dashboard component and template (Copilot); idle-timer lifecycle hooks and logout message redirect (Claude)
+// Human Contributions: Decided the idle timer should run while an authenticated page is open, added the logged-out confirmation after a reviewer suggestion, reviewed the wiring, and verified it with unit tests and a manual browser test
+// Notes: Feature 18 starts the idle timer in ngOnInit and stops it in ngOnDestroy, and manual logout redirects to /login?reason=logout so the login page can confirm the logout.
 // authors: Krizma Nagi
 
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
@@ -19,8 +19,9 @@ import { IdleTimerService } from '../../services/idle-timer.service';
 // Modifications:
 // - Added authenticated username display and logout navigation to the login route
 // - Feature 18: injects IdleTimerService and implements OnInit/OnDestroy so the idle timer runs only while this page is open
+// - Feature 18: manual logout redirects to /login?reason=logout so the login page shows a confirmation message
 // Verification:
-// - Verified by Angular build validation and manual browser test
+// - Verified by Angular build validation, dashboard.component.spec.ts and manual browser test
 // Confidence: High
 @Component({
   selector: 'app-dashboard',
@@ -72,16 +73,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // AI-ASSISTED: YES
-  // Tool: Github Copilot
+  // Tool: Github Copilot (original); Claude (Feature 18 update)
   // Prompt Summary: "Create a dashboard component that displays the user and supports logout"
   // AI Contribution: Logout handler (~75%)
   // Modifications:
-  // - Unchanged in Feature 18: AuthService.logout() now also revokes the JWT on the server
+  // - AuthService.logout() now also revokes the JWT on the server
+  // - Redirects to /login with the query parameter reason=logout so the login page shows "You have been logged out successfully"
   // Verification:
-  // - Manual browser test (Log Out button)
+  // - dashboard.component.spec.ts and manual browser test (Log Out button)
   // Confidence: High
   onLogout(): void {
     this.authService.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login'], { queryParams: { reason: 'logout' } });
   }
 }

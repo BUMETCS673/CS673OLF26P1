@@ -2,7 +2,7 @@
 // Tools: Gemini, Claude
 // Overall AI Contribution: ~80%
 // AI-Assisted Areas: WebMvcTest setup, MockMvc request building, JSON assertions, logout tests
-// Human Contributions: Custom ApiResponse wrapper assertions
+// Human Contributions: Custom ApiResponse wrapper assertions; chose the logout scenarios (valid token, invalid token, missing header), reviewed the assertions, and ran the suite with mvnw test
 // Notes: Controller slice test for AuthController endpoints.
 // Authors: Sara Orion, Krizma Nagi
 
@@ -123,8 +123,11 @@ class AuthControllerTest {
         // Tool: Claude
         // Prompt Summary: "MockMvc tests for the logout endpoint revoking a JWT"
         // AI Contribution: Initial draft (~80%)
-        // Modifications: (fill in)
-        // Verification: Executed local unit test runner
+        // Modifications:
+        //   - Stubs JwtTokenProvider.validateToken() as true, sends a Bearer header, and verifies TokenBlacklistService.revoke() is called with that exact token
+        //   - Asserts the ApiResponse wrapper: success true and message "Logout successful"
+        // Verification:
+        //   - Executed local unit test runner (mvnw test)
         // Confidence: High
         @Test
         @DisplayName("Should revoke a valid token and return 200")
@@ -140,6 +143,16 @@ class AuthControllerTest {
             verify(tokenBlacklistService, times(1)).revoke("valid.jwt.token");
         }
 
+        // AI-ASSISTED: YES
+        // Tool: Claude
+        // Prompt Summary: "MockMvc test that an invalid token is not added to the blacklist"
+        // AI Contribution: Initial draft (~80%)
+        // Modifications:
+        //   - Stubs validateToken() as false and verifies revoke() is never called, so junk strings cannot fill the blacklist
+        //   - Still expects 200 so repeated or stale logouts do not error
+        // Verification:
+        //   - Executed local unit test runner (mvnw test)
+        // Confidence: High
         @Test
         @DisplayName("Should not revoke an invalid token but still return 200")
         void logout_InvalidToken_DoesNotRevoke() throws Exception {
@@ -152,6 +165,15 @@ class AuthControllerTest {
             verify(tokenBlacklistService, never()).revoke(anyString());
         }
 
+        // AI-ASSISTED: YES
+        // Tool: Claude
+        // Prompt Summary: "MockMvc test that logout without an Authorization header still returns 200"
+        // AI Contribution: Initial draft (~80%)
+        // Modifications:
+        //   - Sends no Authorization header and verifies TokenBlacklistService is never touched
+        // Verification:
+        //   - Executed local unit test runner (mvnw test)
+        // Confidence: High
         @Test
         @DisplayName("Should return 200 when no Authorization header is sent")
         void logout_MissingHeader_Returns200() throws Exception {

@@ -68,9 +68,14 @@ public class AuthController {
     // Tool: Claude
     // Prompt Summary: "Add logout endpoint that revokes the caller's JWT"
     // AI Contribution: Endpoint and revocation logic (~70%)
-    // Modifications: (fill in)
-    // Verification: (fill in, e.g. AuthControllerTest + manual test)
-    // Confidence: (fill in)
+    // Modifications:
+    //   - Reads the Bearer token from the Authorization header and only revokes it if JwtTokenProvider.validateToken() accepts it, so invalid strings never fill the blacklist
+    //   - Always returns 200 "Logout successful" (even with a missing, invalid or expired token) so repeated or stale logouts do not produce errors on the frontend
+    //   - Marked the header parameter @Nullable because the class is @NullMarked
+    // Verification:
+    //   - AuthControllerTest logout tests (valid token revoked, invalid token not revoked, missing header returns 200)
+    //   - Manual curl test: a token returned 500 (accepted) before logout and 401 after logout
+    // Confidence: High
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
         @RequestHeader(value = "Authorization", required = false)

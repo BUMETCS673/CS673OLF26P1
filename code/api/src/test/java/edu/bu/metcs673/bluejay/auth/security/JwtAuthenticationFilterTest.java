@@ -2,7 +2,7 @@
 // Tools: Gemini, Claude
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: MockHttpServletRequest/Response setup, SecurityContext assertions, revoked-token test
-// Human Contributions: CS112 inline formatting compliance
+// Human Contributions: CS112 inline formatting compliance; added the TokenBlacklistService mock and constructor argument, chose the revoked-token scenario, reviewed the assertions, and ran the suite with mvnw test
 // Notes: Unit test for JwtAuthenticationFilter verifying SecurityContext injection.
 // Authors: Sara Orion, Krizma Nagi
 
@@ -128,8 +128,11 @@ class JwtAuthenticationFilterTest {
         // Tool: Claude
         // Prompt Summary: "Test that a valid but blacklisted token is not authenticated"
         // AI Contribution: Initial draft (~80%)
-        // Modifications: (fill in)
-        // Verification: Local execution via JUnit runner
+        // Modifications:
+        //   - Stubs validateToken() as true and TokenBlacklistService.isRevoked() as true for the same token
+        //   - Asserts the SecurityContext stays empty, UserDetailsService is never called, and the filter chain still continues once
+        // Verification:
+        //   - Local execution via JUnit runner (mvnw test)
         // Confidence: High
         @Test
         @DisplayName("Should skip authentication when the token has been revoked")

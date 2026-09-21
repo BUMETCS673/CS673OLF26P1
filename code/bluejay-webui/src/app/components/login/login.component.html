@@ -1,11 +1,21 @@
+<!-- AI-USAGE SUMMARY
+Tools: Github Copilot, Claude
+Overall AI Contribution: ~80%
+AI-Assisted Areas: Login form markup, validation messages and submit state (Copilot); session-expired message (Claude)
+Human Contributions: Placed the info message above the error message and reviewed it in the browser
+Notes: Feature 18 added the infoMessage block shown after an idle-timeout redirect.
+authors: Krizma Nagi
+-->
+
 <!-- AI-ASSISTED: YES
-Tool: Github Copilot
+Tool: Github Copilot (original); Claude (Feature 18 changes)
 Prompt Summary: "Create the login form template with validation and submission states"
 AI Contribution: Login markup and conditional states (~80%)
 Modifications:
   - Added username/password fields, validation messages, error output, and submit state
+  - Feature 18: added the infoMessage block that shows "Session Expired due to inactivity"
 Verification:
-  - Verified by Angular build validation
+  - Verified by Angular build validation and manual browser test
 Confidence: High -->
 
 <div class="login-container">
@@ -26,6 +36,10 @@ Confidence: High -->
         <span> Password is required (min 6 characters). </span>
       }
     </div>
+
+    @if (infoMessage) {
+      <p class="info">{{ infoMessage }}</p>
+    }
 
     @if (errorMessage) {
       <p class="error">{{ errorMessage }}</p>

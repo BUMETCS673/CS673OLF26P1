@@ -1,10 +1,10 @@
 // AI-USAGE SUMMARY
-// Tools: Gemini
+// Tools: Gemini, Claude
 // Overall AI Contribution: ~85%
-// AI-Assisted Areas: MockHttpServletRequest/Response setup, SecurityContext assertions
-// Human Contributions: CS112 inline formatting compliance
+// AI-Assisted Areas: MockHttpServletRequest/Response setup, SecurityContext assertions, revoked-token test
+// Human Contributions: CS112 inline formatting compliance; added the TokenBlacklistService mock and constructor argument, chose the revoked-token scenario, reviewed the assertions, and ran the suite with mvnw test
 // Notes: Unit test for JwtAuthenticationFilter verifying SecurityContext injection.
-// Authors: Sara Orion
+// Authors: Sara Orion, Krizma Nagi
 
 package edu.bu.metcs673.bluejay.auth.security;
 
@@ -42,6 +42,9 @@ class JwtAuthenticationFilterTest {
     private UserDetailsService userDetailsService;
 
     @Mock
+    private TokenBlacklistService tokenBlacklistService;
+
+    @Mock
     private FilterChain filterChain;
 
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -50,7 +53,8 @@ class JwtAuthenticationFilterTest {
 
     @BeforeEach
     void setUp() {
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(
+            jwtTokenProvider, userDetailsService, tokenBlacklistService);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         SecurityContextHolder.clearContext();
@@ -116,6 +120,34 @@ class JwtAuthenticationFilterTest {
             // Then
             assertNull(SecurityContextHolder.getContext().getAuthentication());
             verifyNoInteractions(jwtTokenProvider);
+            verifyNoInteractions(userDetailsService);
+            verify(filterChain, times(1)).doFilter(request, response);
+        }
+
+        // AI-ASSISTED: YES
+        // Tool: Claude
+        // Prompt Summary: "Test that a valid but blacklisted token is not authenticated"
+        // AI Contribution: Initial draft (~80%)
+        // Modifications:
+        //   - Stubs validateToken() as true and TokenBlacklistService.isRevoked() as true for the same token
+        //   - Asserts the SecurityContext stays empty, UserDetailsService is never called, and the filter chain still continues once
+        // Verification:
+        //   - Local execution via JUnit runner (mvnw test)
+        // Confidence: High
+        @Test
+        @DisplayName("Should skip authentication when the token has been revoked")
+        void doFilterInternal_RevokedToken_SkipsAuthentication() throws ServletException, IOException {
+            // Given
+            String token = "revoked.jwt.token";
+            request.addHeader("Authorization", "Bearer " + token);
+            when(jwtTokenProvider.validateToken(token)).thenReturn(true);
+            when(tokenBlacklistService.isRevoked(token)).thenReturn(true);
+
+            // When
+            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+            // Then
+            assertNull(SecurityContextHolder.getContext().getAuthentication());
             verifyNoInteractions(userDetailsService);
             verify(filterChain, times(1)).doFilter(request, response);
         }

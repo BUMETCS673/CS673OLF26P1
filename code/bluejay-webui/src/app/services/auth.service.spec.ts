@@ -1,10 +1,10 @@
 // AI-USAGE SUMMARY
-// Tools: Gemini
+// Tools: Gemini, Claude
 // Overall AI Contribution: 85%
-// AI-Assisted Areas: Angular HTTP testing setup, AuthService spec suite, Jest matcher conversions, JSON-parsed auth-data storage assertions
-// Human Contributions: Custom assertions, aligning storage keys with AuthService logic, student team verification
-// Notes: Initial code generated via AI; requires student verification, refactoring, and testing before integration.
-// authors: [Student Name / Team]
+// AI-Assisted Areas: Angular HTTP testing setup, AuthService spec suite, Jest matcher conversions, JSON-parsed auth-data storage assertions, logout revocation tests
+// Human Contributions: Custom assertions, aligning storage keys with AuthService logic, student team verification, reviewing and running the Claude-drafted logout tests against the updated AuthService
+// Notes: Initial code generated via AI; requires student verification, refactoring, and testing before integration. Feature 18 replaced the old logout test with three tests covering server-side token revocation.
+// authors: Krizma Nagi
 
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -158,20 +158,63 @@ describe('AuthService', () => {
     });
 
     // AI-ASSISTED: YES
-    // Tool: Gemini
-    // Prompt Summary: "Test logout() method clearing auth-data from localStorage in Jest."
+    // Tool: Claude (replaces the earlier Gemini logout test)
+    // Prompt Summary: "Test logout() clears auth-data and revokes the JWT on the server via POST /api/v1/auth/logout."
     // AI Contribution: Initial draft (~90%)
     // Modifications:
-    // - Updated boolean assertions to toBe(true) / toBe(false)
-    // Verification: Jest test runner execution
+    // - Replaced the old localStorage-only logout test because logout() now issues an HTTP request
+    // - Asserts the POST method, the /api/v1/auth/logout URL, and the Bearer token header
+    // - Flushes the request so httpMock.verify() in afterEach passes
+    // Verification: Vitest test runner execution via `npm test`
     // Confidence: High
-    it('should remove auth-data from localStorage on logout', () => {
+    it('should remove auth-data and call the logout endpoint with the Bearer token', () => {
       localStorage.setItem(AUTH_DATA_KEY, JSON.stringify({ token: 'jwt-token-xyz' }));
       expect(service.isLoggedIn()).toBe(true);
 
       service.logout();
 
       expect(localStorage.getItem(AUTH_DATA_KEY)).toBeNull();
+      expect(service.isLoggedIn()).toBe(false);
+
+      const req = httpMock.expectOne('/api/v1/auth/logout');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-token-xyz');
+      req.flush({ success: true });
+    });
+
+    // AI-ASSISTED: YES
+    // Tool: Claude
+    // Prompt Summary: "Test that logout still clears local auth-data when the server call fails."
+    // AI Contribution: Initial draft (~90%)
+    // Modifications:
+    // - Simulates an HTTP 500 response with req.flush()
+    // - Asserts local auth-data is removed and isLoggedIn() is false despite the server error
+    // Verification: Vitest test runner execution via `npm test`
+    // Confidence: High
+    it('should still clear auth-data when the logout request fails', () => {
+      localStorage.setItem(AUTH_DATA_KEY, JSON.stringify({ token: 'jwt-token-xyz' }));
+
+      service.logout();
+
+      const req = httpMock.expectOne('/api/v1/auth/logout');
+      req.flush('Server error', { status: 500, statusText: 'Server Error' });
+
+      expect(localStorage.getItem(AUTH_DATA_KEY)).toBeNull();
+      expect(service.isLoggedIn()).toBe(false);
+    });
+
+    // AI-ASSISTED: YES
+    // Tool: Claude
+    // Prompt Summary: "Test that logout makes no server call when there is no token to revoke."
+    // AI Contribution: Initial draft (~90%)
+    // Modifications:
+    // - Uses httpMock.expectNone() to confirm no request is sent when auth-data is empty
+    // Verification: Vitest test runner execution via `npm test`
+    // Confidence: High
+    it('should not call the server when there is no token to revoke', () => {
+      service.logout();
+
+      httpMock.expectNone('/api/v1/auth/logout');
       expect(service.isLoggedIn()).toBe(false);
     });
   });

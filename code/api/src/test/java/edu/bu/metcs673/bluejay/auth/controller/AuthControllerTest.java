@@ -1,10 +1,10 @@
 // AI-USAGE SUMMARY
-// Tools: Gemini
+// Tools: Gemini, Claude
 // Overall AI Contribution: ~80%
-// AI-Assisted Areas: WebMvcTest setup, MockMvc request building, JSON assertions
-// Human Contributions: Custom ApiResponse wrapper assertions
+// AI-Assisted Areas: WebMvcTest setup, MockMvc request building, JSON assertions, logout tests
+// Human Contributions: Custom ApiResponse wrapper assertions; chose the logout scenarios (valid token, invalid token, missing header), reviewed the assertions, and ran the suite with mvnw test
 // Notes: Controller slice test for AuthController endpoints.
-// Authors: Sara Orion
+// Authors: Sara Orion, Krizma Nagi
 
 package edu.bu.metcs673.bluejay.auth.controller;
 
@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.bu.metcs673.bluejay.auth.dto.AuthResponse;
 import edu.bu.metcs673.bluejay.auth.dto.LoginRequest;
 import edu.bu.metcs673.bluejay.auth.security.JwtTokenProvider;
+import edu.bu.metcs673.bluejay.auth.security.TokenBlacklistService;
 import edu.bu.metcs673.bluejay.auth.service.AuthService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -47,6 +49,10 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserDetailsService userDetailsService;
+
+    // Needed by both AuthController and JwtAuthenticationFilter
+    @MockitoBean
+    private TokenBlacklistService tokenBlacklistService;
 
     @Nested
     @DisplayName("POST /api/v1/auth/login Tests")
@@ -106,6 +112,75 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest());
 
             verifyNoInteractions(authService);
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/v1/auth/logout Tests")
+    class LogoutEndpoint {
+
+        // AI-ASSISTED: YES
+        // Tool: Claude
+        // Prompt Summary: "MockMvc tests for the logout endpoint revoking a JWT"
+        // AI Contribution: Initial draft (~80%)
+        // Modifications:
+        //   - Stubs JwtTokenProvider.validateToken() as true, sends a Bearer header, and verifies TokenBlacklistService.revoke() is called with that exact token
+        //   - Asserts the ApiResponse wrapper: success true and message "Logout successful"
+        // Verification:
+        //   - Executed local unit test runner (mvnw test)
+        // Confidence: High
+        @Test
+        @DisplayName("Should revoke a valid token and return 200")
+        void logout_ValidToken_RevokesToken() throws Exception {
+            when(jwtTokenProvider.validateToken("valid.jwt.token")).thenReturn(true);
+
+            mockMvc.perform(post("/api/v1/auth/logout")
+                    .header("Authorization", "Bearer valid.jwt.token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Logout successful"));
+
+            verify(tokenBlacklistService, times(1)).revoke("valid.jwt.token");
+        }
+
+        // AI-ASSISTED: YES
+        // Tool: Claude
+        // Prompt Summary: "MockMvc test that an invalid token is not added to the blacklist"
+        // AI Contribution: Initial draft (~80%)
+        // Modifications:
+        //   - Stubs validateToken() as false and verifies revoke() is never called, so junk strings cannot fill the blacklist
+        //   - Still expects 200 so repeated or stale logouts do not error
+        // Verification:
+        //   - Executed local unit test runner (mvnw test)
+        // Confidence: High
+        @Test
+        @DisplayName("Should not revoke an invalid token but still return 200")
+        void logout_InvalidToken_DoesNotRevoke() throws Exception {
+            when(jwtTokenProvider.validateToken("junk")).thenReturn(false);
+
+            mockMvc.perform(post("/api/v1/auth/logout")
+                    .header("Authorization", "Bearer junk"))
+                .andExpect(status().isOk());
+
+            verify(tokenBlacklistService, never()).revoke(anyString());
+        }
+
+        // AI-ASSISTED: YES
+        // Tool: Claude
+        // Prompt Summary: "MockMvc test that logout without an Authorization header still returns 200"
+        // AI Contribution: Initial draft (~80%)
+        // Modifications:
+        //   - Sends no Authorization header and verifies TokenBlacklistService is never touched
+        // Verification:
+        //   - Executed local unit test runner (mvnw test)
+        // Confidence: High
+        @Test
+        @DisplayName("Should return 200 when no Authorization header is sent")
+        void logout_MissingHeader_Returns200() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/logout"))
+                .andExpect(status().isOk());
+
+            verifyNoInteractions(tokenBlacklistService);
         }
     }
 }

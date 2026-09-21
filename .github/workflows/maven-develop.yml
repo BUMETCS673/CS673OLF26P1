@@ -27,3 +27,8 @@ jobs:
     - name: Compile Backend with Maven
       working-directory: code/api
       run: mvn clean compile
+
+    # 4. Execute Unit Tests
+    - name: Run Junit Tests
+      working-directory: code/api
+      run: mvn test

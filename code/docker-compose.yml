@@ -46,7 +46,7 @@ services:
     build:
       context: ./bluejay-webui
       dockerfile: Dockerfile
-    container_name: angular_web
+    container_name: bluejay_web
     ports:
       - "4200:4200"
     volumes:

@@ -1,0 +1,88 @@
+<!-- Taken from BU CS112 Java Coding Standards
+https://www.cs.bu.edu/courses/cs112/problem_sets/coding_standards.html -->
+<code_scheme name="BU-CS112-Style" version="173">
+    <option name="RIGHT_MARGIN" value="80" />
+    <option name="LINE_SEPARATOR" value="&#10;" />
+    <JavaCodeStyleSettings>
+        <option name="CLASS_NAMES_IN_JAVADOC" value="3" />
+
+        <!-- BU Standard: Never use wildcard imports -->
+        <option name="CLASS_COUNT_TO_USE_IMPORT_ON_THE_FLY" value="99" />
+        <option name="NAMES_COUNT_TO_USE_IMPORT_ON_THE_FLY" value="99" />
+    </JavaCodeStyleSettings>
+    <codeStyleSettings language="JAVA">
+        <option name="RIGHT_MARGIN" value="80" />
+        <option name="KEEP_LINE_BREAKS" value="true" />
+        <option name="KEEP_FIRST_COLUMN_COMMENT" value="true" />
+        <option name="KEEP_CONTROL_STATEMENT_IN_ONE_LINE" value="false" />
+        <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="1" />
+        <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
+        <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
+        <option name="BLANK_LINES_AFTER_CLASS_HEADER" value="0" />
+        <option name="BLANK_LINES_AROUND_FIELD_IN_INTERFACE" value="1" />
+        <option name="BLANK_LINES_AROUND_FIELD" value="0" />
+        <option name="BLANK_LINES_AROUND_METHOD" value="1" />
+        <option name="BLANK_LINES_BEFORE_METHOD_BODY" value="0" />
+
+        <!-- Brace placement: K&R / "end of line" style, per the standard's
+             first (and default) accepted format -->
+        <option name="BRACE_STYLE" value="1" />
+        <option name="CLASS_BRACE_STYLE" value="1" />
+        <option name="METHOD_BRACE_STYLE" value="1" />
+        <option name="LAMBDA_BRACE_STYLE" value="1" />
+
+        <!-- Spacing: "space between a keyword and a following parenthesis" -->
+        <option name="SPACE_BEFORE_IF_PARENTHESES" value="true" />
+        <option name="SPACE_BEFORE_WHILE_PARENTHESES" value="true" />
+        <option name="SPACE_BEFORE_FOR_PARENTHESES" value="true" />
+        <option name="SPACE_BEFORE_SWITCH_PARENTHESES" value="true" />
+        <option name="SPACE_BEFORE_TRY_PARENTHESES" value="true" />
+        <option name="SPACE_BEFORE_CATCH_PARENTHESES" value="true" />
+        <option name="SPACE_BEFORE_SYNCHRONIZED_PARENTHESES" value="true" />
+
+        <!-- "surround the binary operators (including assignment) by spaces" -->
+        <option name="SPACE_AROUND_ASSIGNMENT_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_LOGICAL_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_EQUALITY_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_RELATIONAL_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_BITWISE_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_ADDITIVE_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_MULTIPLICATIVE_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_SHIFT_OPERATORS" value="true" />
+        <option name="SPACE_AROUND_UNARY_OPERATOR" value="false" />
+
+        <!-- "follow a semicolon or comma by a space" -->
+        <option name="SPACE_AFTER_COMMA" value="true" />
+        <option name="SPACE_BEFORE_COMMA" value="false" />
+        <option name="SPACE_AFTER_SEMICOLON" value="true" />
+        <option name="SPACE_BEFORE_SEMICOLON" value="false" />
+
+        <!-- Keep single-line comments where they land, aligned with code -->
+        <option name="LINE_COMMENT_AT_FIRST_COLUMN" value="false" />
+        <option name="LINE_COMMENT_ADD_SPACE" value="true" />
+
+        <!-- "indent by four spaces whenever you are inside a set of curly braces" -->
+        <indentOptions>
+            <option name="INDENT_SIZE" value="4" />
+            <option name="CONTINUATION_INDENT_SIZE" value="4" />
+            <option name="TAB_SIZE" value="4" />
+            <option name="USE_TAB_CHARACTER" value="false" />
+            <option name="SMART_TABS" value="false" />
+            <option name="LABEL_INDENT_SIZE" value="0" />
+            <option name="LABEL_INDENT_ABSOLUTE" value="false" />
+            <option name="USE_RELATIVE_INDENTS" value="false" />
+        </indentOptions>
+
+        <!-- Wrap long parameter lists and long concatenated println-style
+             statements instead of exceeding 80 characters -->
+        <option name="METHOD_PARAMETERS_WRAP" value="5" />
+        <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+        <option name="METHOD_PARAMETERS_LPAREN_ON_NEXT_LINE" value="false" />
+        <option name="BINARY_OPERATION_WRAP" value="5" />
+        <option name="BINARY_OPERATION_SIGN_ON_NEXT_LINE" value="false" />
+        <option name="ALIGN_MULTILINE_BINARY_OPERATION" value="false" />
+        <option name="CALL_PARAMETERS_WRAP" value="5" />
+        <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="false" />
+        <option name="WRAP_LONG_LINES" value="true" />
+    </codeStyleSettings>
+</code_scheme>

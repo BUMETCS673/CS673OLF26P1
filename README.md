@@ -2,82 +2,103 @@
 # 🪶 BlueJay POS – Web & AI Point of Sale System
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Java](https://img.shields.io/badge/Java-17%2B-orange)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green)
-![Angular](https://img.shields.io/badge/Angular-16%2B-red)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-blue)
+![Java](https://img.shields.io/badge/Java-21%2B-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1%2B-green)
+![Angular](https://img.shields.io/badge/Angular-21%2B-red)
+![PostgreSQL](https://img.shields.io/badge/MySQL-8.4%2B-blue)
 
-**BlueJay POS** is an enterprise-grade, multi-tenant web application designed for small-to-medium grocery and retail operations. Evolving from a legacy desktop terminal prototype, BlueJay delivers an intuitive Angular web interface, a robust Spring Boot RESTful API, role-based access security, and cutting-edge **Spring AI** integration for automated supplier receipt scanning and inventory forecasting.
+
+**BlueJay POS** is an enterprise-grade web application designed for small-to-medium grocery and retail operations. Evolving from a desktop terminal prototype, BlueJay delivers a modern Angular web interface, a robust Spring Boot RESTful API, role-based access security (JWT), Flyway database migrations, and interactive **Scalar** API documentation.
 
 ---
 
 ## 📌 Project Overview & Vision
 
 Small-to-medium retail businesses frequently struggle with fragmented software, manual stock entries, and desktop-locked POS terminals. **BlueJay POS** bridges this gap by offering a secure, centralized web platform that streamlines:
-* **Point-of-Sale Checkout:** Fast cashier web interface with automated stock updates and real-time low-stock counter warnings.
-* **AI-Driven Restock Ingestion:** OCR receipt and invoice parsing via Spring AI to automatically update wholesale inventory stock and pricing.
+
+* **Point-of-Sale Checkout:** Fast cashier web interface with automated stock updates and real-time low-stock warnings.
+* **AI-Driven Restock Ingestion:** OCR receipt parsing via Spring AI to automatically update wholesale inventory stock and pricing.
 * **Multi-User Concurrency:** Concurrency-safe relational database design preventing transaction collisions across multiple counter registers.
-* **Store Analytics:** Executive dashboard reporting revenue, cost of goods sold (COGS), profit margins, and remaining stock valuation over custom date ranges.
+* **Store Analytics:** Executive dashboard reporting revenue, cost of goods sold (COGS), profit margins, and remaining stock valuation.
 
 ---
 
 ## 🛠️ Technology Stack
 
 | Layer | Technology / Framework |
-| :--- | :--- |
-| **Frontend** | Angular, TypeScript, HTML5/SCSS, Bootstrap / Tailwind CSS |
-| **Backend** | Java 17+, Spring Boot (REST API, Spring Security, Spring Data JPA) |
-| **AI Integration** | Spring AI (OpenAI / Ollama API for OCR receipt parsing & demand forecasting) |
-| **Database** | TBD |
-| **Build & CI/CD** | Apache Maven, GitHub Actions, JaCoCo, JUnit 5, Mockito |
-| **IDEs** | IntelliJ IDEA (Backend preference) / VS Code (Frontend preference) |
-
----
-
-## 🔒 Security Highlights
-
-* **Stateless JWT Authentication:** Secure session management for Angular SPA and Spring Boot REST API communication.
-* **Password Hashing:** Strong cryptographic password encryption utilizing **BCrypt**.
-* **Role-Based Access Control (RBAC):** Strict method- and endpoint-level authorization separating `ROLE_ADMIN`, `ROLE_MANAGER`, and `ROLE_CASHIER`.
-* **API Validation:** Payload sanitization, CORS protection, and secure file-upload handling for AI receipt uploads.
+| --- | --- |
+| **Frontend** | Angular 21.2, TypeScript, HTML5/SCSS |
+| **Backend** | Java 21 (LTS), Spring Boot 4.1 (`web`, `data-jpa`, `actuator`, `security`) |
+| **API Docs & Testing** | SpringDoc OpenAPI 3.1, Scalar UI, Postman |
+| **Database & Migrations** | MySQL 8.4 (InnoDB), Flyway Database Migrations |
+| **Security** | Stateless JWT (BCrypt Password Hashing, RBAC) |
+| **Containerization** | Docker, Docker Compose, NGINX Reverse Proxy |
+| **Build Tools** | Apache Maven, npm / Angular CLI |
 
 ---
 
 ## 👥 Team & Roles
 
-* **Sara Orion** – *Team Leader & Security Leader* (`srorion@bu.edu`)
-* **Krizma Nagi** – *Requirement Leader* (`nagikriz@bu.edu`)
-* **Kimleng Lim** – *Design & Implementation Leader* (`kimleng@bu.edu`)
-* **Andy Chang** – *Configuration Leader* (`achang3@bu.edu`)
-* **Italia Tran** – *QA Leader* (`intran@bu.edu`)
+* **Sara Orion** – *Team Leader & Security Leader*
+* **Krizma Nagi** – *Requirement Leader*
+* **Kimleng Lim** – *Design & Implementation Leader*
+* **Andy Chang** – *Configuration Leader*
+* **Italia Tran** – *QA Leader*
+
 
 ---
 
-## 📁 Repository Structure
+## 📁 Monorepo Structure
 
 ```text
-TBD
+code/
+├── docker-compose.yml         # Multi-container orchestrator (MySQL, API, Web)
+├── api/                       # Spring Boot 4 + Java 21 REST API
+│   ├── README.md              # Backend API README documentation
+│   ├── Dockerfile             # Multi-stage JDK 21 build definition
+│   ├── pom.xml                # Maven dependencies (Spring Boot, MySQL, Flyway, Scalar)
+│   ├── docs/                  # Postman collections, environments, PlantUML diagrams & IDE code styles
+│   └── src/                   # Backend Java source code & Flyway migrations
+└── bluejay-webui/             # Angular Web Application
+    ├── README.md              # Frontend Web UI README documentation
+    ├── Dockerfile             # Multi-stage build (Node.js compile -> NGINX host)
+    ├── nginx.conf             # NGINX reverse proxy setup (routes /api to backend)
+    ├── package.json           # Frontend dependencies & scripts
+    └── src/                   # Frontend TypeScript, HTML, & CSS source
 ```
 
 ---
 
-## 🚀 Getting Started (Development Setup)
+## 🚀 Quick Start (Development Setup)
 
-### Prerequisites
+### System Prerequisites
 
-* **Java Development Kit (JDK):** Version 17 or higher
-* **Node.js & NPM:** Node LTS (v18+) and NPM
-* **Angular CLI:** `npm install -g @angular/cli`
-* **PostgreSQL / H2:** Local relational database instance
+* **Java Development Kit (JDK):** Version 21
+* **Node.js & npm:** Node.js `v20.19.0+` or `>= v24.0.0` with npm `>= 8.0.0`
+* **Angular CLI:** `npm install -g @angular/cli@21`
+* **Docker Desktop & Docker Compose**
 
-### Backend Setup (Spring Boot)
+### 1. Launch Containerized Stack (Full Docker)
 
-TBD
+To spin up MySQL 8.4, the Spring Boot API, and the Angular Web UI simultaneously:
 
-### Frontend Setup (Angular)
+```bash
+docker compose up -d --build
+```
 
-TBD
+Access services:
+
+* **Web UI (Angular / NGINX):** [http://localhost:4200/](http://localhost:4200/)
+* **API Health Actuator:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
+* **OpenAPI Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+* **Scalar API Reference:** [http://localhost:8080/scalar](http://localhost:8080/scalar)
+
+
+### 2. Launch Hybrid Development Mode (Rapid Iteration)
+
+* **Start Database:** `docker compose up -d db`
+* **Backend API:** Ensure local `application.yaml` points to `localhost:3306`. Run `BluejayApplication.java` from IntelliJ or execute `./mvnw spring-boot:run` inside `api/`.
+* **Frontend Web UI:** Run `npm start` inside `bluejay-webui/` to launch at `http://localhost:4200` with local proxy configuration.
 
 ---
 
@@ -88,9 +109,9 @@ TBD
 * **`feature/<feature-name>`**: Topic branches for isolated user story implementations.
 * **Pull Requests (PRs):** Direct commits to `main` and `develop` are restricted. All feature code must be submitted via PR, pass automated CI test suites, and receive peer review approval prior to merging.
 
+
 ---
 
 ## 📝 License & Acknowledgments
 
-This project is developed as part of the BU MET CS673 Software Engineering course. Built upon foundational domain concepts from the BU MET CS622 term project prototype baseline.
-
+This project is developed as part of the BU MET CS673 Software Engineering course. Built upon foundational domain concepts from the BU MET CS622 term project prototype baseline [JPOS](https://github.com/kim-0x/jpos).

@@ -3,11 +3,11 @@
 
 ## 1. Structure Overview
 
-| Hierarchy | GitHub Element | Label / Structure | Scope / Description |
-| --- | --- | --- | --- |
-| **Epic** | Issue | `type: epic` | High-level feature or capability. Contains tracked User Stories in a Markdown task list. |
-| **User Story** | Issue | `type: user-story` | A single piece of user functionality. Contains acceptance criteria and subtasks. |
-| **Task** | Sub-Issue / Tasklist | `- [ ] Task name` | Technical step required to implement a User Story. |
+| Hierarchy      | GitHub Element       | Label / Structure  | Scope / Description                                                                      |
+|----------------|----------------------|--------------------|------------------------------------------------------------------------------------------|
+| **Epic**       | Issue                | `type: epic`       | High-level feature or capability. Contains tracked User Stories in a Markdown task list. |
+| **User Story** | Issue                | `type: user-story` | A single piece of user functionality. Contains acceptance criteria and subtasks.         |
+| **Task**       | Sub-Issue / Tasklist | `- [ ] Task name`  | Technical step required to implement a User Story.                                       |
 
 ---
 
@@ -104,6 +104,11 @@ When a User Story becomes large or requires multiple engineers, convert its task
 
 ## 4. Best Practices 
 
-* **Always Link Upwards:** When creating a User Story, paste its `#number` into the parent Epic's tasklist. GitHub will automatically create a bi-directional link between them.
+* **Icebox First:** All newly created User Stories must initially sit in the **Icebox** column on the GitHub Project Board until prioritized.
+* **Story Points Required:** Every User Story must have a **Story Point** estimate set in the GitHub Project board before moving to `In Progress`.
+* **Features Only:** User Stories must represent user-facing functional value. Do NOT create User Stories for technical setup (e.g., "Set up DB")—use subtasks or standalone Task issues instead.
+* **Dual Iteration Tracking:** Every User Story accepted into an iteration MUST have both fields assigned:
+   1. **Iteration:** `Iteration X` (for Project Board tracking and burn-down charts)
+   2. **Milestone:** `Release X.0` (for class deliverable and release progress tracking)
+* **Always Link Upwards:** When creating a User Story, paste its `#number` into the parent Epic's tasklist. GitHub will automatically create a bidirectional link between them.
 * **Don't Over-Convert Tasks:** Keep tasks inside the User Story as simple checklist items *unless* they need to be assigned to a different developer, tracked across different sprints, or require detailed discussion.
-* **Set Milestones at the Story Level:** Assign `Milestone` (e.g., `iterationX`) to User Stories rather than Epics. This provides accurate progress bars on the release dashboard.

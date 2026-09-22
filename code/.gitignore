@@ -1,0 +1,22 @@
+# Build outputs
+api/target/
+web/dist/
+web/node_modules/
+api/.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IDE Projects ###
+# Add any IDE project files if using a different IDE
+
+# IntelliJ IDEA
+.idea
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+
+# Ignore macOS system files
+.DS_Store

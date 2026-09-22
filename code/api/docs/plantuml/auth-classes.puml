@@ -1,0 +1,148 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+' --- CLASSES & RECORDS ---
+
+class AuthController {
+  - authService: AuthService
+  + login(LoginRequest): ResponseEntity<ApiResponse<AuthResponse>>
+}
+
+interface AuthService << interface >> {
+  + login(LoginRequest): AuthResponse
+}
+
+class AuthServiceImpl {
+  - authenticationManager: AuthenticationManager
+  - tokenProvider: JwtTokenProvider
+  + login(LoginRequest): AuthResponse
+}
+
+record AuthResponse << record >> {
+  - username: String
+  - token: String
+  - tokenType: String
+  - expiresIn: Long
+  + of(String, String, Long): AuthResponse
+}
+
+record LoginRequest << record >> {
+  - username: String
+  - password: String
+}
+
+class JwtTokenProvider {
+  - key: SecretKey
+  - expirationMs: long
+  + generateToken(Authentication): String
+  + getUsernameFromToken(String): String
+  + validateToken(String): boolean
+}
+
+class JwtAuthenticationFilter {
+  - tokenProvider: JwtTokenProvider
+  - userDetailsService: UserDetailsService
+  - AUTHORIZATION_HEADER: String
+  - BEARER_PREFIX: String
+  # doFilterInternal(HttpServletRequest, HttpServletResponse, FilterChain): void
+  - parseJwt(HttpServletRequest): String?
+}
+
+class SecurityConfig {
+  - jwtAuthenticationFilter: JwtAuthenticationFilter
+  + securityFilterChain(HttpSecurity): SecurityFilterChain
+  + corsConfigurationSource(): CorsConfigurationSource
+  + passwordEncoder(): PasswordEncoder
+  + authenticationManager(AuthenticationConfiguration): AuthenticationManager
+}
+
+class UserDetailsServiceImpl {
+  - userRepository: UserRepository
+  + loadUserByUsername(String): UserDetails
+}
+
+interface UserRepository << interface >> {
+  + findByUsernameWithRolesAndPermissions(String): Optional<User>
+}
+
+record CustomUserDetails << record >> {
+  - userId: UUID
+  - username: String
+  - passwordHash: String
+  - enabled: boolean
+  - authorities: Set<GrantedAuthority>
+  - extractAuthorities(User): Set<GrantedAuthority>
+}
+
+' --- DOMAIN ENTITIES WITH JPA / DB TABLE MAPPINGS ---
+
+entity User << Table: users >>  {
+  - id: UUID <<PK>>
+  - username: String <<UQ, Not Null>>
+  - passwordHash: String <<Not Null>>
+  - enabled: Boolean <<Not Null>>
+  - createdAt: LocalDateTime <<Not Null>>
+  - roles: Set<Role>
+  + builder(): UserBuilder
+}
+
+entity Role << Table: roles >> {
+  - id: Long <<PK, AutoIncrement>>
+  - name: String <<UQ, Not Null>>
+  - description: String
+  - permissions: Set<Permission>
+  + builder(): RoleBuilder
+}
+
+entity Permission << Table: permissions >> {
+  - id: Long <<PK, AutoIncrement>>
+  - name: String <<UQ, Not Null>>
+  - description: String
+  + builder(): PermissionBuilder
+}
+
+' --- EXTERNAL INTERFACES (SPRING SECURITY) ---
+interface UserDetailsService << interface >> {
+  + loadUserByUsername(String): UserDetails
+}
+
+interface UserDetails << interface >> {
+}
+
+' --- RELATIONSHIPS ---
+
+' Structural Associations (Field Injections / Inclusions)
+AuthController          "1" --> "1" AuthService             : authService
+AuthServiceImpl         "1" --> "1" JwtTokenProvider        : tokenProvider
+JwtAuthenticationFilter "1" --> "1" JwtTokenProvider        : tokenProvider
+JwtAuthenticationFilter "1" --> "1" UserDetailsService      : userDetailsService
+SecurityConfig          "1" --> "1" JwtAuthenticationFilter : jwtAuthenticationFilter
+UserDetailsServiceImpl "1" --> "1" UserRepository          : userRepository
+
+' --- JUNCTION TABLES (MANY-TO-MANY RELATIONSHIPS) ---
+
+User "1" *-- "*" Role : user_roles\n(user_id <<FK>>, role_id <<FK>>) >
+Role "1" *-- "*" Permission : role_permissions\n(role_id <<FK>>, permission_id <<FK>>) >
+
+' Interface Realizations
+AuthServiceImpl        ..|> AuthService
+UserDetailsServiceImpl ..|> UserDetailsService
+CustomUserDetails      ..|> UserDetails
+
+' Behavioral Dependencies (Method Inputs / Outputs)
+AuthController          ..> LoginRequest : uses
+AuthController          ..> AuthResponse : returns
+AuthService             ..> LoginRequest : accepts
+AuthService             ..> AuthResponse : returns
+AuthServiceImpl         ..> LoginRequest : accepts
+AuthServiceImpl         ..> AuthResponse : returns
+AuthServiceImpl         ..> CustomUserDetails : authenticates
+
+UserDetailsServiceImpl  ..> UserRepository : queries
+UserRepository          ..> User : retrieves
+CustomUserDetails       ..> User : constructs from
+
+@enduml

@@ -21,6 +21,7 @@ jobs:
       with:
         node-version: 'latest'
         cache: 'npm'
+        cache-dependency-path: ./code/bluejay-webui/package-lock.json
 
     # 3. Compile the code using working-directory
     - name: Npm install

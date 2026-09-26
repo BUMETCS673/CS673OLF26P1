@@ -1,0 +1,33 @@
+name: Frontend CI Test (Frontend)
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Check out the source code
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Install and configure Node.js
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'latest'
+        cache: 'npm'
+
+    # 3. Compile the code using working-directory
+    - name: Npm install
+      working-directory: code/bluejay-webui
+      run: npm i
+
+    # 4. Execute Tests
+    - name: Run Tests
+      working-directory: code/bluejay-webui
+      run: npm run-script test

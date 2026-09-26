@@ -25,7 +25,19 @@ import { AuthService } from './auth.service';
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
-
+  let store: { [key: string]: string } = {};
+  const mockLocalStorage = {
+    getItem: (key: string): string | null => key in store ? store[key] : null,
+    setItem: (key: string, value: string) => store[key] = `${value}`,
+    removeItem: (key: string) => delete store[key],
+    clear: () => store = {}
+  };
+  
+  Object.defineProperty(window, 'localStorage', {
+    value: mockLocalStorage,
+    writable: true
+  });
+  
   const AUTH_DATA_KEY = 'auth-data';
 
   beforeEach(() => {

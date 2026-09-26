@@ -18,6 +18,7 @@ jobs:
     # 2. Install and configure Node.js
     - name: Use Node.js
       uses: actions/setup-node@v4
+      working-directory: code/bluejay-webui
       with:
         node-version: 'latest'
         cache: 'npm'

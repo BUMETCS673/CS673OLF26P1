@@ -9,7 +9,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../../services/auth.service';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 // AI-ASSISTED: YES
@@ -20,14 +23,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 // - Added form validation, loading state, authentication submission, and navigation/error handling
 // - Feature 18: injects ActivatedRoute and shows an info message when redirected by the idle timer or after a manual logout
 // Verification:
-// - Verified by Angular build validation, login.component.spec.ts and manual browser test
+// - Verified by Angular build validation, login-page.component.spec.ts and manual browser test
 // Confidence: High
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  templateUrl: './login-page.component.html',
+  styleUrls: ['./login-page.component.scss'],
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
@@ -52,7 +55,7 @@ export class LoginComponent {
   // - Maps reason=logout to "You have been logged out successfully" after a reviewer suggestion
   // - Uses a Map so unknown reason values show no message
   // Verification:
-  // - login.component.spec.ts and manual browser test
+  // - login-page.component.spec.ts and manual browser test
   // Confidence: High
   private readonly reasonMessages = new Map<string, string>([
     ['inactivity', 'Session Expired due to inactivity'],

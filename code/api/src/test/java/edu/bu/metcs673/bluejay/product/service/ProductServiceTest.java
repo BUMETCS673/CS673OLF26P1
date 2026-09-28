@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ProductServiceTest {
@@ -34,15 +35,18 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should create product when all fields are valid")
     public void shouldCreateProductWhenAllFieldsAreValid() {
-        Product product = new Product();
-        product.setBarcode("barcode-test-12345");
-        product.setName("Milk");
-        product.setCategoryId(1);
+        CreateProductDto productDto = new CreateProductDto();
+        productDto.setBarcode("barcode-test-12345");
+        productDto.setName("Milk");
+        productDto.setCategoryId(1);
 
-        Product result = productService.createProduct(product);
+        Product product = productService.createProduct(productDto);
 
-        assertNotNull(result);
-        assertNotNull(result.getId());
+        assertNotNull(product);
+        assertNotNull(product.getId());
+        assertEquals("barcode-test-12345", product.getBarcode());
+        assertEquals("Milk", product.getName());
+        assertEquals(1, product.getCategoryId());
     }
 
     private static class MockProductRepository implements ProductRepository {

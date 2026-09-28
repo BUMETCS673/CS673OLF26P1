@@ -8,6 +8,7 @@ package edu.bu.metcs673.bluejay.product.service;
 
 import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductDto;
+import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.AfterEach;
@@ -16,10 +17,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ProductServiceTest {
     private ProductRepository productRepository;
@@ -54,6 +55,17 @@ public class ProductServiceTest {
         assertEquals(1, product.getCategoryId());
     }
 
+    @Test
+    @DisplayName("Should throw exception when create product with duplicated barcode")
+    public void shouldThrowExceptionWhenCreateProductWithDuplicateBarcode() {
+        CreateProductDto productDto = new CreateProductDto();
+        productDto.setBarcode("barcode-existed-12345");
+        productDto.setName("Chocolate Milk");
+        productDto.setCategoryId(1);
+
+        assertThrows(ProductAlreadyExistedException.class, () -> productService.createProduct(productDto));
+    }
+
     private static class MockProductRepository implements ProductRepository {
         private final ArrayList<Product> products = new ArrayList<>();
 
@@ -64,7 +76,14 @@ public class ProductServiceTest {
             p1.setName("product-mock");
             p1.setCategoryId(1);
 
+            Product p2 = new Product();
+            p2.setId(UUID.randomUUID());
+            p2.setBarcode("barcode-existed-12345");
+            p2.setName("product-existed");
+            p2.setCategoryId(1);
+
             products.add(p1);
+            products.add(p2);
         }
 
         void reset() {
@@ -78,6 +97,13 @@ public class ProductServiceTest {
             product.setId(UUID.randomUUID());
             products.add(product);
             return product;
+        }
+
+        @Override
+        public Optional<Product> getProductBy(String barcode) {
+             return products.stream()
+                    .filter(p -> p.getBarcode().equals(barcode))
+                    .findFirst();
         }
     }
 }

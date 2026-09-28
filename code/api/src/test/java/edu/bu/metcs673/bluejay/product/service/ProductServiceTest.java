@@ -6,6 +6,9 @@
 
 package edu.bu.metcs673.bluejay.product.service;
 
+import edu.bu.metcs673.bluejay.product.domain.Product;
+import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
+import edu.bu.metcs673.bluejay.product.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ProductServiceTest {
-    private final MockProductRepository productRepository;
+    private final ProductRepository productRepository;
     private final ProductService productService;
 
     @BeforeEach
@@ -40,5 +43,9 @@ public class ProductServiceTest {
 
         assertNotNull(result);
         assertNotNull(result.getId());
+    }
+
+    private static class MockProductRepository implements ProductRepository {
+
     }
 }

@@ -7,6 +7,7 @@
 package edu.bu.metcs673.bluejay.product.service;
 
 import edu.bu.metcs673.bluejay.product.domain.Product;
+import edu.bu.metcs673.bluejay.product.dto.CreateProductDto;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.AfterEach;

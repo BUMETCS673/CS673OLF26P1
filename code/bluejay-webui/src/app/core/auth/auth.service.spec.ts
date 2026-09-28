@@ -11,6 +11,45 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
 
+class InMemoryStorage implements Storage {
+  private readonly entries = new Map<string, string>();
+
+  get length(): number {
+    return this.entries.size;
+  }
+
+  clear(): void {
+    this.entries.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.entries.get(key) ?? null;
+  }
+
+  key(index: number): string | null {
+    return [...this.entries.keys()][index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.entries.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.entries.set(key, value);
+  }
+}
+
+Object.defineProperties(globalThis, {
+  localStorage: {
+    configurable: true,
+    value: new InMemoryStorage(),
+  },
+  sessionStorage: {
+    configurable: true,
+    value: new InMemoryStorage(),
+  },
+});
+
 // AI-ASSISTED: YES
 // Tool: Gemini
 // Prompt Summary: "Create unit test suite for AuthService converting Jasmine matchers to Jest matchers."

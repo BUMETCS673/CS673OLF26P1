@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ProductServiceTest {
-    private final ProductRepository productRepository;
-    private final ProductService productService;
+    private ProductRepository productRepository;
+    private ProductService productService;
 
     @BeforeEach
     public void setup() {
@@ -30,7 +30,8 @@ public class ProductServiceTest {
 
     @AfterEach
     public void teardown() {
-        productRepository.reset();
+        MockProductRepository repository = (MockProductRepository) productRepository;
+        repository.reset();
     }
 
     @Test
@@ -51,6 +52,8 @@ public class ProductServiceTest {
     }
 
     private static class MockProductRepository implements ProductRepository {
+        void reset() {
 
+        }
     }
 }

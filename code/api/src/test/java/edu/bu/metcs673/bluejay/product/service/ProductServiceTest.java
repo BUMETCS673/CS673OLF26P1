@@ -15,6 +15,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -52,8 +55,29 @@ public class ProductServiceTest {
     }
 
     private static class MockProductRepository implements ProductRepository {
-        void reset() {
+        private final ArrayList<Product> products = new ArrayList<>();
 
+        public MockProductRepository() {
+            Product p1 = new Product();
+            p1.setId(UUID.randomUUID());
+            p1.setBarcode("barcode-mock-12345");
+            p1.setName("product-mock");
+            p1.setCategoryId(1);
+
+            products.add(p1);
+        }
+
+        void reset() {
+            products.clear();
+        }
+
+        @Override
+        public Product addProduct(Product product) {
+            // Should create new entity in real database implementation
+            // rather than update Product domain class
+            product.setId(UUID.randomUUID());
+            products.add(product);
+            return product;
         }
     }
 }

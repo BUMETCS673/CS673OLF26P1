@@ -6,10 +6,18 @@ import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 
 public class ProductServiceImpl implements ProductService {
-    public ProductServiceImpl(ProductRepository productRepository) {}
+    private final ProductRepository _productRepository;
+    public ProductServiceImpl(ProductRepository productRepository) {
+        _productRepository = productRepository;
+    }
 
     @Override
     public Product createProduct(CreateProductDto productDto) {
-        return null;
+        Product product = new Product();
+        product.setBarcode(productDto.getBarcode());
+        product.setName(productDto.getName());
+        product.setCategoryId(productDto.getCategoryId());
+
+        return _productRepository.addProduct(product);
     }
 }

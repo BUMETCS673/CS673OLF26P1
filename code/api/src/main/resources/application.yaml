@@ -59,7 +59,7 @@ scalar:
   actuatorEnabled: true
 
   # Hides the interactive "Test Request" / API client panel in Scalar
-  hideTestRequestButton: true
+  hideTestRequestButton: false
 
   # Allows readers to download the openapi.json or openapi.yaml directly from Scalar UI
   documentDownloadType: both

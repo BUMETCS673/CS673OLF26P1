@@ -1,0 +1,81 @@
+// AI-ASSISTED: YES
+// Tool: Github Copilot
+// Prompt Summary: "Style the login form for a centered, accessible authentication view"
+// AI Contribution: Login layout and visual styling (~90%)
+// Modifications:
+//   - Added centered form layout, field styling, validation states, and button states
+// Verification:
+//   - Verified by Angular build validation
+// Confidence: High
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--mat-sys-surface-container-low);
+  box-sizing: border-box;
+}
+
+.login-panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 420px;
+  padding: 36px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  background: var(--mat-sys-surface);
+  box-shadow: 0 12px 36px rgb(30 54 76 / 8%);
+}
+
+.login-heading {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  color: var(--mat-sys-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 8px 0 0;
+  color: var(--mat-sys-on-surface);
+  font-size: 26px;
+  font-weight: 650;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.error {
+  color: var(--mat-sys-error);
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.info {
+  color: var(--mat-sys-primary);
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+button {
+  min-height: 44px;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .login-panel {
+    padding: 28px 22px;
+  }
+}

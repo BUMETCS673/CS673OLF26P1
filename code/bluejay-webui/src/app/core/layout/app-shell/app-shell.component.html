@@ -1,0 +1,17 @@
+<div class="app-shell">
+  <app-sidebar />
+  <div class="workspace">
+    <mat-toolbar class="app-header">
+      <div class="brand-lockup">
+        <span class="app-name">Bluejay Web UI</span>
+        <span class="app-subtitle">Grocery Operations</span>
+      </div>
+      <span class="header-spacer"></span>
+      <span class="username">{{ username }}</span>
+      <button mat-button type="button" (click)="logout()">Log out</button>
+    </mat-toolbar>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

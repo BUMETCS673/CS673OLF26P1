@@ -8,7 +8,7 @@ package edu.bu.metcs673.bluejay.product.service.impl;
 
 import edu.bu.metcs673.bluejay.product.domain.Category;
 import edu.bu.metcs673.bluejay.product.domain.Product;
-import edu.bu.metcs673.bluejay.product.dto.CreateProductDto;
+import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
@@ -24,7 +24,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product createProduct(CreateProductDto productDto) {
+    public Product createProduct(CreateProductWithCategoryDto productDto) {
         Product product = new Product();
         product.setBarcode(productDto.getBarcode());
         product.setName(productDto.getName());

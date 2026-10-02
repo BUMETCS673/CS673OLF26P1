@@ -8,7 +8,7 @@ package edu.bu.metcs673.bluejay.product.service;
 
 import edu.bu.metcs673.bluejay.product.domain.Category;
 import edu.bu.metcs673.bluejay.product.domain.Product;
-import edu.bu.metcs673.bluejay.product.dto.CreateProductDto;
+import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
@@ -48,7 +48,7 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should create product when all fields are valid")
     public void shouldCreateProductWhenAllFieldsAreValid() {
-        CreateProductDto productDto = new CreateProductDto();
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
         productDto.setBarcode("barcode-test-12345");
         productDto.setName("Milk");
         productDto.setCategoryId(1);
@@ -65,7 +65,7 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should throw exception when create product with duplicated barcode")
     public void shouldThrowExceptionWhenCreateProductWithDuplicateBarcode() {
-        CreateProductDto productDto = new CreateProductDto();
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
         productDto.setBarcode("barcode-existed-12345");
         productDto.setName("Chocolate Milk");
         productDto.setCategoryId(1);
@@ -76,7 +76,7 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should add new product with newly created category if category doesn't exist")
     public void shouldAddNewCategoryToProductWhenProductCategoryNotExist() {
-        CreateProductDto productDto = new CreateProductDto();
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
         productDto.setBarcode("barcode-test-12345");
         productDto.setName("Soy Milk");
         productDto.setCategoryName("test-new-category");
@@ -94,7 +94,7 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should save product category description when provided")
     public void shouldSaveOptionalCategoryDescriptionWhenDescriptionIsEmpty() {
-        CreateProductDto productDto = new CreateProductDto();
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
         productDto.setBarcode("barcode-test-12345");
         productDto.setName("Oat Milk");
         productDto.setCategoryName("test-new-category");

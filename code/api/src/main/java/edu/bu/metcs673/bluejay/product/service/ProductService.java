@@ -7,8 +7,8 @@
 package edu.bu.metcs673.bluejay.product.service;
 
 import edu.bu.metcs673.bluejay.product.domain.Product;
-import edu.bu.metcs673.bluejay.product.dto.CreateProductDto;
+import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 
 public interface ProductService {
-    Product createProduct(CreateProductDto productDto);
+    Product createProduct(CreateProductWithCategoryDto productDto);
 }

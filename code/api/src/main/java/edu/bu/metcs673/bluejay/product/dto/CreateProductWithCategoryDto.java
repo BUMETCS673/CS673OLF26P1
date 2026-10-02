@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class CreateProductDto {
+public class CreateProductWithCategoryDto {
     private String name;
     private String barcode;
     private int categoryId;

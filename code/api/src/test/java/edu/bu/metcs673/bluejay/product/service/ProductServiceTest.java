@@ -91,6 +91,26 @@ public class ProductServiceTest {
         assertEquals("test-new-category", category.getName());
     }
 
+    @Test
+    @DisplayName("Should save product category description when provided")
+    public void shouldSaveOptionalCategoryDescriptionWhenDescriptionIsEmpty() {
+        CreateProductDto productDto = new CreateProductDto();
+        productDto.setBarcode("barcode-test-12345");
+        productDto.setName("Oat Milk");
+        productDto.setCategoryName("test-new-category");
+        productDto.setCategoryDescription("test-description-category");
+
+        Product product = productService.createProduct(productDto);
+        assertNotNull(product);
+        assertNotNull(product.getId());
+        assertEquals("barcode-test-12345", product.getBarcode());
+        assertEquals("Oat Milk", product.getName());
+        Category category = product.getCategory();
+        assertNotNull(category);
+        assertEquals("test-new-category", category.getName());
+        assertEquals("test-description-category", category.getDescription());
+    }
+
     private static class MockProductRepository implements ProductRepository {
         private final ArrayList<Product> products = new ArrayList<>();
 

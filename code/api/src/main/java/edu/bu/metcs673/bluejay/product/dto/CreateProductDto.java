@@ -16,4 +16,5 @@ public class CreateProductDto {
     private String barcode;
     private int categoryId;
     private String categoryName;
+    private String categoryDescription;
 }

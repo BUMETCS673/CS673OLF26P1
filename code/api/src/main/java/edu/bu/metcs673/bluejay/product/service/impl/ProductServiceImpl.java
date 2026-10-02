@@ -43,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
 
         var categoryEntity = new Category();
         categoryEntity.setName(productDto.getCategoryName());
+        categoryEntity.setDescription(productDto.getCategoryDescription());
         var category = _categoryRepository.addCategory(categoryEntity);
         product.setCategoryId(category.getId());
         product.setCategory(category);

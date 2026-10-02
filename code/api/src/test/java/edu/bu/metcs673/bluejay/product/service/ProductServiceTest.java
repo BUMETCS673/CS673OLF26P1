@@ -6,9 +6,11 @@
 
 package edu.bu.metcs673.bluejay.product.service;
 
+import edu.bu.metcs673.bluejay.product.domain.Category;
 import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
+import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.AfterEach;
@@ -24,18 +26,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ProductServiceTest {
     private ProductRepository productRepository;
+    private CategoryRepository categoryRepository;
     private ProductService productService;
 
     @BeforeEach
     public void setup() {
         productRepository = new MockProductRepository();
-        productService = new ProductServiceImpl(productRepository);
+        categoryRepository = new MockCategoryRepository();
+        productService = new ProductServiceImpl(productRepository,  categoryRepository);
     }
 
     @AfterEach
     public void teardown() {
         MockProductRepository repository = (MockProductRepository) productRepository;
         repository.reset();
+
+        MockCategoryRepository cRepository = (MockCategoryRepository) categoryRepository;
+        cRepository.reset();
     }
 
     @Test
@@ -81,8 +88,7 @@ public class ProductServiceTest {
         assertEquals("Soy Milk", product.getName());
         Category category = product.getCategory();
         assertNotNull(category);
-        assertNotNull(product.getCategoryId());
-        assertEquals("test-name-category", category.getName());
+        assertEquals("test-new-category", category.getName());
     }
 
     private static class MockProductRepository implements ProductRepository {
@@ -123,6 +129,37 @@ public class ProductServiceTest {
              return products.stream()
                     .filter(p -> p.getBarcode().equals(barcode))
                     .findFirst();
+        }
+    }
+
+    private static class MockCategoryRepository implements CategoryRepository {
+        private final ArrayList<Category> categories = new ArrayList<>();
+
+        public MockCategoryRepository() {
+            Category c1 = new Category();
+            c1.setId(1);
+            c1.setName("test-category");
+            c1.setDescription("test-description");
+
+            categories.add(c1);
+        }
+
+        @Override
+        public Category addCategory(Category category) {
+            category.setId(9999);
+            categories.add(category);
+            return category;
+        }
+
+        @Override
+        public Optional<Category> getCategoryBy(int categoryId) {
+            return categories.stream()
+                    .filter(c -> c.getId() == categoryId)
+                    .findFirst();
+        }
+
+        public void reset() {
+            categories.clear();
         }
     }
 }

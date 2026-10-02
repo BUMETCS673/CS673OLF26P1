@@ -9,14 +9,10 @@ package edu.bu.metcs673.bluejay.product.domain;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
-
-@Setter
 @Getter
-public class Product {
-    private UUID id;
+@Setter
+public class Category {
+    private int id;
     private String name;
-    private String barcode;
-    private int categoryId;
-    private Category category;
+    private String description;
 }

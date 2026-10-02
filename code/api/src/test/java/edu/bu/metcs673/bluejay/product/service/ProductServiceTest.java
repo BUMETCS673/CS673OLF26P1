@@ -66,6 +66,25 @@ public class ProductServiceTest {
         assertThrows(ProductAlreadyExistedException.class, () -> productService.createProduct(productDto));
     }
 
+    @Test
+    @DisplayName("Should add new product with newly created category if category doesn't exist")
+    public void shouldAddNewCategoryToProductWhenProductCategoryNotExist() {
+        CreateProductDto productDto = new CreateProductDto();
+        productDto.setBarcode("barcode-test-12345");
+        productDto.setName("Soy Milk");
+        productDto.setCategoryName("test-new-category");
+
+        Product product = productService.createProduct(productDto);
+        assertNotNull(product);
+        assertNotNull(product.getId());
+        assertEquals("barcode-test-12345", product.getBarcode());
+        assertEquals("Soy Milk", product.getName());
+        Category category = product.getCategory();
+        assertNotNull(category);
+        assertNotNull(product.getCategoryId());
+        assertEquals("test-name-category", category.getName());
+    }
+
     private static class MockProductRepository implements ProductRepository {
         private final ArrayList<Product> products = new ArrayList<>();
 

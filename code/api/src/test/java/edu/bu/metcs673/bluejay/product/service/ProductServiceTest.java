@@ -167,6 +167,11 @@ public class ProductServiceTest {
                     .filter(p -> p.getBarcode().equals(barcode))
                     .findFirst();
         }
+
+        @Override
+        public List<Product> getProducts() {
+            return List.of();
+        }
     }
 
     private static class MockCategoryRepository implements CategoryRepository {

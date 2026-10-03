@@ -11,11 +11,15 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
+import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
+import edu.bu.metcs673.bluejay.product.exception.UnknownProductCategoryException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository _productRepository;
@@ -56,6 +60,30 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> getProducts() {
-        return List.of();
+        List<Product> products = _productRepository.getProducts();
+
+        if (products.isEmpty()) {
+            throw new ProductNotFoundException();
+        }
+
+        List<ProductDto> result = new ArrayList<>();
+        for (Product p : products) {
+            Optional<Category> c = _categoryRepository.getCategoryBy(p.getCategoryId());
+            if (c.isEmpty()) {
+                throw new UnknownProductCategoryException(p.getCategoryId());
+            }
+
+            var dto = new ProductDto();
+            dto.setId(p.getId());
+            dto.setName(p.getName());
+            dto.setBarcode(p.getBarcode());
+            dto.setCategoryId(p.getCategoryId());
+            dto.setCategoryName(c.get().getName());
+            dto.setCategoryDescription(c.get().getDescription());
+
+            result.add(dto);
+        }
+
+        return result;
     }
 }

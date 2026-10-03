@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate # Prevents Hibernate from interfering with Flyway migrations
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration   # Points to src/main/resources/db/migration

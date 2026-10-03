@@ -1,7 +1,7 @@
-// AI-ASSISTED: NO
-// Tool: NO
-// Prompt Summary: "N/A"
-// AI Contribution: 0%
+// AI-ASSISTED: YES
+// Tool: GitHub Copilot
+// Prompt Summary: "Refactor product service test to verify paginated retrieval"
+// AI Contribution: Test refactor for paginated retrieval (~35%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.service;
@@ -114,18 +114,20 @@ public class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("Should return top 1000 list of product with category when there are records in database")
-    public void shouldReturnTop1000ProductsWithCategoryWhenHasRecords() {
-        List<ProductDto> products = productService.getProducts();
+    @DisplayName("Should return products with category when requested page has records")
+    public void shouldReturnProductsWithCategoryWhenRequestedPageHasRecords() {
+        List<ProductDto> products = productService.getProducts(2, 1);
 
         assertNotNull(products);
         assertFalse(products.isEmpty());
-        assertTrue(products.size() <= 1000);
+        assertEquals(1, products.size());
 
         ProductDto firstProduct = products.getFirst();
         assertNotNull(firstProduct);
         assertNotNull(firstProduct.getId());
+        assertEquals("product-existed", firstProduct.getName());
         assertTrue(firstProduct.getCategoryId() > 0);
+        assertEquals("test-category", firstProduct.getCategoryName());
     }
 
     private static class MockProductRepository implements ProductRepository {
@@ -169,8 +171,14 @@ public class ProductServiceTest {
         }
 
         @Override
-        public List<Product> getProducts() {
-            return List.of();
+        public List<Product> getProducts(int pageNumber, int pageSize) {
+            int fromIndex = (pageNumber - 1) * pageSize;
+            if (fromIndex >= products.size()) {
+                return List.of();
+            }
+
+            int toIndex = Math.min(fromIndex + pageSize, products.size());
+            return products.subList(fromIndex, toIndex);
         }
     }
 

@@ -1,7 +1,7 @@
-// AI-ASSISTED: NO
-// Tool: NO
-// Prompt Summary: "N/A"
-// AI Contribution: 0%
+// AI-ASSISTED: YES
+// Tool: GitHub Copilot
+// Prompt Summary: "Refactor product retrieval contract to support pagination"
+// AI Contribution: Method signature update for pagination (~15%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.service;
@@ -14,5 +14,5 @@ import java.util.List;
 
 public interface ProductService {
     Product createProduct(CreateProductWithCategoryDto productDto);
-    List<ProductDto> getProducts();
+    List<ProductDto> getProducts(int pageNumber, int pageSize);
 }

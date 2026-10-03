@@ -1,7 +1,7 @@
-// AI-ASSISTED: NO
-// Tool: NO
-// Prompt Summary: "N/A"
-// AI Contribution: 0%
+// AI-ASSISTED: YES
+// Tool: GitHub Copilot
+// Prompt Summary: "Refactor product retrieval service to use pagination"
+// AI Contribution: Pagination refactor and guard clauses (~30%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.service.impl;
@@ -59,8 +59,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getProducts() {
-        List<Product> products = _productRepository.getProducts();
+    public List<ProductDto> getProducts(int pageNumber, int pageSize) {
+        if (pageNumber < 1) {
+            throw new IllegalArgumentException("pageNumber must be greater than 0");
+        }
+
+        if (pageSize < 1) {
+            throw new IllegalArgumentException("pageSize must be greater than 0");
+        }
+
+        List<Product> products = _productRepository.getProducts(
+                pageNumber, pageSize);
 
         if (products.isEmpty()) {
             throw new ProductNotFoundException();

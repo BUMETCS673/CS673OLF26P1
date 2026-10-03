@@ -13,7 +13,9 @@ import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
 import edu.bu.metcs673.bluejay.product.exception.UnknownProductCategoryException;
+import edu.bu.metcs673.bluejay.product.mock.MockPriceBookRepository;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
+import edu.bu.metcs673.bluejay.product.repository.PriceBookRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.impl.ProductServiceImpl;
 import edu.bu.metcs673.bluejay.product.mock.MockCategoryRepository;
@@ -24,19 +26,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ProductServiceTest {
     private ProductRepository productRepository;
     private CategoryRepository categoryRepository;
+    private PriceBookRepository priceBookRepository;
     private ProductService productService;
 
     @BeforeEach
     public void setup() {
         productRepository = new MockProductRepository();
         categoryRepository = new MockCategoryRepository();
-        productService = new ProductServiceImpl(productRepository,  categoryRepository);
+        priceBookRepository = new MockPriceBookRepository();
+        productService = new ProductServiceImpl(productRepository,  categoryRepository, priceBookRepository);
     }
 
     @AfterEach
@@ -46,6 +51,9 @@ public class ProductServiceTest {
 
         MockCategoryRepository cRepository = (MockCategoryRepository) categoryRepository;
         cRepository.reset();
+
+        MockPriceBookRepository pRepository = (MockPriceBookRepository) priceBookRepository;
+        pRepository.reset();
     }
 
     @Test
@@ -149,5 +157,17 @@ public class ProductServiceTest {
 
         assertThrows(UnknownProductCategoryException.class,
                 () -> productService.getProducts(1, 1));
+    }
+
+    @Test
+    @DisplayName("Should return product with details and latest price when multiple prices available")
+    public void shouldReturnProductWithLatestPrice() {
+        ProductDto product = productService.getProductBy(UUID.fromString("12345678-1234-1234-1234-123456789abc"));
+
+        assertNotNull(product);
+        assertNotNull(product.getId());
+        assertEquals("product-mock", product.getName());
+        assertEquals("test-category", product.getCategoryName());
+        assertEquals(3.75, product.getPrice());
     }
 }

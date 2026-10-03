@@ -11,8 +11,10 @@ import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface ProductService {
     Product createProduct(CreateProductWithCategoryDto productDto);
     List<ProductDto> getProducts(int pageNumber, int pageSize);
+    ProductDto getProductBy(UUID id);
 }

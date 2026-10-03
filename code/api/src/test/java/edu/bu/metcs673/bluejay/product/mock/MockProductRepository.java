@@ -19,13 +19,13 @@ public class MockProductRepository implements ProductRepository {
 
     public MockProductRepository() {
         Product p1 = new Product();
-        p1.setId(UUID.randomUUID());
+        p1.setId(UUID.fromString("12345678-1234-1234-1234-123456789abc"));
         p1.setBarcode("barcode-mock-12345");
         p1.setName("product-mock");
         p1.setCategoryId(1);
 
         Product p2 = new Product();
-        p2.setId(UUID.randomUUID());
+        p2.setId(UUID.fromString("12345678-1234-1234-1234-123456789bcd"));
         p2.setBarcode("barcode-existed-12345");
         p2.setName("product-existed");
         p2.setCategoryId(1);
@@ -51,6 +51,13 @@ public class MockProductRepository implements ProductRepository {
     public Optional<Product> getProductBy(String barcode) {
         return products.stream()
                 .filter(p -> p.getBarcode().equals(barcode))
+                .findFirst();
+    }
+
+    @Override
+    public Optional<Product> getProductBy(UUID id) {
+        return products.stream()
+                .filter(p -> p.getId().equals(id))
                 .findFirst();
     }
 

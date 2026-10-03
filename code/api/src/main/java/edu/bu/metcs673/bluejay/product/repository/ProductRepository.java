@@ -10,9 +10,11 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ProductRepository {
     Product addProduct(Product product);
     Optional<Product> getProductBy(String barcode);
+    Optional<Product> getProductBy(UUID id);
     List<Product> getProducts(int pageNumber, int pageSize);
 }

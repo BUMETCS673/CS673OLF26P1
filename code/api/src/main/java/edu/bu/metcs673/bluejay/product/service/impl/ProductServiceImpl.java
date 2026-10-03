@@ -7,27 +7,32 @@
 package edu.bu.metcs673.bluejay.product.service.impl;
 
 import edu.bu.metcs673.bluejay.product.domain.Category;
+import edu.bu.metcs673.bluejay.product.domain.PriceBook;
 import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
 import edu.bu.metcs673.bluejay.product.exception.UnknownProductCategoryException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
+import edu.bu.metcs673.bluejay.product.repository.PriceBookRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository _productRepository;
     private final CategoryRepository _categoryRepository;
+    private final PriceBookRepository _priceBookRepository;
+
     public ProductServiceImpl(ProductRepository productRepository,
-                              CategoryRepository categoryRepository) {
+                              CategoryRepository categoryRepository,
+                              PriceBookRepository priceBookRepository) {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
+        _priceBookRepository = priceBookRepository;
     }
 
     @Override
@@ -94,5 +99,39 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return result;
+    }
+
+    @Override
+    public ProductDto getProductBy(UUID id) {
+        Optional<Product> p = _productRepository.getProductBy(id);
+
+        if (p.isEmpty()) {
+            throw new ProductNotFoundException(id);
+        }
+
+        var product = p.get();
+        Optional<Category> category = _categoryRepository.getCategoryBy(product.getCategoryId());
+        if (category.isEmpty()) {
+            throw new UnknownProductCategoryException(product.getCategoryId());
+        }
+
+        List<PriceBook> priceBooks = _priceBookRepository.getProductPricesBy(id);
+        if (priceBooks.isEmpty()) {
+            throw new MissingProductPriceException(product.getName());
+        }
+
+        Optional<PriceBook> priceBook = priceBooks.stream()
+                .max(Comparator.comparing(PriceBook::getEffectiveAt));
+
+        ProductDto productDto = new ProductDto();
+        productDto.setId(product.getId());
+        productDto.setName(product.getName());
+        productDto.setBarcode(product.getBarcode());
+        productDto.setCategoryId(product.getCategoryId());
+        productDto.setCategoryName(category.get().getName());
+        productDto.setCategoryDescription(category.get().getDescription());
+        productDto.setPrice(priceBook.get().getPrice());
+
+        return productDto;
     }
 }

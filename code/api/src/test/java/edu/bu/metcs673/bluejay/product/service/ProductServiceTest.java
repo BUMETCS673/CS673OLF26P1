@@ -1,7 +1,7 @@
 // AI-ASSISTED: YES
 // Tool: GitHub Copilot
-// Prompt Summary: "Refactor product service test to verify paginated retrieval"
-// AI Contribution: Test refactor for paginated retrieval (~35%)
+// Prompt Summary: "Refactor product service tests for pagination and exceptions"
+// AI Contribution: Test refactor for pagination and exception coverage (~40%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.service;
@@ -11,6 +11,8 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
+import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
+import edu.bu.metcs673.bluejay.product.exception.UnknownProductCategoryException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.impl.ProductServiceImpl;
@@ -127,5 +129,25 @@ public class ProductServiceTest {
         assertEquals("product-existed", firstProduct.getName());
         assertTrue(firstProduct.getCategoryId() > 0);
         assertEquals("test-category", firstProduct.getCategoryName());
+    }
+
+    @Test
+    @DisplayName("Should throw product not found exception when requested page has no records")
+    public void shouldThrowProductNotFoundExceptionWhenRequestedPageHasNoRecords() {
+        MockProductRepository repository = (MockProductRepository) productRepository;
+        repository.reset();
+
+        assertThrows(ProductNotFoundException.class,
+                () -> productService.getProducts(1, 1));
+    }
+
+    @Test
+    @DisplayName("Should throw unknown product category exception when product category does not exist")
+    public void shouldThrowUnknownProductCategoryExceptionWhenProductCategoryDoesNotExist() {
+        MockCategoryRepository repository = (MockCategoryRepository) categoryRepository;
+        repository.reset();
+
+        assertThrows(UnknownProductCategoryException.class,
+                () -> productService.getProducts(1, 1));
     }
 }

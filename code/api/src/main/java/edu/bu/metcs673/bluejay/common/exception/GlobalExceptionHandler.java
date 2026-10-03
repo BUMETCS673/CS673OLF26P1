@@ -4,13 +4,14 @@
 // AI-Assisted Areas: @RestControllerAdvice implementation, MethodArgumentNotValidException extraction
 // Human Contributions: Mapping specific HTTP status codes and error constants
 // Notes: Global exception handler adhering to CS112 formatting and wrapping rules.
-// Authors: Sara Orion
+// Authors: Sara Orion, Krizma Nagi
 
 package edu.bu.metcs673.bluejay.common.exception;
 
 import edu.bu.metcs673.bluejay.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -50,6 +51,27 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
+
+    // AI-ASSISTED: YES
+    // Tool: Claude
+    // Prompt Summary: "Return 403 instead of 500 when @PreAuthorize denies access"
+    // AI Contribution: Handler method (~90%)
+    // Modifications:
+    //   - Needed for Story #57: without it the generic Exception handler
+    //     below turned method-security denials into 500 errors
+    // Verification:
+    //   - ReportControllerTest cashier case expects 403
+    // Confidence: High
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
+        AccessDeniedException ex) {
+        ApiResponse<Void> response = ApiResponse.error(
+            "You do not have permission to access this resource",
+            "ACCESS_DENIED"
+        );
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(

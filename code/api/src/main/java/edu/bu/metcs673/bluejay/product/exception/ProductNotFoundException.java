@@ -1,3 +1,9 @@
+// AI-ASSISTED: NO
+// Tool: NO
+// Prompt Summary: "N/A"
+// AI Contribution: 0%
+// Confidence: High
+
 package edu.bu.metcs673.bluejay.product.exception;
 
 import java.util.UUID;

@@ -1,7 +1,7 @@
 // AI-ASSISTED: YES
 // Tool: GitHub Copilot
-// Prompt Summary: "Refactor product service tests for pagination and exceptions"
-// AI Contribution: Test refactor for pagination and exception coverage (~40%)
+// Prompt Summary: "Add product service tests for pagination and product lookup exceptions"
+// AI Contribution: Test additions for pagination and product lookup exception coverage (~45%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.service;
@@ -10,6 +10,7 @@ import edu.bu.metcs673.bluejay.product.domain.Category;
 import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
 import edu.bu.metcs673.bluejay.product.exception.UnknownProductCategoryException;
@@ -169,5 +170,36 @@ public class ProductServiceTest {
         assertEquals("product-mock", product.getName());
         assertEquals("test-category", product.getCategoryName());
         assertEquals(3.75, product.getPrice());
+    }
+
+    @Test
+    @DisplayName("Should throw product not found exception when product id does not exist")
+    public void shouldThrowProductNotFoundExceptionWhenGetProductByIdDoesNotExist() {
+        UUID unknownId = UUID.fromString("12345678-1234-1234-1234-123456789def");
+
+        assertThrows(ProductNotFoundException.class,
+                () -> productService.getProductBy(unknownId));
+    }
+
+    @Test
+    @DisplayName("Should throw unknown product category exception when find product by id and category does not exist")
+    public void shouldThrowUnknownProductCategoryExceptionWhenFindProductByIdAndCategoryDoesNotExist() {
+        MockCategoryRepository repository = (MockCategoryRepository) categoryRepository;
+        repository.reset();
+
+        assertThrows(UnknownProductCategoryException.class,
+                () -> productService.getProductBy(
+                        UUID.fromString("12345678-1234-1234-1234-123456789abc")));
+    }
+
+    @Test
+    @DisplayName("Should throw missing product price exception when find product by id and price does not exist")
+    public void shouldThrowMissingProductPriceExceptionWhenFindProductByIdAndPriceDoesNotExist() {
+        MockPriceBookRepository repository = (MockPriceBookRepository) priceBookRepository;
+        repository.reset();
+
+        assertThrows(MissingProductPriceException.class,
+                () -> productService.getProductBy(
+                        UUID.fromString("12345678-1234-1234-1234-123456789abc")));
     }
 }

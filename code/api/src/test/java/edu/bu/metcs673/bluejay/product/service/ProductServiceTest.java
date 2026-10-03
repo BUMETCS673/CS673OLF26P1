@@ -14,15 +14,14 @@ import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.impl.ProductServiceImpl;
+import edu.bu.metcs673.bluejay.product.mock.MockCategoryRepository;
+import edu.bu.metcs673.bluejay.product.mock.MockProductRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -128,88 +127,5 @@ public class ProductServiceTest {
         assertEquals("product-existed", firstProduct.getName());
         assertTrue(firstProduct.getCategoryId() > 0);
         assertEquals("test-category", firstProduct.getCategoryName());
-    }
-
-    private static class MockProductRepository implements ProductRepository {
-        private final ArrayList<Product> products = new ArrayList<>();
-
-        public MockProductRepository() {
-            Product p1 = new Product();
-            p1.setId(UUID.randomUUID());
-            p1.setBarcode("barcode-mock-12345");
-            p1.setName("product-mock");
-            p1.setCategoryId(1);
-
-            Product p2 = new Product();
-            p2.setId(UUID.randomUUID());
-            p2.setBarcode("barcode-existed-12345");
-            p2.setName("product-existed");
-            p2.setCategoryId(1);
-
-            products.add(p1);
-            products.add(p2);
-        }
-
-        void reset() {
-            products.clear();
-        }
-
-        @Override
-        public Product addProduct(Product product) {
-            // Should create new entity in real database implementation
-            // rather than update Product domain class
-            product.setId(UUID.randomUUID());
-            products.add(product);
-            return product;
-        }
-
-        @Override
-        public Optional<Product> getProductBy(String barcode) {
-             return products.stream()
-                    .filter(p -> p.getBarcode().equals(barcode))
-                    .findFirst();
-        }
-
-        @Override
-        public List<Product> getProducts(int pageNumber, int pageSize) {
-            int fromIndex = (pageNumber - 1) * pageSize;
-            if (fromIndex >= products.size()) {
-                return List.of();
-            }
-
-            int toIndex = Math.min(fromIndex + pageSize, products.size());
-            return products.subList(fromIndex, toIndex);
-        }
-    }
-
-    private static class MockCategoryRepository implements CategoryRepository {
-        private final ArrayList<Category> categories = new ArrayList<>();
-
-        public MockCategoryRepository() {
-            Category c1 = new Category();
-            c1.setId(1);
-            c1.setName("test-category");
-            c1.setDescription("test-description");
-
-            categories.add(c1);
-        }
-
-        @Override
-        public Category addCategory(Category category) {
-            category.setId(9999);
-            categories.add(category);
-            return category;
-        }
-
-        @Override
-        public Optional<Category> getCategoryBy(int categoryId) {
-            return categories.stream()
-                    .filter(c -> c.getId() == categoryId)
-                    .findFirst();
-        }
-
-        public void reset() {
-            categories.clear();
-        }
     }
 }

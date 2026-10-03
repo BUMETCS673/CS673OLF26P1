@@ -9,6 +9,7 @@ package edu.bu.metcs673.bluejay.product.service;
 import edu.bu.metcs673.bluejay.product.domain.Category;
 import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -109,6 +111,21 @@ public class ProductServiceTest {
         assertNotNull(category);
         assertEquals("test-new-category", category.getName());
         assertEquals("test-description-category", category.getDescription());
+    }
+
+    @Test
+    @DisplayName("Should return top 1000 list of product with category when there are records in database")
+    public void shouldReturnTop1000ProductsWithCategoryWhenHasRecords() {
+        List<ProductDto> products = productService.getProducts();
+
+        assertNotNull(products);
+        assertFalse(products.isEmpty());
+        assertTrue(products.size() <= 1000);
+
+        ProductDto firstProduct = products.getFirst();
+        assertNotNull(firstProduct);
+        assertNotNull(firstProduct.getId());
+        assertTrue(firstProduct.getCategoryId() > 0);
     }
 
     private static class MockProductRepository implements ProductRepository {

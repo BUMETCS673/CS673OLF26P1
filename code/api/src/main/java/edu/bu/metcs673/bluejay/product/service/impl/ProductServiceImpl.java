@@ -9,10 +9,13 @@ package edu.bu.metcs673.bluejay.product.service.impl;
 import edu.bu.metcs673.bluejay.product.domain.Category;
 import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
+
+import java.util.List;
 
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository _productRepository;
@@ -49,5 +52,10 @@ public class ProductServiceImpl implements ProductService {
         product.setCategory(category);
 
         return _productRepository.addProduct(product);
+    }
+
+    @Override
+    public List<ProductDto> getProducts() {
+        return List.of();
     }
 }

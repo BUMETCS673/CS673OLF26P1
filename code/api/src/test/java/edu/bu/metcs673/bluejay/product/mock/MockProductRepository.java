@@ -1,3 +1,9 @@
+// AI-ASSISTED: YES
+// Tool: GitHub Copilot
+// Prompt Summary: "Update mock product repository to support paginated retrieval"
+// AI Contribution: Pagination mock method update (~25%)
+// Confidence: High
+
 package edu.bu.metcs673.bluejay.product.mock;
 
 import edu.bu.metcs673.bluejay.product.domain.Product;

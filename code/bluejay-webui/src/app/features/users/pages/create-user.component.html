@@ -1,0 +1,108 @@
+<!--
+  AI-USAGE SUMMARY
+  Tools: GitHub Copilot
+  Overall AI Contribution: 100%
+  AI-Assisted Areas: Created HTML page for adding a new user
+  Human Contributions: None
+  Notes: Create user form
+  Authors: Italia Tran
+-->
+
+<div class="create-user-page">
+  <header class="topbar">
+    <a class="brand" routerLink="/dashboard" aria-label="BlueJay dashboard">
+      <span>BLUEJAY <small>ADMINISTRATION</small></span>
+    </a>
+  </header>
+
+  <main class="content">
+    <a class="back-link" routerLink="/users">&larr; User directory</a>
+
+    <div class="page-heading">
+      <div>
+        <p class="eyebrow">PEOPLE / ACCESS / NEW</p>
+        <h1>Create user</h1>
+        <p class="description">Add an account and assign its access level.</p>
+      </div>
+    </div>
+
+    @if (successMessage(); as message) {
+      <div class="feedback success" role="status">
+        <p>{{ message }}</p>
+        <a routerLink="/users">Return to user directory</a>
+      </div>
+    }
+
+    @if (errorMessage(); as message) {
+      <div class="feedback error" role="alert">{{ message }}</div>
+    }
+
+    <form class="user-form" [formGroup]="userForm" (ngSubmit)="onSubmit()" novalidate>
+      <div class="form-heading">
+        <h2>Account details</h2>
+        <span>Required fields are marked</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="username">Username <span aria-hidden="true">*</span></label>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            autocomplete="off"
+            maxlength="50"
+            required
+            [attr.aria-invalid]="userForm.controls.username.invalid && userForm.controls.username.touched"
+            aria-describedby="username-error"
+          />
+          @if (userForm.controls.username.touched && userForm.controls.username.hasError('required')) {
+            <span class="field-error" id="username-error">Enter a username.</span>
+          } @else if (userForm.controls.username.touched && userForm.controls.username.hasError('maxlength')) {
+            <span class="field-error" id="username-error">Username must be 50 characters or fewer.</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="password">Temporary password <span aria-hidden="true">*</span></label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            required
+            [attr.aria-invalid]="userForm.controls.password.invalid && userForm.controls.password.touched"
+            aria-describedby="password-error"
+          />
+          @if (userForm.controls.password.touched && userForm.controls.password.hasError('required')) {
+            <span class="field-error" id="password-error">Enter a temporary password.</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="role">Access role <span aria-hidden="true">*</span></label>
+          <select id="role" formControlName="role" required>
+            @for (role of roles; track role.value) {
+              <option [value]="role.value">{{ role.label }}</option>
+            }
+          </select>
+        </div>
+
+        <label class="enabled-field" for="enabled">
+          <input id="enabled" type="checkbox" formControlName="enabled" />
+          <span>
+            <strong>Account enabled</strong>
+            <small>The user can sign in as soon as the account is created.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <a class="cancel-button" routerLink="/users">Cancel</a>
+        <button class="submit-button" type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Creating account...' : 'Create account' }}
+        </button>
+      </div>
+    </form>
+  </main>
+</div>

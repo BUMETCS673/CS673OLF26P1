@@ -1,0 +1,49 @@
+<!-- AI-USAGE SUMMARY
+Tools: GitHub Copilot
+Overall AI Contribution: ~70%
+AI-Assisted Areas: Form fields, category autocomplete, validation and submit button markup
+Human Contributions: Required the form to reset cleanly after create and reviewed the layout in the browser
+Notes: The form is exposed as #productForm="ngForm" so the component can reset it.
+authors: Kimleng
+-->
+
+<section class="form-card">
+  <h2>Add a product</h2>
+  <p class="intro">Enter product details to add it to the catalog.</p>
+
+  <form #productForm="ngForm" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline">
+      <mat-label>Product name</mat-label>
+      <input matInput name="name" [(ngModel)]="name" required maxlength="120" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Barcode</mat-label>
+      <input matInput name="barcode" [(ngModel)]="barcode" required maxlength="64" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category name</mat-label>
+      <input matInput name="categoryName" [formField]="categoryForm.name" [matAutocomplete]="categoryAuto"
+        (input)="onCategoryInput()" placeholder="Type or choose a category" />
+      <mat-autocomplete #categoryAuto="matAutocomplete" [displayWith]="displayCategory"
+        (optionSelected)="selectCategory($event)">
+        @for (category of filteredCategories(); track category.id) {
+          <mat-option [value]="category.name">{{ category.name }}</mat-option>
+        }
+      </mat-autocomplete>
+      @if (categoryError()) { <mat-hint class="category-error">{{ categoryError() }}</mat-hint> }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category description (optional)</mat-label>
+      <textarea matInput name="categoryDescription" [(ngModel)]="categoryDescription" rows="3"></textarea>
+    </mat-form-field>
+
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+    <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !name.trim() || !barcode.trim()">
+      {{ saving() ? 'Saving…' : 'Create product' }}
+    </button>
+  </form>
+</section>

@@ -11,6 +11,7 @@ package edu.bu.metcs673.bluejay.common.exception;
 import edu.bu.metcs673.bluejay.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -49,6 +50,16 @@ public class GlobalExceptionHandler {
             "AUTH_INVALID_CREDENTIALS"
         );
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
+        AccessDeniedException ex) {
+        ApiResponse<Void> response = ApiResponse.error(
+            "Access Denied",
+            "ACCESS_DENIED"
+        );
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

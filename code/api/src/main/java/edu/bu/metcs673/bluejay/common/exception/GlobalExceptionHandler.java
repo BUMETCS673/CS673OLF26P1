@@ -52,6 +52,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
+    /*
+        AI-USAGE SUMMARY
+        Tools: Github Copilot
+        Overall AI Contribution: 90%
+        AI-Assisted Areas: handleAccessDeniedException creation and response
+        Human Contributions: Prompting to add an exception if user is denied access to the
+        page
+        Notes: Access denied exception
+        Authors: Italia Tran
+    */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
         AccessDeniedException ex) {

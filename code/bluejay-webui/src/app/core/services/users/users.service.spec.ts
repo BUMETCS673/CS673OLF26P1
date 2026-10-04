@@ -1,10 +1,20 @@
+/*
+  AI-USAGE SUMMARY
+  Tools: GitHub Copilot
+  Overall AI Contribution: 80%
+  AI-Assisted Areas: Created base unit tests and modified tests based on user input
+  Human Contributions: Prompted for specific unit tests depending on requirements
+  Notes: Unit test for the user service API
+  Authors: Italia Tran
+*/
+
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { AuthService } from '../core/auth/auth.service';
+import { AuthService } from '../../auth/auth.service';
 import { UserRecord, UsersService } from './users.service';
 
 describe('UsersService', () => {

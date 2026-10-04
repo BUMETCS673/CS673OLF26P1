@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: Github Copilot
+    Overall AI Contribution: 100%
+    AI-Assisted Areas: UserService implementation
+    Human Contributions: None
+    Notes: UserService implementation that is set by the UserService interface
+    Authors: Italia Tran
+*/
+
 package edu.bu.metcs673.bluejay.auth.service.impl;
 
 import edu.bu.metcs673.bluejay.auth.dto.UserResponse;

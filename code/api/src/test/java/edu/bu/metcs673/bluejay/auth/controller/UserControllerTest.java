@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: Github Copilot
+    Overall AI Contribution: 90%
+    AI-Assisted Areas:
+    Human Contributions: Prompting to add types of test cases that fits the documentation.
+    Notes: Test class for the User Controller
+    Authors: Italia Tran
+*/
+
 package edu.bu.metcs673.bluejay.auth.controller;
 
 import edu.bu.metcs673.bluejay.auth.dto.UserResponse;

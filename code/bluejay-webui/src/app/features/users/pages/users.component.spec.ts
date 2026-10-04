@@ -1,10 +1,20 @@
+/*
+  AI-USAGE SUMMARY
+  Tools: GitHub Copilot
+  Overall AI Contribution: 90%
+  AI-Assisted Areas: Created unit tests for the users page based on documentation requirements
+  Human Contributions: Prompted type of unit tests that needs to be covered
+  Notes: Unit Tests for the Users page
+  Authors: Italia Tran
+*/
+
 import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService } from '../../core/auth/auth.service';
-import { UserRecord, UsersService } from '../../services/users.service';
-import { UsersComponent } from './users.component';
+import { AuthService } from '../../../core/auth/auth.service';
+import { UserRecord, UsersService } from '../../../core/services/users/users.service';
+import { UsersPage } from './users.component';
 
 describe('UsersComponent directory behavior', () => {
   const userRecords: UserRecord[] = [
@@ -34,7 +44,7 @@ describe('UsersComponent directory behavior', () => {
     usersServiceMock.getUsers.mockReturnValue(of(userRecords));
 
     TestBed.configureTestingModule({
-      imports: [UsersComponent],
+      imports: [UsersPage],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: { logout: vi.fn() } },
@@ -44,7 +54,7 @@ describe('UsersComponent directory behavior', () => {
   });
 
   function createFixture() {
-    const fixture = TestBed.createComponent(UsersComponent);
+    const fixture = TestBed.createComponent(UsersPage);
     fixture.detectChanges();
     return fixture;
   }

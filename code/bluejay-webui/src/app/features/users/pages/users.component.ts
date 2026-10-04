@@ -1,9 +1,19 @@
+/*
+  AI-USAGE SUMMARY
+  Tools: GitHub Copilot
+  Overall AI Contribution: 80%
+  AI-Assisted Areas: Created base user component and the additiomal search and sort features
+  Human Contributions: Prompted for search and sort features after base was built
+  Notes: Angular component for the Users page
+  Authors: Italia Tran
+*/
+
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { UserRecord, UsersService } from '../../services/users.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { UserRecord, UsersService } from '../../../core/services/users/users.service';
 
 type SortColumn = 'username' | 'id' | 'createdAt' | 'enabled';
 type SortDirection = 'asc' | 'desc';
@@ -15,7 +25,7 @@ type SortDirection = 'asc' | 'desc';
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
 })
-export class UsersComponent implements OnInit {
+export class UsersPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly usersService = inject(UsersService);

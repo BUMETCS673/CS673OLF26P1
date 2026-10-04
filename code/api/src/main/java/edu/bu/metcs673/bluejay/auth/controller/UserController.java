@@ -1,3 +1,14 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: Github Copilot
+    Overall AI Contribution: 90%
+    AI-Assisted Areas: API creation and mapping
+    Human Contributions: API authorization and status codes depending on if there is a response
+    or if it fails
+    Notes: User Controller class that primarily handles user related APIs
+    Authors: Italia Tran
+*/
+
 package edu.bu.metcs673.bluejay.auth.controller;
 
 import edu.bu.metcs673.bluejay.auth.dto.UserResponse;

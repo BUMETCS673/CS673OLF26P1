@@ -1,7 +1,17 @@
+/*
+  AI-USAGE SUMMARY
+  Tools: GitHub Copilot
+  Overall AI Contribution: 100%
+  AI-Assisted Areas: Created user service to get data from the user API
+  Human Contributions: None
+  Notes: Service to get data from the user API
+  Authors: Italia Tran
+*/
+
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { AuthService } from '../core/auth/auth.service';
+import { AuthService } from '../../auth/auth.service';
 
 export interface UserRecord {
   id: string;

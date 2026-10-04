@@ -4,7 +4,7 @@
 // AI-Assisted Areas: @RestControllerAdvice implementation, MethodArgumentNotValidException extraction
 // Human Contributions: Mapping specific HTTP status codes and error constants
 // Notes: Global exception handler adhering to CS112 formatting and wrapping rules.
-// Authors: Sara Orion
+// Authors: Sara Orion, Krizma Nagi
 
 package edu.bu.metcs673.bluejay.common.exception;
 
@@ -52,21 +52,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
-    /*
-        AI-USAGE SUMMARY
-        Tools: Github Copilot
-        Overall AI Contribution: 90%
-        AI-Assisted Areas: handleAccessDeniedException creation and response
-        Human Contributions: Prompting to add an exception if user is denied access to the
-        page
-        Notes: Access denied exception
-        Authors: Italia Tran
-    */
+    // AI-ASSISTED: YES
+    // Tool: Claude
+    // Prompt Summary: "Return 403 instead of 500 when @PreAuthorize denies access"
+    // AI Contribution: Handler method (~90%)
+    // Modifications:
+    //   - Needed for Story #57: without it the generic Exception handler
+    //     below turned method-security denials into 500 errors
+    // Verification:
+    //   - ReportControllerTest cashier case expects 403
+    // Confidence: High
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
         AccessDeniedException ex) {
         ApiResponse<Void> response = ApiResponse.error(
-            "Access denied",
+            "You do not have permission to access this resource",
             "ACCESS_DENIED"
         );
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);

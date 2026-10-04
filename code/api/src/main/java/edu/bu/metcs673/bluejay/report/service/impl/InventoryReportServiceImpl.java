@@ -23,7 +23,8 @@ import java.util.List;
 // AI Contribution: Initial draft (~85%)
 // Modifications:
 //   - Marked read-only transactional
-//   - Returns an immutable copy so callers cannot change the result
+//   - PR review (Sara): removed List.copyOf(); JdbcTemplate already
+//     returns a new list, so the copy was an extra allocation
 // Verification:
 //   - InventoryReportServiceImplTest
 // Confidence: High
@@ -40,6 +41,6 @@ public class InventoryReportServiceImpl implements InventoryReportService {
     @Override
     @Transactional(readOnly = true)
     public List<InventoryReportItem> getInventoryReport() {
-        return List.copyOf(inventoryReportRepository.findInventoryReport());
+        return inventoryReportRepository.findInventoryReport();
     }
 }

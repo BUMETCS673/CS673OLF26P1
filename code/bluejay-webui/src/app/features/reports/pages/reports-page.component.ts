@@ -1,7 +1,7 @@
 // AI-USAGE SUMMARY
 // Tools: Claude
 // Overall AI Contribution: ~85%
-// AI-Assisted Areas: Report table template, loading/empty/error states, styles
+// AI-Assisted Areas: Report table template, loading/empty/error states
 // Human Contributions: Columns from Story #57 (product, latest cost, on-hand quantity)
 // Notes: Replaces the "coming soon" placeholder with the core inventory report table.
 // authors: Krizma Nagi
@@ -23,6 +23,7 @@ type LoadState = 'loading' | 'loaded' | 'forbidden' | 'error';
 // Modifications:
 // - Shows a clear message on 403 so cashiers know why the report is unavailable
 // - Uses signals, matching the standalone Angular 21 setup
+// - PR review (Sara): styles moved to reports-page.component.scss
 // Verification:
 // - reports-page.component.spec.ts and ng build
 // Confidence: High
@@ -92,25 +93,7 @@ type LoadState = 'loading' | 'loaded' | 'forbidden' | 'error';
       }
     </section>
   `,
-  styles: `
-    .report { max-width: 960px; }
-    .report__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
-    .report__header h1 { margin: 0; }
-    .report__subtitle { margin: 4px 0 0; color: #64748b; }
-    .report__refresh { padding: 8px 16px; border: 0; border-radius: 8px; background: #2f4fe0; color: #fff; font-weight: 600; cursor: pointer; }
-    .report__refresh:disabled { opacity: 0.6; cursor: default; }
-    .report__summary { color: #475569; margin: 0 0 8px; }
-    .report__message { padding: 16px; border-radius: 8px; background: #f1f5f9; }
-    .report__message--error { background: #fef2f2; color: #b91c1c; }
-    .report__table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
-    .report__table { width: 100%; border-collapse: collapse; }
-    .report__table th, .report__table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    .report__table th { background: #f8fafc; font-size: 0.85rem; color: #475569; }
-    .report__table tbody tr:last-child td { border-bottom: 0; }
-    .num { text-align: right !important; font-variant-numeric: tabular-nums; }
-    .muted { color: #64748b; }
-    .out { color: #b91c1c; font-weight: 600; }
-  `,
+  styleUrl: './reports-page.component.scss',
 })
 export class ReportsPage implements OnInit {
   private reportService = inject(InventoryReportService);

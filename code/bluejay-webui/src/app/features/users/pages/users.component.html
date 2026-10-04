@@ -13,9 +13,6 @@
     <a class="brand" routerLink="/dashboard" aria-label="BlueJay dashboard">
       <span>BLUEJAY <small>ADMINISTRATION</small></span>
     </a>
-    <div class="account-controls">
-      <button type="button" class="sign-out" (click)="signOut()">Sign out</button>
-    </div>
   </header>
 
   <main class="content">
@@ -25,14 +22,17 @@
         <h1>User directory</h1>
         <p class="description">Accounts currently stored in BlueJay.</p>
       </div>
-      <button
-        type="button"
-        class="refresh-button"
-        (click)="loadUsers()"
-        [disabled]="isLoading()"
-      >
-        {{ isLoading() ? 'Refreshing...' : 'Refresh list' }}
-      </button>
+      <div class="heading-actions">
+        <a class="create-button" routerLink="/users/new">Create user</a>
+        <button
+          type="button"
+          class="refresh-button"
+          (click)="loadUsers()"
+          [disabled]="isLoading()"
+        >
+          {{ isLoading() ? 'Refreshing...' : 'Refresh list' }}
+        </button>
+      </div>
     </div>
 
     <section class="totals" aria-label="User totals">

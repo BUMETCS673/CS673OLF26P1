@@ -196,6 +196,31 @@ describe('AuthService', () => {
       expect(service.isLoggedIn()).toBe(false);
     });
 
+    it('should identify admins from the JWT roles claim', () => {
+      const claims = btoa(JSON.stringify({ roles: ['ROLE_ADMIN'] }));
+      localStorage.setItem(AUTH_DATA_KEY, JSON.stringify({ token: `header.${claims}.signature` }));
+
+      expect(service.isAdmin()).toBe(true);
+    });
+
+    it('should reject non-admin and malformed JWT role claims', () => {
+      const claims = btoa(JSON.stringify({ roles: ['ROLE_CASHIER'] }));
+      localStorage.setItem(AUTH_DATA_KEY, JSON.stringify({ token: `header.${claims}.signature` }));
+
+      expect(service.isAdmin()).toBe(false);
+
+      localStorage.setItem(AUTH_DATA_KEY, JSON.stringify({ token: 'not-a-jwt' }));
+      expect(service.isAdmin()).toBe(false);
+    });
+
+    it('should treat malformed stored auth data as logged out', () => {
+      localStorage.setItem(AUTH_DATA_KEY, '{invalid json');
+
+      expect(service.getAuthData()).toBeNull();
+      expect(service.isLoggedIn()).toBe(false);
+      expect(service.isAdmin()).toBe(false);
+    });
+
     // AI-ASSISTED: YES
     // Tool: Claude (replaces the earlier Gemini logout test)
     // Prompt Summary: "Test logout() clears auth-data and revokes the JWT on the server via POST /api/v1/auth/logout."

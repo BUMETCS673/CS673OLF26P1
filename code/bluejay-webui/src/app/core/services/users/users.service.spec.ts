@@ -15,7 +15,7 @@ import {
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from '../../auth/auth.service';
-import { UserRecord, UsersService } from './users.service';
+import { CreateUserRequest, UserRecord, UsersService } from './users.service';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -62,5 +62,39 @@ describe('UsersService', () => {
     });
 
     expect(result).toEqual(users);
+  });
+
+  it('creates a user with the bearer token and unwraps the API response', () => {
+    const request: CreateUserRequest = {
+      username: 'new-cashier',
+      password: 'secret-pass',
+      enabled: true,
+      role: 'ROLE_CASHIER',
+    };
+    const createdUser: UserRecord = {
+      id: 'user-2',
+      username: 'new-cashier',
+      enabled: true,
+      createdAt: '2026-10-04T10:00:00',
+    };
+    let result: UserRecord | undefined;
+
+    service.createUser(request).subscribe((response) => (result = response));
+
+    const httpRequest = httpTestingController.expectOne('/api/v1/users');
+    expect(httpRequest.request.method).toBe('POST');
+    expect(httpRequest.request.headers.get('Authorization')).toBe(
+      'Bearer test-token',
+    );
+    expect(httpRequest.request.body).toEqual(request);
+    httpRequest.flush({
+      success: true,
+      message: 'User created successfully',
+      data: createdUser,
+      errorCode: null,
+      timestamp: '2026-10-04T10:00:00Z',
+    });
+
+    expect(result).toEqual(createdUser);
   });
 });

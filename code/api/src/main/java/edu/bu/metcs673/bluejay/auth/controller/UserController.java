@@ -11,15 +11,20 @@
 
 package edu.bu.metcs673.bluejay.auth.controller;
 
+import edu.bu.metcs673.bluejay.auth.dto.CreateUserRequest;
 import edu.bu.metcs673.bluejay.auth.dto.UserResponse;
 import edu.bu.metcs673.bluejay.auth.service.UserService;
 import edu.bu.metcs673.bluejay.common.dto.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.TransactionException;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -41,6 +46,32 @@ public class UserController {
             return ResponseEntity.ok(response);
         } catch (DataAccessException | TransactionException ex) {
             ApiResponse<List<UserResponse>> response = ApiResponse.error(
+                "An unexpected internal error occurred",
+                "INTERNAL_SERVER_ERROR"
+            );
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @PostMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+        @Valid @RequestBody CreateUserRequest request) {
+        try {
+            UserResponse createdUser = userService.createUser(request);
+            ApiResponse<UserResponse> response = ApiResponse.success(
+                createdUser,
+                "User created successfully"
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException ex) {
+            ApiResponse<UserResponse> response = ApiResponse.error(
+                ex.getMessage(),
+                "USER_CREATE_FAILED"
+            );
+            return ResponseEntity.badRequest().body(response);
+        } catch (DataAccessException | TransactionException ex) {
+            ApiResponse<UserResponse> response = ApiResponse.error(
                 "An unexpected internal error occurred",
                 "INTERNAL_SERVER_ERROR"
             );

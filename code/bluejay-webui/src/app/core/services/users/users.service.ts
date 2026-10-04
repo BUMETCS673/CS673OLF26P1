@@ -20,6 +20,13 @@ export interface UserRecord {
   createdAt: string;
 }
 
+export interface CreateUserRequest {
+  username: string;
+  password: string;
+  enabled: boolean;
+  role: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -34,13 +41,23 @@ export class UsersService {
   private readonly authService = inject(AuthService);
 
   getUsers(): Observable<UserRecord[]> {
-    const token = this.authService.getToken();
-    const headers = token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : undefined;
-
     return this.http
-      .get<ApiResponse<UserRecord[]>>('/api/v1/users', { headers })
+      .get<ApiResponse<UserRecord[]>>('/api/v1/users', {
+        headers: this.getAuthHeaders(),
+      })
       .pipe(map((response) => response.data));
+  }
+
+  createUser(request: CreateUserRequest): Observable<UserRecord> {
+    return this.http
+      .post<ApiResponse<UserRecord>>('/api/v1/users', request, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  private getAuthHeaders(): HttpHeaders | undefined {
+    const token = this.authService.getToken();
+    return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
   }
 }

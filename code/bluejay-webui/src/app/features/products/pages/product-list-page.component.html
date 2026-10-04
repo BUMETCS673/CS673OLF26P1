@@ -1,0 +1,24 @@
+<!-- AI-USAGE SUMMARY
+Tools: GitHub Copilot
+Overall AI Contribution: ~60%
+AI-Assisted Areas: Page layout wiring search, list and form components
+Human Contributions: Decided the layout and removed the search wiring to the list
+Notes: The form still refreshes the list through its created event.
+authors: Kimleng
+-->
+
+<main class="page">
+  <header class="page-heading">
+    <p class="eyebrow">CATALOG MANAGEMENT</p>
+    <h1>Products</h1>
+    <p>Search, browse, and add products to your catalog.</p>
+  </header>
+
+  <div class="columns">
+    <section class="catalog-column" aria-label="Product catalog">
+      <app-product-search />
+      <app-product-list #productList />
+    </section>
+    <app-product-form (created)="productList.loadPage(1)" />
+  </div>
+</main>

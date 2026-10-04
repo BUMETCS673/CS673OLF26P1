@@ -72,7 +72,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(
         MethodArgumentNotValidException ex) {

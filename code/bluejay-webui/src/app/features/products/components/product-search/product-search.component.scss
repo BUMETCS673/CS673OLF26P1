@@ -1,0 +1,39 @@
+// AI-USAGE SUMMARY
+// Tools: GitHub Copilot
+// Overall AI Contribution: ~75%
+// AI-Assisted Areas: Flex layout, vertical alignment of input and buttons, result card styling
+// Human Contributions: Reported the vertical misalignment of the input and buttons and verified the fix in the browser
+// Notes: Buttons use a fixed 56px row to match the outlined input height.
+// authors: Kimleng
+
+.search-card {
+  padding: 18px 20px 4px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.search-form { display: flex; align-items: flex-start; gap: 12px; }
+.barcode-field { flex: 1; }
+.actions { display: flex; align-items: center; gap: 4px; height: 56px; }
+.actions mat-icon { margin-right: 4px; }
+
+.result { padding: 4px 0 16px; }
+.result-title { margin: 0 0 8px; font-weight: 600; color: #166534; }
+.result-details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0;
+}
+.result-details dt { color: #64748b; }
+.result-details dd { margin: 0; }
+.result-message { margin: 0; }
+.result-message.not-found { color: #475569; }
+.result-message.error { color: #b91c1c; }
+
+@media (max-width: 600px) {
+  .search-form { flex-direction: column; gap: 0; }
+  .barcode-field { width: 100%; }
+  .actions { height: auto; padding: 0 0 12px; }
+}

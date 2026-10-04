@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
+import { UsersComponent } from '../../../components/users/users.component';
 
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  template: '<h1>Users</h1><p>User management coming soon.</p>',
+  imports: [UsersComponent],
+  template: '<app-users />',
 })
 export class UsersPage {}

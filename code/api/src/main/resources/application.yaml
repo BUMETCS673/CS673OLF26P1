@@ -23,6 +23,9 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    clean-disabled: false
+    clean-on-validation-error: true
+    ignore-migration-patterns: "versioned:*"
 
 # Custom Security & JWT Application Properties
 app:

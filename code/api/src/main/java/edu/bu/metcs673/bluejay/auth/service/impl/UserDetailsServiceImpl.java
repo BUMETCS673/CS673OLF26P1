@@ -11,6 +11,7 @@ package edu.bu.metcs673.bluejay.auth.service.impl;
 import edu.bu.metcs673.bluejay.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,7 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 @NullMarked
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
-
+    
+    @Autowired
     private final UserRepository userRepository;
 
     @Override

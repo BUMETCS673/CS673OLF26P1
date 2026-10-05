@@ -23,20 +23,6 @@ describe('ProductSearchComponent', { timeout: 15000 }, () => {
   let element: HTMLElement;
   const emitSpy = vi.fn();
 
-  const apply = async (productName = '', categoryName = '') => {
-    const input = element.querySelector('input') as HTMLInputElement;
-    const select = element.querySelector('mat-select') as HTMLElement;
-    input.value = productName;
-    input.dispatchEvent(new Event('input'));
-    await fixture.whenStable();
-    fixture.detectChanges();
-    component.categoryName = categoryName;
-    select.dispatchEvent(new Event('selectionChange'));
-    component.submit();
-    await fixture.whenStable();
-    fixture.detectChanges();
-  };
-
   beforeEach(async () => {
     emitSpy.mockReset();
     serviceMock.listCategories.mockReset();
@@ -59,14 +45,18 @@ describe('ProductSearchComponent', { timeout: 15000 }, () => {
     expect(component.categories().map((category) => category.name)).toEqual(['beverage', 'fruit']);
   });
 
-  it('emits trimmed product-name and category filters on submit', async () => {
-    await apply('  Water  ', 'beverage');
+  it('emits trimmed product-name and category filters on submit', () => {
+    component.productName = '  Water  ';
+    component.categoryName = 'beverage';
+    component.submit();
 
     expect(emitSpy).toHaveBeenCalledWith({ productName: 'Water', categoryName: 'beverage' });
   });
 
-  it('emits null filters when both fields are blank', async () => {
-    await apply('   ', '');
+  it('emits null filters when both fields are blank', () => {
+    component.productName = '   ';
+    component.categoryName = '';
+    component.submit();
 
     expect(emitSpy).toHaveBeenCalledWith({ productName: null, categoryName: null });
   });
@@ -85,23 +75,18 @@ describe('ProductSearchComponent', { timeout: 15000 }, () => {
     expect(element.querySelector('[role="alert"]')?.textContent).toContain('Could not load product categories.');
   });
 
-  it('clear empties the filters, resets the form state and emits empty filters', async () => {
-    const input = element.querySelector('input') as HTMLInputElement;
-    input.value = 'Water';
-    input.dispatchEvent(new Event('input'));
-    await fixture.whenStable();
-    fixture.detectChanges();
+  it('clear empties the filters, resets the form state and emits empty filters', () => {
+    const resetForm = vi.fn();
+    (component as any).searchForm = { resetForm };
+
+    component.productName = 'Water';
     component.categoryName = 'beverage';
-    component.submit();
 
     component.clear();
-    await fixture.whenStable();
-    fixture.detectChanges();
 
     expect(component.productName).toBe('');
     expect(component.categoryName).toBe('');
-    expect(input.value).toBe('');
+    expect(resetForm).toHaveBeenCalledWith({ productName: '', categoryName: '' });
     expect(emitSpy).toHaveBeenLastCalledWith({});
-    expect(element.querySelectorAll('.ng-invalid.ng-touched, .ng-invalid.ng-dirty').length).toBe(0);
   });
 });

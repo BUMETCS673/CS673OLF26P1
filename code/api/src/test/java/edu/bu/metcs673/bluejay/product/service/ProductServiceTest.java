@@ -55,10 +55,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should create product when all fields are valid")
     public void shouldCreateProductWhenAllFieldsAreValid() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-test-12345");
-        productDto.setName("Milk");
-        productDto.setCategoryId(1L);
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Milk",
+            "barcode-test-12345",
+            1L,
+            null,
+            null
+        );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
@@ -83,10 +86,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should throw exception when create product with duplicated barcode")
     public void shouldThrowExceptionWhenCreateProductWithDuplicateBarcode() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-existed-12345");
-        productDto.setName("Chocolate Milk");
-        productDto.setCategoryId(1L);
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Chocolate Milk",
+            "barcode-existed-12345",
+            1L,
+            null,
+            null
+        );
 
         when(productRepository.getProductBy("barcode-existed-12345"))
                 .thenReturn(Optional.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)));
@@ -97,10 +103,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should add new product with newly created category if category doesn't exist")
     public void shouldAddNewCategoryToProductWhenProductCategoryNotExist() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-test-12345");
-        productDto.setName("Soy Milk");
-        productDto.setCategoryName("test-new-category");
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Soy Milk",
+            "barcode-test-12345",
+            null,
+            "test-new-category",
+            null
+        );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
         when(categoryRepository.addCategory(org.mockito.ArgumentMatchers.any(Category.class)))
@@ -131,11 +140,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should save product category description when provided")
     public void shouldSaveOptionalCategoryDescriptionWhenDescriptionIsEmpty() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-test-12345");
-        productDto.setName("Oat Milk");
-        productDto.setCategoryName("test-new-category");
-        productDto.setCategoryDescription("test-description-category");
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Oat Milk",
+            "barcode-test-12345",
+            null,
+            "test-new-category",
+            "test-description-category"
+        );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
         when(categoryRepository.addCategory(org.mockito.ArgumentMatchers.any(Category.class)))
@@ -178,12 +189,12 @@ public class ProductServiceTest {
 
         assertNotNull(categories);
         assertEquals(2, categories.size());
-        assertEquals(1L, categories.get(0).getId());
-        assertEquals("test-category", categories.get(0).getName());
-        assertEquals("test-description", categories.get(0).getDescription());
-        assertEquals(2L, categories.get(1).getId());
-        assertEquals("beverages", categories.get(1).getName());
-        assertEquals("drinks", categories.get(1).getDescription());
+        assertEquals(1L, categories.get(0).id());
+        assertEquals("test-category", categories.get(0).name());
+        assertEquals("test-description", categories.get(0).description());
+        assertEquals(2L, categories.get(1).id());
+        assertEquals("beverages", categories.get(1).name());
+        assertEquals("drinks", categories.get(1).description());
     }
 
     @Test
@@ -203,10 +214,10 @@ public class ProductServiceTest {
 
         ProductDto firstProduct = products.getFirst();
         assertNotNull(firstProduct);
-        assertNotNull(firstProduct.getId());
-        assertEquals("product-existed", firstProduct.getName());
-        assertTrue(firstProduct.getCategoryId() > 0);
-        assertEquals("test-category", firstProduct.getCategoryName());
+        assertNotNull(firstProduct.id());
+        assertEquals("product-existed", firstProduct.name());
+        assertTrue(firstProduct.categoryId() > 0);
+        assertEquals("test-category", firstProduct.categoryName());
     }
 
     @Test
@@ -246,7 +257,7 @@ public class ProductServiceTest {
 
         assertNotNull(products);
         assertEquals(1, products.size());
-        assertEquals("Spring Water", products.getFirst().getName());
+        assertEquals("Spring Water", products.getFirst().name());
     }
 
     @Test
@@ -274,10 +285,10 @@ public class ProductServiceTest {
         ProductDto product = productService.getProductBy("barcode-mock-12345");
 
         assertNotNull(product);
-        assertNotNull(product.getId());
-        assertEquals("product-mock", product.getName());
-        assertEquals("test-category", product.getCategoryName());
-        assertEquals(3.75, product.getPrice());
+        assertNotNull(product.id());
+        assertEquals("product-mock", product.name());
+        assertEquals("test-category", product.categoryName());
+        assertEquals(3.75, product.price());
     }
 
     @Test
@@ -337,11 +348,6 @@ public class ProductServiceTest {
         Integer pageNumber,
         Integer pageSize
     ) {
-        ProductQueryDto queryDto = new ProductQueryDto();
-        queryDto.setProductName(productName);
-        queryDto.setCategoryName(categoryName);
-        queryDto.setPageNumber(pageNumber);
-        queryDto.setPageSize(pageSize);
-        return queryDto;
+        return new ProductQueryDto(productName, categoryName, pageNumber, pageSize);
     }
 }

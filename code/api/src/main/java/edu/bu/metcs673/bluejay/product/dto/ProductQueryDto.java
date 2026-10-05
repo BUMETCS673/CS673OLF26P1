@@ -6,14 +6,10 @@
 
 package edu.bu.metcs673.bluejay.product.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class ProductQueryDto {
-    private String productName;
-    private String categoryName;
-    private Integer pageNumber;
-    private Integer pageSize;
+public record ProductQueryDto(
+    String productName,
+    String categoryName,
+    Integer pageNumber,
+    Integer pageSize
+) {
 }

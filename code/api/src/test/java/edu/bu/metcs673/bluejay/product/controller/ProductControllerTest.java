@@ -76,10 +76,13 @@ private static final UUID PRODUCT_ID =
         @Test
         @DisplayName("Should allow admin to create product and return 201")
         void createProduct_Admin_Returns201() throws Exception {
-            CreateProductWithCategoryDto request = new CreateProductWithCategoryDto();
-            request.setBarcode("barcode-test-12345");
-            request.setName("Milk");
-            request.setCategoryId(1L);
+            CreateProductWithCategoryDto request = new CreateProductWithCategoryDto(
+                "Milk",
+                "barcode-test-12345",
+                1L,
+                null,
+                null
+            );
 
             Product product = new Product();
             product.setId(PRODUCT_ID);
@@ -110,21 +113,22 @@ private static final UUID PRODUCT_ID =
         @Test
         @DisplayName("Should allow manager to get paginated products and return 200")
         void getProducts_Manager_Returns200() throws Exception {
-            ProductDto product = new ProductDto();
-            product.setId(PRODUCT_ID);
-            product.setName("product-mock");
-            product.setBarcode("barcode-mock-12345");
-            product.setCategoryId(1L);
-            product.setCategoryName("test-category");
-            product.setCategoryDescription("test-description");
-            product.setPrice(3.75);
+            ProductDto product = new ProductDto(
+                PRODUCT_ID,
+                "product-mock",
+                "barcode-mock-12345",
+                1L,
+                "test-category",
+                "test-description",
+                3.75
+            );
 
             when(productService.getProducts(argThat(query ->
                 query != null
-                    && "product".equals(query.getProductName())
-                    && "test-category".equals(query.getCategoryName())
-                    && Integer.valueOf(1).equals(query.getPageNumber())
-                    && Integer.valueOf(1).equals(query.getPageSize())
+                    && "product".equals(query.productName())
+                    && "test-category".equals(query.categoryName())
+                    && Integer.valueOf(1).equals(query.pageNumber())
+                    && Integer.valueOf(1).equals(query.pageSize())
             ))).thenReturn(List.of(product));
 
             mockMvc.perform(get("/api/v1/product")
@@ -158,10 +162,7 @@ private static final UUID PRODUCT_ID =
         @Test
         @DisplayName("Should allow manager to get product categories and return 200")
         void getProductCategories_Manager_Returns200() throws Exception {
-            CategoryDto category = new CategoryDto();
-            category.setId(1L);
-            category.setName("test-category");
-            category.setDescription("test-description");
+            CategoryDto category = new CategoryDto(1L, "test-category", "test-description");
 
             when(productService.getProductCategories()).thenReturn(List.of(category));
 
@@ -190,14 +191,15 @@ private static final UUID PRODUCT_ID =
         @Test
         @DisplayName("Should allow admin to get product by barcode and return 200")
         void getProductByBarcode_Admin_Returns200() throws Exception {
-            ProductDto product = new ProductDto();
-            product.setId(PRODUCT_ID);
-            product.setName("product-mock");
-            product.setBarcode(PRODUCT_BARCODE);
-            product.setCategoryId(1L);
-            product.setCategoryName("test-category");
-            product.setCategoryDescription("test-description");
-            product.setPrice(3.75);
+            ProductDto product = new ProductDto(
+                PRODUCT_ID,
+                "product-mock",
+                PRODUCT_BARCODE,
+                1L,
+                "test-category",
+                "test-description",
+                3.75
+            );
 
             when(productService.getProductBy(PRODUCT_BARCODE)).thenReturn(product);
 

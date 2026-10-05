@@ -6,15 +6,11 @@
 
 package edu.bu.metcs673.bluejay.product.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
-public class CreateProductWithCategoryDto {
-    private String name;
-    private String barcode;
-    private Long categoryId;
-    private String categoryName;
-    private String categoryDescription;
+public record CreateProductWithCategoryDto(
+    String name,
+    String barcode,
+    Long categoryId,
+    String categoryName,
+    String categoryDescription
+) {
 }

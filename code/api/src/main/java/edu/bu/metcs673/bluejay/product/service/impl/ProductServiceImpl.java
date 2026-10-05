@@ -1,7 +1,7 @@
 // AI-ASSISTED: YES
 // Tool: GitHub Copilot
-// Prompt Summary: "Refactor product service to use Product pricing fields, barcode lookup, and category selection"
-// AI Contribution: Spring service integration for pricing, barcode lookup, and category list responses (~80%)
+// Prompt Summary: "Refactor product service to use Product pricing fields, filtered queries, barcode lookup, and category selection"
+// AI Contribution: Spring service integration for pricing, filtered product queries, barcode lookup, and category list responses (~85%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.service.impl;
@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.product.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
@@ -85,7 +86,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getProducts(int pageNumber, int pageSize) {
+    public List<ProductDto> getProducts(ProductQueryDto productQueryDto) {
+        int pageNumber = productQueryDto.getPageNumber() == null
+            ? 1
+            : productQueryDto.getPageNumber();
+        int pageSize = productQueryDto.getPageSize() == null
+            ? 10
+            : productQueryDto.getPageSize();
+
         if (pageNumber < 1) {
             throw new IllegalArgumentException("pageNumber must be greater than 0");
         }
@@ -94,8 +102,15 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("pageSize must be greater than 0");
         }
 
+        String productName = normalizeFilter(productQueryDto.getProductName());
+        String categoryName = normalizeFilter(productQueryDto.getCategoryName());
+
         List<Product> products = _productRepository.getProducts(
-                pageNumber, pageSize);
+            productName,
+            categoryName,
+            pageNumber,
+            pageSize
+        );
 
         if (products.isEmpty()) {
             throw new ProductNotFoundException();
@@ -120,6 +135,14 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return result;
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
     }
 
     @Override

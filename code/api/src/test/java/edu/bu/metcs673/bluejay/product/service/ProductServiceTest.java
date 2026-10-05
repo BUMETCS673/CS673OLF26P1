@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.product.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
@@ -188,11 +189,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should return products with category when requested page has records")
     public void shouldReturnProductsWithCategoryWhenRequestedPageHasRecords() {
-        when(productRepository.getProducts(2, 1))
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 2, 1);
+
+        when(productRepository.getProducts(null, null, 2, 1))
                 .thenReturn(List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(2, 1);
+        List<ProductDto> products = productService.getProducts(queryDto);
 
         assertNotNull(products);
         assertFalse(products.isEmpty());
@@ -209,21 +212,56 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should throw product not found exception when requested page has no records")
     public void shouldThrowProductNotFoundExceptionWhenRequestedPageHasNoRecords() {
-        when(productRepository.getProducts(1, 1)).thenReturn(List.of());
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
+
+        when(productRepository.getProducts(null, null, 1, 1)).thenReturn(List.of());
 
         assertThrows(ProductNotFoundException.class,
-                () -> productService.getProducts(1, 1));
+                () -> productService.getProducts(queryDto));
     }
 
     @Test
     @DisplayName("Should throw unknown product category exception when product category does not exist")
     public void shouldThrowUnknownProductCategoryExceptionWhenProductCategoryDoesNotExist() {
-        when(productRepository.getProducts(1, 1))
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
+
+        when(productRepository.getProducts(null, null, 1, 1))
                 .thenReturn(List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.empty());
 
         assertThrows(UnknownProductCategoryException.class,
-                () -> productService.getProducts(1, 1));
+                () -> productService.getProducts(queryDto));
+    }
+
+    @Test
+    @DisplayName("Should pass product name and category filters to repository")
+    public void shouldFilterProductsByProductNameAndCategoryName() {
+        ProductQueryDto queryDto = createProductQueryDto("Water", "beverage", 1, 10);
+
+        when(productRepository.getProducts("Water", "beverage", 1, 10))
+                .thenReturn(List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        List<ProductDto> products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertEquals(1, products.size());
+        assertEquals("Spring Water", products.getFirst().getName());
+    }
+
+    @Test
+    @DisplayName("Should default page number and page size when query pagination is missing")
+    public void shouldDefaultProductQueryPagination() {
+        ProductQueryDto queryDto = createProductQueryDto("Milk", "dairy", null, null);
+
+        when(productRepository.getProducts("Milk", "dairy", 1, 10))
+                .thenReturn(List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        List<ProductDto> products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertEquals(1, products.size());
     }
 
     @Test
@@ -291,5 +329,19 @@ public class ProductServiceTest {
         category.setName("test-category");
         category.setDescription("test-description");
         return category;
+    }
+
+    private ProductQueryDto createProductQueryDto(
+        String productName,
+        String categoryName,
+        Integer pageNumber,
+        Integer pageSize
+    ) {
+        ProductQueryDto queryDto = new ProductQueryDto();
+        queryDto.setProductName(productName);
+        queryDto.setCategoryName(categoryName);
+        queryDto.setPageNumber(pageNumber);
+        queryDto.setPageSize(pageSize);
+        return queryDto;
     }
 }

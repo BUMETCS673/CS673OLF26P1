@@ -15,6 +15,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -117,10 +119,18 @@ private static final UUID PRODUCT_ID =
             product.setCategoryDescription("test-description");
             product.setPrice(3.75);
 
-            when(productService.getProducts(1, 1)).thenReturn(List.of(product));
+            when(productService.getProducts(argThat(query ->
+                query != null
+                    && "product".equals(query.getProductName())
+                    && "test-category".equals(query.getCategoryName())
+                    && Integer.valueOf(1).equals(query.getPageNumber())
+                    && Integer.valueOf(1).equals(query.getPageSize())
+            ))).thenReturn(List.of(product));
 
             mockMvc.perform(get("/api/v1/product")
                     .with(user("manager").roles("MANAGER"))
+                    .param("productName", "product")
+                    .param("categoryName", "test-category")
                     .param("pageNumber", "1")
                     .param("pageSize", "1"))
                 .andExpect(status().isOk())

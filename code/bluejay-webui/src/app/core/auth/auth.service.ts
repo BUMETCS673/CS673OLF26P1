@@ -58,7 +58,13 @@ export class AuthService {
   // Confidence: High
   getAuthData(): any | null {
     const value = localStorage.getItem(this.AUTH_DATA_KEY);
-    return value ? JSON.parse(value) : null;
+    if (!value) return null;
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
   }
 
   getToken(): string | null {
@@ -71,6 +77,24 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return !!this.getToken();
+  }
+
+  isAdmin(): boolean {
+    try {
+      const token = this.getToken();
+      const encodedPayload = token?.split('.')[1];
+      if (!encodedPayload) return false;
+
+      const base64Payload = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+      const paddedPayload = base64Payload.padEnd(
+        Math.ceil(base64Payload.length / 4) * 4,
+        '=',
+      );
+      const claims = JSON.parse(atob(paddedPayload));
+      return Array.isArray(claims.roles) && claims.roles.includes('ROLE_ADMIN');
+    } catch {
+      return false;
+    }
   }
 
   // AI-ASSISTED: YES

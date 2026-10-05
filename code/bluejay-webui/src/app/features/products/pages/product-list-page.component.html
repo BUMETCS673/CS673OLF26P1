@@ -16,7 +16,7 @@ authors: Kimleng
 
   <div class="columns">
     <section class="catalog-column" aria-label="Product catalog">
-      <app-product-search />
+      <app-product-search (search)="productList.applyFilters($event)" />
       <app-product-list #productList />
     </section>
     <app-product-form (created)="productList.loadPage(1)" />

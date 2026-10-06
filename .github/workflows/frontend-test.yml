@@ -33,55 +33,7 @@ jobs:
       working-directory: code/bluejay-webui
       run: npm install --no-save @vitest/coverage-v8@4.1.11
 
-    # 5. Execute Tests with coverage
+    # 5. Execute tests with coverage
     - name: Run Tests
       working-directory: code/bluejay-webui
-      run: npm run-script test -- --coverage --watch=false --coverageReporters=lcov --coverageReporters=text-summary
-
-    - name: Add frontend coverage to Actions summary
-      if: always()
-      run: |
-        python - <<'PY'
-        import os
-        from pathlib import Path
-
-        coverage_dir = Path("code/bluejay-webui/coverage")
-        reports = list(coverage_dir.rglob("lcov.info")) if coverage_dir.exists() else []
-        summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
-
-        if not reports:
-            summary.write_text(
-                "## Frontend test coverage\n\n"
-                "LCOV report unavailable. Check the frontend test step.\n"
-                "\nGenerated coverage files:\n"
-                + "\n".join(f"- {path}" for path in coverage_dir.rglob("*")) if coverage_dir.exists() else "",
-                encoding="utf-8",
-            )
-            raise SystemExit(0)
-
-        totals = {key: 0 for key in ("LF", "LH", "BRF", "BRH", "FNF", "FNH")}
-        for report in reports:
-            for line in report.read_text(encoding="utf-8").splitlines():
-                key, separator, value = line.partition(":")
-                if separator and key in totals:
-                    totals[key] += int(value)
-
-        def coverage_row(label, covered_key, found_key):
-            covered = totals[covered_key]
-            found = totals[found_key]
-            percentage = covered * 100 / found if found else 0
-            return f"| {label} | {covered} | {found - covered} | {percentage:.1f}% |"
-
-        lines = [
-            "## Frontend test coverage (Vitest)",
-            "",
-            "| Metric | Covered | Missed | Coverage |",
-            "| --- | ---: | ---: | ---: |",
-            coverage_row("Lines", "LH", "LF"),
-            coverage_row("Branches", "BRH", "BRF"),
-            coverage_row("Functions", "FNH", "FNF"),
-            "",
-        ]
-        with summary.open("a", encoding="utf-8") as output:
-            output.write("\n".join(lines))
-        PY
+      run: npm run-script test -- --coverage --watch=false

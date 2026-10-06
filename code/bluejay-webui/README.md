@@ -2,6 +2,27 @@
 
 Bluejay is an Angular 21 web application for grocery operations. It provides the application shell and feature areas for dashboard, products, inventory, sales, reports, users, and authentication.
 
+---
+
+## 🚀 Iteration 2 Features & Highlights
+
+During **Iteration 2**, the frontend moved beyond placeholder routes to deliver active feature modules and route security:
+
+* **Route Security & Access Control (`app.routes.ts`):** Integrated functional `canActivate` route guards (`authGuard`, `adminGuard`, `adminAndManagerGuard`).
+  * `/products`, `/inventory`, `/reports`: Protected for **Admin** and **Manager** roles.
+  * `/users`: Strictly protected for **Admin** users.
+* **User Management Feature (`features/users`):**
+  * Active directory page featuring live search filtering, column sorting (username, ID, creation date, enabled status), and 403/401 error messaging.
+  * User creation form component supporting role selection (`ROLE_CASHIER`, `ROLE_MANAGER`, `ROLE_ADMIN`) and reactive validation.
+* **Inventory Reporting Feature (`features/reports`):**
+  * Replaced placeholders with a functional inventory report page using modern Angular Signals (`items`, `state`, `totalUnits`).
+  * Features loading, forbidden (403), and error states, with formatted tables for product stock counts and unit costs.
+* **Inventory & Product Management Pages:**
+  * `InventoryPage`: Assembled standalone layout composing inventory health, stock list, and stock entry components.
+  * `ProductListPage`: Built composed view containing product search, listing, and product entry forms.
+
+---
+
 ## Get Started
 
 Requirements: Node.js and npm. The app expects the Bluejay backend to be available at `http://localhost:8080` for API requests.
@@ -33,22 +54,22 @@ npm run build
 src/app/
 ├── core/
 │   ├── auth/           # Authentication and idle-session services
-│   ├── guards/         # Route guard extension point
+│   ├── guards/         # Route guards (authGuard, adminGuard, adminAndManagerGuard)
 │   ├── layout/         # App shell, sidebar, and global navigation
 │   └── services/       # Application-wide infrastructure services
 ├── features/
 │   ├── auth/           # Login page and auth routes
-│   ├── dashboard/
-│   ├── inventory/
-│   ├── products/
-│   ├── reports/
-│   ├── sales/
-│   └── users/
+│   ├── dashboard/      # Dashboard metrics & summary routes
+│   ├── inventory/      # Inventory health, stock lists, & stock entry forms
+│   ├── products/       # Product search, catalog lists, & creation forms
+│   ├── reports/        # Inventory reports with signals & error state handling
+│   ├── sales/          # Point-of-sale checkout feature
+│   └── users/          # User directory (search/sort) & user creation form
 └── shared/
-	├── components/     # Reusable UI
-	├── directives/     # Reusable directives
-	├── models/         # Reusable types
-	└── pipes/          # Reusable pipes
+  	├── components/     # Reusable UI
+  	├── directives/     # Reusable directives
+  	├── models/         # Reusable types (e.g. ApiResponse)
+  	└── pipes/          # Reusable pipes
 ```
 
 Each business feature owns its route file and `pages/`, `components/`, `models/`, and `services/` folders. Some folders are currently empty and are kept in the repository with `.gitkeep` files. Feature routes are lazy-loaded by `src/app/app.routes.ts`; the login feature keeps the `/login` path. Application-wide authentication and idle-session behavior is implemented under `src/app/core/auth/`.
@@ -87,7 +108,7 @@ features/<feature-name>/
 ├── components/       # Reusable UI used only by this feature
 ├── pages/            # Routed, page-level standalone components
 ├── services/         # Feature API and orchestration services
-├── models/            # Feature-specific types and interfaces
+├── models/           # Feature-specific types and interfaces
 └── <feature-name>.routes.ts
 ```
 

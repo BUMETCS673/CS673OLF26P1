@@ -1,0 +1,25 @@
+<!-- AI-USAGE SUMMARY
+Tools: Gemini
+Overall AI Contribution: ~80%
+AI-Assisted Areas: Page layout template wiring health, list, and form components
+Human Contributions: Layout structure and wiring child component references for event refreshes
+authors: Sara Orion
+-->
+
+<main class="page">
+  <header class="page-heading">
+    <p class="eyebrow">INVENTORY MANAGEMENT</p>
+    <h1>Stock & Inventory</h1>
+    <p>Monitor stock health, view current catalog quantities, and record incoming stock entries.</p>
+  </header>
+
+  <div class="columns">
+    <section class="inventory-column" aria-label="Inventory stock and health">
+      <app-inventory-health #inventoryHealth />
+      <app-inventory-list #inventoryList />
+    </section>
+
+    <app-stock-entry-form
+      (created)="inventoryList.loadData(); inventoryHealth.loadData()" />
+  </div>
+</main>

@@ -1,0 +1,41 @@
+<!-- AI-USAGE SUMMARY
+Tools: GitHub Copilot
+Overall AI Contribution: ~75%
+AI-Assisted Areas: Search form markup for product-name/category filters and
+category dropdown loading state
+Human Contributions: Replaced barcode lookup with shared list filtering and
+reviewed the filter layout in the browser
+Notes: Emits list filters instead of rendering one-off search results.
+authors: Kimleng
+-->
+
+<section class="search-card">
+  <form #searchForm="ngForm" class="search-form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Product name</mat-label>
+      <input matInput name="productName" [(ngModel)]="productName" placeholder="Search products" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="category-field">
+      <mat-label>Category</mat-label>
+      <mat-select name="categoryName" [value]="categoryName"
+        (selectionChange)="categoryName = $event.value || ''">
+        <mat-option value="">All categories</mat-option>
+        @for (category of categories(); track category.id) {
+          <mat-option [value]="category.name">{{ category.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-flat-button color="primary" type="submit" [disabled]="loading()">
+        <mat-icon>filter_alt</mat-icon> Apply
+      </button>
+      <button mat-button type="button" (click)="clear()">Clear</button>
+    </div>
+  </form>
+
+  @if (loading()) { <mat-progress-bar mode="indeterminate" /> }
+  @if (categoryError()) { <p class="result-message error" role="alert">{{ categoryError() }}</p> }
+</section>

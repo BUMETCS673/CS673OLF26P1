@@ -1,0 +1,177 @@
+// AI-ASSISTED: YES
+// Tool: GitHub Copilot
+// Prompt Summary: "Refactor product service to use Product pricing fields, filtered queries, barcode lookup, and category selection"
+// AI Contribution: Spring service integration for pricing, filtered product queries, barcode lookup, and category list responses (~85%)
+// Confidence: High
+
+package edu.bu.metcs673.bluejay.product.service.impl;
+
+import edu.bu.metcs673.bluejay.product.domain.Category;
+import edu.bu.metcs673.bluejay.product.domain.Product;
+import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
+import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
+import edu.bu.metcs673.bluejay.common.exception.MissingProductPriceException;
+import edu.bu.metcs673.bluejay.common.exception.ProductAlreadyExistedException;
+import edu.bu.metcs673.bluejay.common.exception.ProductNotFoundException;
+import edu.bu.metcs673.bluejay.common.exception.UnknownProductCategoryException;
+import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
+import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
+import edu.bu.metcs673.bluejay.product.service.ProductService;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class ProductServiceImpl implements ProductService {
+    private final ProductRepository _productRepository;
+    private final CategoryRepository _categoryRepository;
+
+    public ProductServiceImpl(ProductRepository productRepository,
+                              CategoryRepository categoryRepository) {
+        _productRepository = productRepository;
+        _categoryRepository = categoryRepository;
+    }
+
+    @Override
+    public Product createProduct(CreateProductWithCategoryDto productDto) {
+        Product product = new Product();
+        product.setBarcode(productDto.barcode());
+        product.setName(productDto.name());
+        product.setCategoryId(productDto.categoryId());
+        product.setCostPrice(BigDecimal.ZERO);
+        product.setSalePrice(BigDecimal.ZERO);
+
+        var p = _productRepository.getProductBy(productDto.barcode());
+
+        if (p.isPresent()) {
+            throw new ProductAlreadyExistedException(productDto.barcode());
+        }
+
+        Optional<Category> c = productDto.categoryId() == null
+            ? Optional.empty()
+            : _categoryRepository.getCategoryBy(productDto.categoryId());
+        if (c.isPresent()) {
+            return _productRepository.addProduct(product);
+        }
+
+        var categoryEntity = new Category();
+        categoryEntity.setName(productDto.categoryName());
+        categoryEntity.setDescription(productDto.categoryDescription());
+        var category = _categoryRepository.addCategory(categoryEntity);
+        product.setCategoryId(category.getId());
+        product.setCategory(category);
+
+        return _productRepository.addProduct(product);
+    }
+
+    @Override
+    public List<CategoryDto> getProductCategories() {
+        List<Category> categories = _categoryRepository.getCategories();
+        List<CategoryDto> result = new ArrayList<>();
+
+        for (Category category : categories) {
+            result.add(new CategoryDto(
+                category.getId(),
+                category.getName(),
+                category.getDescription()
+            ));
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<ProductDto> getProducts(ProductQueryDto productQueryDto) {
+        int pageNumber = productQueryDto.pageNumber() == null
+            ? 1
+            : productQueryDto.pageNumber();
+        int pageSize = productQueryDto.pageSize() == null
+            ? 10
+            : productQueryDto.pageSize();
+
+        if (pageNumber < 1) {
+            throw new IllegalArgumentException("pageNumber must be greater than 0");
+        }
+
+        if (pageSize < 1) {
+            throw new IllegalArgumentException("pageSize must be greater than 0");
+        }
+
+        String productName = normalizeFilter(productQueryDto.productName());
+        String categoryName = normalizeFilter(productQueryDto.categoryName());
+
+        List<Product> products = _productRepository.getProducts(
+            productName,
+            categoryName,
+            pageNumber,
+            pageSize
+        );
+
+        if (products.isEmpty()) {
+            throw new ProductNotFoundException();
+        }
+
+        List<ProductDto> result = new ArrayList<>();
+        for (Product p : products) {
+            Optional<Category> c = _categoryRepository.getCategoryBy(p.getCategoryId());
+            if (c.isEmpty()) {
+                throw new UnknownProductCategoryException(p.getCategoryId());
+            }
+
+            result.add(new ProductDto(
+                p.getId(),
+                p.getName(),
+                p.getBarcode(),
+                p.getCategoryId(),
+                c.get().getName(),
+                c.get().getDescription(),
+                0
+            ));
+        }
+
+        return result;
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    @Override
+    public ProductDto getProductBy(String barcode) {
+        Optional<Product> p = _productRepository.getProductBy(barcode);
+
+        if (p.isEmpty()) {
+            throw new ProductNotFoundException(barcode);
+        }
+
+        var product = p.get();
+        Optional<Category> category = _categoryRepository.getCategoryBy(product.getCategoryId());
+        if (category.isEmpty()) {
+            throw new UnknownProductCategoryException(product.getCategoryId());
+        }
+
+        if (product.getSalePrice() == null
+            || product.getSalePrice().compareTo(BigDecimal.ZERO) == 0) {
+            throw new MissingProductPriceException(product.getName());
+        }
+
+        return new ProductDto(
+            product.getId(),
+            product.getName(),
+            product.getBarcode(),
+            product.getCategoryId(),
+            category.get().getName(),
+            category.get().getDescription(),
+            product.getSalePrice().doubleValue()
+        );
+    }
+}

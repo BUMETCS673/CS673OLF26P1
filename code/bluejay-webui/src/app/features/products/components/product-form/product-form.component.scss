@@ -1,0 +1,16 @@
+// AI-USAGE SUMMARY
+// Tools: GitHub Copilot
+// Overall AI Contribution: ~80%
+// AI-Assisted Areas: Card and field layout styling
+// Human Contributions: Reviewed the styling in the browser
+// Notes: Plain card styling shared in look with the other product components.
+// authors: Kimleng
+
+.form-card { padding: 22px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; }
+h2 { margin: 0 0 5px; font-size: 1.15rem; }
+.intro { margin: 0 0 20px; color: #64748b; }
+form { display: grid; gap: 8px; }
+mat-form-field { width: 100%; }
+button { margin-top: 4px; min-height: 44px; }
+.error { margin: 0 0 8px; color: #b42318; }
+.category-error { color: #b42318; }

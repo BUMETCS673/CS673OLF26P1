@@ -15,6 +15,43 @@ A production-ready Spring Boot 4.1 backend built with Java 21, Spring Security, 
 
 ---
 
+## 🚀 Iteration 2 API & Security Updates
+
+During **Iteration 2**, backend endpoints were expanded across vertical slices to support core point-of-sale features, reporting, and role-based access control:
+
+### 1. Endpoint & Controller Summary
+
+* **Authentication & User Management (`/users`)**
+    * `GET /users` — Retrieves system users (Restricted to `ADMIN`).
+    * `POST /users` — Creates new user accounts with role assignments (Restricted to `ADMIN`).
+* **Inventory Management (`/inventory`)**
+    * `GET /inventory` — Returns active inventory stock levels (`ADMIN`, `MANAGER`).
+    * `GET /inventory/health` — Retrieves inventory health and stock status metrics (`ADMIN`, `MANAGER`).
+    * `POST /inventory/stock-entry` — Submits new stock inventory entries (`ADMIN`, `MANAGER`).
+* **Product Catalog (`/product`)**
+    * `POST /product` — Creates products with assigned categories.
+    * `GET /product` — Filtered product lookup via `ProductQueryDto`.
+    * `GET /product/categories` — Retrieves available product categories.
+    * `GET /product/{barcode}` — Barcode lookup for catalog items.
+    * *(All product endpoints enforced via class-level `ADMIN`, `MANAGER`)*.
+* **Reports (`/reports`)**
+    * `GET /reports/inventory` — Generates total catalog report with stock counts and unit costs (`ADMIN`, `MANAGER`).
+
+### 2. Standardized API Response Contract
+
+All controllers wrap returned payloads in `common.dto.ApiResponse<T>`:
+
+```json
+{
+  "success": true,
+  "message": "Products retrieved successfully",
+  "data": [  ],
+  "errorCode": null
+}
+```
+
+---
+
 ## 🏛️ Architecture & Domain-Driven Design (DDD)
 
 Our backend follows a **Clean Architecture (Ports & Adapters)** pattern organized around **Vertical Feature Slices**. Each business module (such as `auth`) isolates its core business domain from framework and persistence infrastructure.
@@ -22,18 +59,14 @@ Our backend follows a **Clean Architecture (Ports & Adapters)** pattern organize
 ```text
 edu.bu.metcs673.bluejay/
 ├── auth/                      # Authentication & Identity Vertical Slice
-│   ├── controller/            # Driving Adapter: REST Endpoints & Request Validation (@Valid)
-│   ├── dto/                   # Middle Layer: API Transport Contracts (*Request.java, *Response.java)
-│   ├── entity/                # Driven Adapter: JPA Database Entities & Relational Schemas
-│   ├── repository/            # Driven Adapter: Spring Data JPA Interfaces
-│   ├── security/              # Driving Adapter: Web Security, JWT Filters & Auth Infrastructure
-│   └── service/               # Middle Layer: Application Use Cases & Auth Orchestration
-├── common/                    # Cross-Cutting Concerns & Shared Infrastructure
-│   ├── config/                # Framework Configuration Beans
-│   ├── dto/                   # Unified API Response Wrappers (ApiResponse<T>)
-│   └── exception/             # Global RestControllerAdvice Exception Handlers
-└── [domain]/                  # Future Domain Slices (e.g., sales, inventory)
-    └── domain/                # Inner Core: Pure Framework-Agnostic Value Objects & Enums
+│   └── security/              # Web Security, JWT Filters & Auth Infrastructure
+├── inventory/                 # Stock & Restock Operations Vertical Slice
+├── product/                   # Catalog & Category Vertical Slice
+├── report/                    # Analytics & Inventory Reporting Vertical Slice
+└── common/                    # Cross-Cutting Concerns & Shared Infrastructure
+    ├── config/                # Framework Configuration Beans
+    ├── dto/                   # Unified API Response Wrappers (ApiResponse<T>)
+    └── exception/             # Global RestControllerAdvice Exception Handlers
 ```
 
 ### 📐 Domain Guidelines & Architectural Rules
@@ -67,6 +100,15 @@ To maintain consistency across all feature slices (e.g., `sales`, `inventory`, `
 ```
 
 #### 2. Standard Sub-Package Responsibilities & Allowed Dependencies
+
+```text
+├── controller/            # Driving Adapter: REST Endpoints & Request Validation (@Valid)
+├── domain/                # Inner Core: Business enums, core objects and domain model contracts
+├── dto/                   # Middle Layer: API Transport Contracts (*Request.java, *Response.java)
+├── entity/                # Driven Adapter: JPA Database Entities & Relational Schemas
+├── repository/            # Driven Adapter: Spring Data JPA Interfaces
+└── service/               # Middle Layer: Application Use Cases & Auth Orchestration
+```
 
 | Clean Architecture Layer                        | Package Location             | Architectural Role & Primary Purpose                                                                                                                                                        | Allowed Dependencies                         |
 |-------------------------------------------------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|

@@ -1,0 +1,31 @@
+// AI-USAGE SUMMARY
+// Tools: GitHub Copilot
+// Overall AI Contribution: ~75%
+// AI-Assisted Areas: Flex layout for product-name/category filters, vertical
+// alignment and responsive spacing
+// Human Contributions: Replaced the barcode search card with shared list
+// filters and verified the updated alignment in the browser
+// Notes: Buttons use a fixed 56px row to match the outlined inputs.
+// authors: Kimleng
+
+.search-card {
+  padding: 18px 20px 4px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.search-form { display: flex; align-items: flex-start; gap: 12px; }
+.search-field { flex: 1.5; }
+.category-field { flex: 1; min-width: 180px; }
+.actions { display: flex; align-items: center; gap: 4px; height: 56px; }
+.actions mat-icon { margin-right: 4px; }
+
+.result-message { margin: 8px 0 12px; }
+.result-message.error { color: #b91c1c; }
+
+@media (max-width: 600px) {
+  .search-form { flex-direction: column; gap: 0; }
+  .search-field, .category-field { width: 100%; }
+  .actions { height: auto; padding: 0 0 12px; }
+}

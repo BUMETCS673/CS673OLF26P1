@@ -1,0 +1,22 @@
+// AI-USAGE SUMMARY
+// Tools: GitHub Copilot
+// Overall AI Contribution: ~70%
+// AI-Assisted Areas: Page grid layout
+// Human Contributions: Reviewed the layout in the browser
+// Notes: Two-column layout for catalog and form.
+// authors: Kimleng
+
+:host { display: block; }
+
+.page { max-width: 1440px; margin: 0 auto; padding: clamp(20px, 3vw, 36px); }
+.page-heading { margin-bottom: 24px; }
+h1 { margin: 4px 0 6px; font-size: clamp(1.8rem, 3vw, 2.3rem); color: #172b3a; }
+.page-heading p { margin: 0; color: #64748b; }
+.page-heading .eyebrow { color: #176b87; letter-spacing: .12em; font-size: .75rem; font-weight: 700; }
+.columns { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, .85fr); align-items: start; gap: 22px; }
+.catalog-column { display: grid; gap: 16px; }
+.notice { margin-top: 14px; color: #176b54; }
+
+@media (max-width: 900px) {
+  .columns { grid-template-columns: 1fr; }
+}

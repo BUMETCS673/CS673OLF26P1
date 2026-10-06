@@ -1,0 +1,40 @@
+<!-- AI-USAGE SUMMARY
+Tools: Gemini
+Overall AI Contribution: ~80%
+AI-Assisted Areas: Inventory health progress bar and status badge template markup
+Human Contributions: UI layout choices and dynamic class mapping for health thresholds
+authors: Sara Orion
+-->
+
+<div class="card inventory-health-card">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">Inventory Health</h2>
+      <p class="card-subtitle">Quick stock visibility overview.</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <p class="card-subtitle">Loading inventory health metrics...</p>
+  } @else {
+    @for (item of healthItems(); track item.id) {
+      <div class="health-item">
+        <div class="health-info">
+          <span class="product-name">{{ item.productName }}</span>
+          <span class="health-status" [ngClass]="'status-' + getStatusClass(item.status)">
+            {{ item.percentage }}% &nbsp; {{ item.status }}
+          </span>
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            [ngClass]="'fill-' + getStatusClass(item.status)"
+            [style.width.%]="item.percentage">
+          </div>
+        </div>
+      </div>
+    } @empty {
+      <p class="card-subtitle">No inventory health metrics available.</p>
+    }
+  }
+</div>

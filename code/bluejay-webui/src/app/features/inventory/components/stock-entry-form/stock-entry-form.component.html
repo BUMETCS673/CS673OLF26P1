@@ -1,0 +1,68 @@
+<!-- AI-USAGE SUMMARY
+Tools: Gemini
+Overall AI Contribution: ~80%
+AI-Assisted Areas: Stock entry reactive form template markup and dynamic error banner styling
+Human Contributions: Form layout structure, field grouping, and accessibility attributes
+authors: Sara Orion
+-->
+
+<div class="card stock-entry-card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">Stock Entry</h3>
+      <p class="card-subtitle">Record incoming stock using product barcode, cost, and quantity.</p>
+    </div>
+  </div>
+
+  <form [formGroup]="stockForm" (ngSubmit)="onSubmit()" class="stock-form">
+    <div class="form-row">
+      <div class="form-group barcode-group">
+        <label for="barcode">Barcode</label>
+        <input
+          id="barcode"
+          type="text"
+          formControlName="barcode"
+          placeholder="Enter product barcode"
+          class="form-control"
+          [class.is-invalid]="stockForm.get('barcode')?.touched && stockForm.get('barcode')?.invalid"
+        />
+      </div>
+
+      <div class="form-group cost-group">
+        <label for="cost">Cost</label>
+        <input
+          id="cost"
+          type="number"
+          step="0.01"
+          formControlName="cost"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group quantity-group">
+        <label for="quantity">Quantity</label>
+        <input
+          id="quantity"
+          type="number"
+          formControlName="quantity"
+          class="form-control"
+          [class.is-invalid]="stockForm.get('quantity')?.touched && stockForm.get('quantity')?.invalid"
+        />
+      </div>
+
+      <div class="form-group button-group">
+        <button type="submit" class="btn btn-action" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Adding...' : 'Add Entry' }}
+        </button>
+      </div>
+    </div>
+  </form>
+
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+  }
+</div>

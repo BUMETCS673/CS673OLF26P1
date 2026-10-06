@@ -1,0 +1,18 @@
+// AI-USAGE SUMMARY
+// Tools: GitHub Copilot
+// Overall AI Contribution: ~80%
+// AI-Assisted Areas: Card, table and message styling
+// Human Contributions: Reviewed the styling in the browser
+// Notes: Plain card styling shared in look with the other product components.
+// authors: Kimleng
+
+.list-card { overflow: hidden; background: white; border: 1px solid #e2e8f0; border-radius: 14px; }
+.list-header { padding: 20px 20px 14px; }
+h2 { margin: 0 0 4px; font-size: 1.1rem; }
+.list-header p { margin: 0; color: #64748b; }
+.table-container { overflow-x: auto; }
+table { width: 100%; }
+th { color: #526273; font-weight: 600; white-space: nowrap; }
+td { white-space: nowrap; }
+.empty-cell { height: 64px; text-align: center; color: #64748b; }
+.error { margin: 0; padding: 16px 20px; color: #b42318; }

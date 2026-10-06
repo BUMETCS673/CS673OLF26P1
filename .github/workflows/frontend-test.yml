@@ -36,7 +36,7 @@ jobs:
     # 5. Execute Tests with coverage
     - name: Run Tests
       working-directory: code/bluejay-webui
-      run: npm run-script test -- --coverage
+      run: npm run-script test -- --coverage --watch=false --coverageReporters=lcov --coverageReporters=text-summary
 
     - name: Add frontend coverage to Actions summary
       if: always()
@@ -52,7 +52,9 @@ jobs:
         if not reports:
             summary.write_text(
                 "## Frontend test coverage\n\n"
-                "LCOV report unavailable. Check the frontend test step.\n",
+                "LCOV report unavailable. Check the frontend test step.\n"
+                "\nGenerated coverage files:\n"
+                + "\n".join(f"- {path}" for path in coverage_dir.rglob("*")) if coverage_dir.exists() else "",
                 encoding="utf-8",
             )
             raise SystemExit(0)

@@ -1,0 +1,56 @@
+// --- Theme Tokens ---
+$bg-main: #f8fafc;
+$text-primary: #0f172a;
+$text-secondary: #64748b;
+
+.page {
+  padding: 2rem;
+  background-color: $bg-main;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: $text-primary;
+
+  .page-heading {
+    margin-bottom: 2rem;
+
+    .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: $text-secondary;
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem 0;
+      color: $text-primary;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: $text-secondary;
+    }
+  }
+
+  // Two-column layout grid (Matches Catalog layout)
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 380px; // Left side content, fixed right sidebar for form
+    gap: 1.5rem;
+    align-items: start;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr; // Stacks vertically on smaller screens
+    }
+  }
+
+  .inventory-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}

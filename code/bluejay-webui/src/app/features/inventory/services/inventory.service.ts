@@ -10,10 +10,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {ApiResponse} from '../../../shared/models/api-response.model';
-import {
-  StockEntryRequest,
-  StockEntryResponse
-} from '../models/stock-entry.model';
+import {CreateStockEntry, StockEntry, InventoryItem, InventoryHealthItem} from '../models/inventory.model';
 
 
 // AI-ASSISTED: YES
@@ -28,9 +25,17 @@ import {
 })
 export class InventoryService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/v1/inventory/stock-entries';
+  private readonly apiUrl = '/api/v1/inventory';
 
-  recordStockEntry(request: StockEntryRequest): Observable<ApiResponse<StockEntryResponse>> {
-    return this.http.post<ApiResponse<StockEntryResponse>>(this.apiUrl, request);
+  recordStockEntry(request: CreateStockEntry): Observable<ApiResponse<StockEntry>> {
+    return this.http.post<ApiResponse<StockEntry>>(`${this.apiUrl}/stock-entry`, request);
+  }
+
+  getStockInventory(): Observable<ApiResponse<InventoryItem[]>> {
+    return this.http.get<ApiResponse<InventoryItem[]>>(`${this.apiUrl}`);
+  }
+
+  getInventoryHealth(): Observable<ApiResponse<InventoryHealthItem[]>> {
+    return this.http.get<ApiResponse<InventoryHealthItem[]>>(`${this.apiUrl}/health`);
   }
 }

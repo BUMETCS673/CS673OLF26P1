@@ -29,8 +29,3 @@ export interface ProductCategory {
   name: string;
   description: string | null;
 }
-
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}

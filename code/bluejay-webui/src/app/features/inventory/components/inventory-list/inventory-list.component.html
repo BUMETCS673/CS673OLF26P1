@@ -1,0 +1,40 @@
+<!-- AI-USAGE SUMMARY
+Tools: Gemini
+Overall AI Contribution: ~80%
+AI-Assisted Areas: Stock inventory table template markup and Control Flow syntax
+Human Contributions: Table column layout and empty/loading state display logic
+authors: Sara Orion
+-->
+
+<div class="table-responsive">
+  <table class="recent-table">
+    <thead>
+    <tr>
+      <th>BARCODE</th>
+      <th>PRODUCT</th>
+      <th>COST</th>
+      <th>TOTAL STOCK</th>
+    </tr>
+    </thead>
+    <tbody>
+      @if (isLoading()) {
+        <tr>
+          <td colspan="4" style="text-align: center; color: #64748b;">Loading stock inventory...</td>
+        </tr>
+      } @else {
+        @for (item of inventoryItems(); track item.id) {
+          <tr>
+            <td>{{ item.barcode }}</td>
+            <td class="font-medium">{{ item.productName }}</td>
+            <td>${{ item.cost | number:'1.2-2' }}</td>
+            <td>{{ item.quantity }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" style="text-align: center; color: #64748b;">No stock inventory records available.</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

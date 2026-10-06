@@ -8,18 +8,17 @@
 
 // AI-ASSISTED: YES
 // Tool: Gemini
-// Prompt Summary: "Create TypeScript interfaces matching backend StockEntryRequest, StockEntryResponse, and ApiResponse wrapper."
+// Prompt Summary: "Create TypeScript interfaces matching backend CreateStockEntry, StockEntry, and InventoryItem wrapper."
 // AI Contribution: Initial draft (~100%)
-// Modifications: Configured generic ApiResponse contract to align with Spring Boot backend wrapper.
 // Verification: Angular compiler type checking.
 // Confidence: High
-export interface StockEntryRequest {
+export interface CreateStockEntry {
   barcode: string;
   quantity: number;
   cost?: number | null;
 }
 
-export interface StockEntryResponse {
+export interface StockEntry {
   movementId: number;
   productId: string;
   barcode: string;
@@ -32,9 +31,24 @@ export interface StockEntryResponse {
   message: string;
 }
 
-export interface RecentStockEntryItem {
+export interface InventoryItem {
+  id: string;
   barcode: string;
   productName: string;
   cost: number;
   quantity: number;
+}
+
+// AI-ASSISTED: YES
+// Tool: Gemini
+// Prompt Summary: "Create InventoryHealthItem interface for dynamic product stock level rendering. Define status types and percentage attributes."
+// AI Contribution: Initial draft (~100%)
+// Modifications: Added explicit union type for health status levels.
+// Verification: Angular compiler type check.
+// Confidence: High
+export interface InventoryHealthItem {
+  id: string;
+  productName: string;
+  percentage: number;
+  status: 'Healthy' | 'Low' | 'Critical';
 }

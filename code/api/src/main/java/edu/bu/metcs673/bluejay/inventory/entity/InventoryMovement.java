@@ -24,6 +24,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -50,8 +52,8 @@ public class InventoryMovement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", columnDefinition = "VARCHAR(36)", updatable
-        = false, nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "product_id", updatable = false, nullable = false)
     private UUID productId;
 
     @Column(name = "quantity_change", nullable = false)
@@ -64,7 +66,8 @@ public class InventoryMovement {
     @Column(name = "reference_id", length = 36)
     private String referenceId;
 
-    @Column(name = "user_id", columnDefinition = "VARCHAR(36)")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "user_id")
     private UUID userId;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -48,11 +48,20 @@ describe('ProductService', () => {
   });
 
   it('lists products with the requested page and size', () => {
-    service.list(3, 25).subscribe();
+    service.list({ pageNumber: 3, pageSize: 25 }).subscribe();
 
     const request = controller.expectOne((r) => r.url === '/api/v1/product');
     expect(request.request.params.get('pageNumber')).toBe('3');
     expect(request.request.params.get('pageSize')).toBe('25');
+    request.flush({ data: [] });
+  });
+
+  it('lists products with product-name and category filters', () => {
+    service.list({ productName: 'Water', categoryName: 'beverage', pageNumber: 1, pageSize: 10 }).subscribe();
+
+    const request = controller.expectOne((r) => r.url === '/api/v1/product');
+    expect(request.request.params.get('productName')).toBe('Water');
+    expect(request.request.params.get('categoryName')).toBe('beverage');
     request.flush({ data: [] });
   });
 

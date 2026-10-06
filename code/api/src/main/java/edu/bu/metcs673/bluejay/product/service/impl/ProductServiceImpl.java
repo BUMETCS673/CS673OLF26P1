@@ -1,7 +1,7 @@
 // AI-ASSISTED: YES
 // Tool: GitHub Copilot
-// Prompt Summary: "Refactor product service to use Product pricing fields, barcode lookup, and category selection"
-// AI Contribution: Spring service integration for pricing, barcode lookup, and category list responses (~80%)
+// Prompt Summary: "Refactor product service to use Product pricing fields, filtered queries, barcode lookup, and category selection"
+// AI Contribution: Spring service integration for pricing, filtered product queries, barcode lookup, and category list responses (~85%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.service.impl;
@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.product.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.product.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
@@ -39,28 +40,28 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product createProduct(CreateProductWithCategoryDto productDto) {
         Product product = new Product();
-        product.setBarcode(productDto.getBarcode());
-        product.setName(productDto.getName());
-        product.setCategoryId(productDto.getCategoryId());
+        product.setBarcode(productDto.barcode());
+        product.setName(productDto.name());
+        product.setCategoryId(productDto.categoryId());
         product.setCostPrice(BigDecimal.ZERO);
         product.setSalePrice(BigDecimal.ZERO);
 
-        var p = _productRepository.getProductBy(productDto.getBarcode());
+        var p = _productRepository.getProductBy(productDto.barcode());
 
         if (p.isPresent()) {
-            throw new ProductAlreadyExistedException(productDto.getBarcode());
+            throw new ProductAlreadyExistedException(productDto.barcode());
         }
 
-        Optional<Category> c = productDto.getCategoryId() == null
+        Optional<Category> c = productDto.categoryId() == null
             ? Optional.empty()
-            : _categoryRepository.getCategoryBy(productDto.getCategoryId());
+            : _categoryRepository.getCategoryBy(productDto.categoryId());
         if (c.isPresent()) {
             return _productRepository.addProduct(product);
         }
 
         var categoryEntity = new Category();
-        categoryEntity.setName(productDto.getCategoryName());
-        categoryEntity.setDescription(productDto.getCategoryDescription());
+        categoryEntity.setName(productDto.categoryName());
+        categoryEntity.setDescription(productDto.categoryDescription());
         var category = _categoryRepository.addCategory(categoryEntity);
         product.setCategoryId(category.getId());
         product.setCategory(category);
@@ -74,18 +75,25 @@ public class ProductServiceImpl implements ProductService {
         List<CategoryDto> result = new ArrayList<>();
 
         for (Category category : categories) {
-            CategoryDto dto = new CategoryDto();
-            dto.setId(category.getId());
-            dto.setName(category.getName());
-            dto.setDescription(category.getDescription());
-            result.add(dto);
+            result.add(new CategoryDto(
+                category.getId(),
+                category.getName(),
+                category.getDescription()
+            ));
         }
 
         return result;
     }
 
     @Override
-    public List<ProductDto> getProducts(int pageNumber, int pageSize) {
+    public List<ProductDto> getProducts(ProductQueryDto productQueryDto) {
+        int pageNumber = productQueryDto.pageNumber() == null
+            ? 1
+            : productQueryDto.pageNumber();
+        int pageSize = productQueryDto.pageSize() == null
+            ? 10
+            : productQueryDto.pageSize();
+
         if (pageNumber < 1) {
             throw new IllegalArgumentException("pageNumber must be greater than 0");
         }
@@ -94,8 +102,15 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("pageSize must be greater than 0");
         }
 
+        String productName = normalizeFilter(productQueryDto.productName());
+        String categoryName = normalizeFilter(productQueryDto.categoryName());
+
         List<Product> products = _productRepository.getProducts(
-                pageNumber, pageSize);
+            productName,
+            categoryName,
+            pageNumber,
+            pageSize
+        );
 
         if (products.isEmpty()) {
             throw new ProductNotFoundException();
@@ -108,18 +123,26 @@ public class ProductServiceImpl implements ProductService {
                 throw new UnknownProductCategoryException(p.getCategoryId());
             }
 
-            var dto = new ProductDto();
-            dto.setId(p.getId());
-            dto.setName(p.getName());
-            dto.setBarcode(p.getBarcode());
-            dto.setCategoryId(p.getCategoryId());
-            dto.setCategoryName(c.get().getName());
-            dto.setCategoryDescription(c.get().getDescription());
-
-            result.add(dto);
+            result.add(new ProductDto(
+                p.getId(),
+                p.getName(),
+                p.getBarcode(),
+                p.getCategoryId(),
+                c.get().getName(),
+                c.get().getDescription(),
+                0
+            ));
         }
 
         return result;
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
     }
 
     @Override
@@ -141,15 +164,14 @@ public class ProductServiceImpl implements ProductService {
             throw new MissingProductPriceException(product.getName());
         }
 
-        ProductDto productDto = new ProductDto();
-        productDto.setId(product.getId());
-        productDto.setName(product.getName());
-        productDto.setBarcode(product.getBarcode());
-        productDto.setCategoryId(product.getCategoryId());
-        productDto.setCategoryName(category.get().getName());
-        productDto.setCategoryDescription(category.get().getDescription());
-        productDto.setPrice(product.getSalePrice().doubleValue());
-
-        return productDto;
+        return new ProductDto(
+            product.getId(),
+            product.getName(),
+            product.getBarcode(),
+            product.getCategoryId(),
+            category.get().getName(),
+            category.get().getDescription(),
+            product.getSalePrice().doubleValue()
+        );
     }
 }

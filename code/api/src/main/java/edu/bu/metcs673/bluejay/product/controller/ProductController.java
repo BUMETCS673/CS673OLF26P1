@@ -1,7 +1,7 @@
 // AI-ASSISTED: YES
 // Tool: GitHub Copilot
-// Prompt Summary: "Create secured ProductController endpoints for create, list, barcode lookup, and category selection"
-// AI Contribution: REST endpoint scaffolding, ApiResponse wrapping, and role-based method security for product/category reads (~85%)
+// Prompt Summary: "Create secured ProductController endpoints for create, filtered list, barcode lookup, and category selection"
+// AI Contribution: REST endpoint scaffolding, ApiResponse wrapping, and role-based method security for filtered product/category reads (~85%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.product.controller;
@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -49,9 +49,8 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProductDto>>> getProducts(
-        @RequestParam(defaultValue = "1") int pageNumber,
-        @RequestParam(defaultValue = "10") int pageSize) {
-        List<ProductDto> products = productService.getProducts(pageNumber, pageSize);
+        ProductQueryDto productQueryDto) {
+        List<ProductDto> products = productService.getProducts(productQueryDto);
         ApiResponse<List<ProductDto>> response = ApiResponse.success(
             products,
             "Products retrieved successfully"

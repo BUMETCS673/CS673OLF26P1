@@ -23,6 +23,20 @@ Small-to-medium retail businesses frequently struggle with fragmented software, 
 
 ---
 
+## 🚀 Iteration 2 Highlights & Status
+
+During **Iteration 2**, the team focused on establishing core inventory operations, reporting capabilities, user management, and enforcing strict Role-Based Access Control (RBAC) across both backend services and frontend router navigation:
+
+* **Role-Based Access Control (RBAC) & Route Security:**
+  * Backend endpoints are secured using `@PreAuthorize` annotations based on user roles (`ROLE_ADMIN`, `ROLE_MANAGER`, `ROLE_CASHIER`).
+  * Frontend navigation routes are guarded (`adminGuard`, `adminAndManagerGuard`, `authGuard`) to restrict unauthorized access based on privileges.
+* **Standardized API Response Pipeline:** All Spring Boot REST API responses across domain controllers are wrapped inside a consistent `ApiResponse<T>` envelope for uniform data and error contracts.
+* **User Management & Directory:** Administrators can create new platform accounts (assigning roles) and search/sort active system users.
+* **Inventory & Product Management:** Expanded product creation with category mapping, barcode lookup, inventory health metrics, and stock entry forms.
+* **Inventory Reporting:** Introduced live inventory reporting detailing product stock levels, unit costs, and out-of-stock highlights.
+
+---
+
 ## 🛠️ Technology Stack
 
 | Layer | Technology / Framework |

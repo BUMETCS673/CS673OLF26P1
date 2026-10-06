@@ -16,7 +16,7 @@ import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
-import edu.bu.metcs673.bluejay.product.exception.ProductNotFoundException;
+import edu.bu.metcs673.bluejay.common.exception.ProductNotFoundException;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

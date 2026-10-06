@@ -37,7 +37,7 @@ public class Product {
     @Column(length = 36, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String name;
 
     @Column(unique = true, length = 100)

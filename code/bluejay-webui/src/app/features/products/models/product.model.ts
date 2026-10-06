@@ -37,8 +37,3 @@ export interface ProductQuery {
   pageNumber?: number;
   pageSize?: number;
 }
-
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}

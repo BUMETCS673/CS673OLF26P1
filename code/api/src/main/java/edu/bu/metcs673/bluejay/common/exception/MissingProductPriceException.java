@@ -4,9 +4,8 @@
 // AI Contribution: HTTP status and error-code mapping for missing product price failures (~80%)
 // Confidence: High
 
-package edu.bu.metcs673.bluejay.product.exception;
+package edu.bu.metcs673.bluejay.common.exception;
 
-import edu.bu.metcs673.bluejay.common.exception.BaseAppException;
 import org.springframework.http.HttpStatus;
 
 public class MissingProductPriceException extends BaseAppException {

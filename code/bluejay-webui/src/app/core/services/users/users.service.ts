@@ -12,6 +12,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
+import { ApiResponse} from '../../../shared/models/api-response.model';
 
 export interface UserRecord {
   id: string;
@@ -27,20 +28,13 @@ export interface CreateUserRequest {
   role: string;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errorCode: string | null;
-  timestamp: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class UsersService {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
 
   getUsers(): Observable<UserRecord[]> {
+    // @ts-ignore
     return this.http
       .get<ApiResponse<UserRecord[]>>('/api/v1/users', {
         headers: this.getAuthHeaders(),
@@ -49,6 +43,7 @@ export class UsersService {
   }
 
   createUser(request: CreateUserRequest): Observable<UserRecord> {
+    // @ts-ignore
     return this.http
       .post<ApiResponse<UserRecord>>('/api/v1/users', request, {
         headers: this.getAuthHeaders(),

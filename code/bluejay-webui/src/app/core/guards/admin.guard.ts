@@ -22,3 +22,13 @@ export const adminGuard: CanActivateFn = (_route, state) => {
     ? router.createUrlTree(['/dashboard'])
     : router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
 };
+
+export const cashierGuard: CanActivateFn = (_route, state) => {
+  const authService = inject(AuthService);
+  return authService.isCashier();
+};
+
+export const adminAndManagerGuard: CanActivateFn = (_route, state) => {
+  const authService = inject(AuthService);
+  return authService.isManager() || authService.isAdmin();
+};

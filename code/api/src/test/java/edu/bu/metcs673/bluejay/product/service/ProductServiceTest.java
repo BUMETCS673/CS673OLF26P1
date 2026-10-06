@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.common.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.common.exception.ProductAlreadyExistedException;
 import edu.bu.metcs673.bluejay.common.exception.ProductNotFoundException;
@@ -54,10 +55,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should create product when all fields are valid")
     public void shouldCreateProductWhenAllFieldsAreValid() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-test-12345");
-        productDto.setName("Milk");
-        productDto.setCategoryId(1L);
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Milk",
+            "barcode-test-12345",
+            1L,
+            null,
+            null
+        );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
@@ -82,10 +86,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should throw exception when create product with duplicated barcode")
     public void shouldThrowExceptionWhenCreateProductWithDuplicateBarcode() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-existed-12345");
-        productDto.setName("Chocolate Milk");
-        productDto.setCategoryId(1L);
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Chocolate Milk",
+            "barcode-existed-12345",
+            1L,
+            null,
+            null
+        );
 
         when(productRepository.getProductBy("barcode-existed-12345"))
                 .thenReturn(Optional.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)));
@@ -96,10 +103,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should add new product with newly created category if category doesn't exist")
     public void shouldAddNewCategoryToProductWhenProductCategoryNotExist() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-test-12345");
-        productDto.setName("Soy Milk");
-        productDto.setCategoryName("test-new-category");
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Soy Milk",
+            "barcode-test-12345",
+            null,
+            "test-new-category",
+            null
+        );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
         when(categoryRepository.addCategory(org.mockito.ArgumentMatchers.any(Category.class)))
@@ -130,11 +140,13 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should save product category description when provided")
     public void shouldSaveOptionalCategoryDescriptionWhenDescriptionIsEmpty() {
-        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto();
-        productDto.setBarcode("barcode-test-12345");
-        productDto.setName("Oat Milk");
-        productDto.setCategoryName("test-new-category");
-        productDto.setCategoryDescription("test-description-category");
+        CreateProductWithCategoryDto productDto = new CreateProductWithCategoryDto(
+            "Oat Milk",
+            "barcode-test-12345",
+            null,
+            "test-new-category",
+            "test-description-category"
+        );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
         when(categoryRepository.addCategory(org.mockito.ArgumentMatchers.any(Category.class)))
@@ -177,22 +189,24 @@ public class ProductServiceTest {
 
         assertNotNull(categories);
         assertEquals(2, categories.size());
-        assertEquals(1L, categories.get(0).getId());
-        assertEquals("test-category", categories.get(0).getName());
-        assertEquals("test-description", categories.get(0).getDescription());
-        assertEquals(2L, categories.get(1).getId());
-        assertEquals("beverages", categories.get(1).getName());
-        assertEquals("drinks", categories.get(1).getDescription());
+        assertEquals(1L, categories.get(0).id());
+        assertEquals("test-category", categories.get(0).name());
+        assertEquals("test-description", categories.get(0).description());
+        assertEquals(2L, categories.get(1).id());
+        assertEquals("beverages", categories.get(1).name());
+        assertEquals("drinks", categories.get(1).description());
     }
 
     @Test
     @DisplayName("Should return products with category when requested page has records")
     public void shouldReturnProductsWithCategoryWhenRequestedPageHasRecords() {
-        when(productRepository.getProducts(2, 1))
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 2, 1);
+
+        when(productRepository.getProducts(null, null, 2, 1))
                 .thenReturn(List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(2, 1);
+        List<ProductDto> products = productService.getProducts(queryDto);
 
         assertNotNull(products);
         assertFalse(products.isEmpty());
@@ -200,30 +214,65 @@ public class ProductServiceTest {
 
         ProductDto firstProduct = products.getFirst();
         assertNotNull(firstProduct);
-        assertNotNull(firstProduct.getId());
-        assertEquals("product-existed", firstProduct.getName());
-        assertTrue(firstProduct.getCategoryId() > 0);
-        assertEquals("test-category", firstProduct.getCategoryName());
+        assertNotNull(firstProduct.id());
+        assertEquals("product-existed", firstProduct.name());
+        assertTrue(firstProduct.categoryId() > 0);
+        assertEquals("test-category", firstProduct.categoryName());
     }
 
     @Test
     @DisplayName("Should throw product not found exception when requested page has no records")
     public void shouldThrowProductNotFoundExceptionWhenRequestedPageHasNoRecords() {
-        when(productRepository.getProducts(1, 1)).thenReturn(List.of());
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
+
+        when(productRepository.getProducts(null, null, 1, 1)).thenReturn(List.of());
 
         assertThrows(ProductNotFoundException.class,
-                () -> productService.getProducts(1, 1));
+                () -> productService.getProducts(queryDto));
     }
 
     @Test
     @DisplayName("Should throw unknown product category exception when product category does not exist")
     public void shouldThrowUnknownProductCategoryExceptionWhenProductCategoryDoesNotExist() {
-        when(productRepository.getProducts(1, 1))
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
+
+        when(productRepository.getProducts(null, null, 1, 1))
                 .thenReturn(List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.empty());
 
         assertThrows(UnknownProductCategoryException.class,
-                () -> productService.getProducts(1, 1));
+                () -> productService.getProducts(queryDto));
+    }
+
+    @Test
+    @DisplayName("Should pass product name and category filters to repository")
+    public void shouldFilterProductsByProductNameAndCategoryName() {
+        ProductQueryDto queryDto = createProductQueryDto("Water", "beverage", 1, 10);
+
+        when(productRepository.getProducts("Water", "beverage", 1, 10))
+                .thenReturn(List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        List<ProductDto> products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertEquals(1, products.size());
+        assertEquals("Spring Water", products.getFirst().name());
+    }
+
+    @Test
+    @DisplayName("Should default page number and page size when query pagination is missing")
+    public void shouldDefaultProductQueryPagination() {
+        ProductQueryDto queryDto = createProductQueryDto("Milk", "dairy", null, null);
+
+        when(productRepository.getProducts("Milk", "dairy", 1, 10))
+                .thenReturn(List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        List<ProductDto> products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertEquals(1, products.size());
     }
 
     @Test
@@ -236,10 +285,10 @@ public class ProductServiceTest {
         ProductDto product = productService.getProductBy("barcode-mock-12345");
 
         assertNotNull(product);
-        assertNotNull(product.getId());
-        assertEquals("product-mock", product.getName());
-        assertEquals("test-category", product.getCategoryName());
-        assertEquals(3.75, product.getPrice());
+        assertNotNull(product.id());
+        assertEquals("product-mock", product.name());
+        assertEquals("test-category", product.categoryName());
+        assertEquals(3.75, product.price());
     }
 
     @Test
@@ -291,5 +340,14 @@ public class ProductServiceTest {
         category.setName("test-category");
         category.setDescription("test-description");
         return category;
+    }
+
+    private ProductQueryDto createProductQueryDto(
+        String productName,
+        String categoryName,
+        Integer pageNumber,
+        Integer pageSize
+    ) {
+        return new ProductQueryDto(productName, categoryName, pageNumber, pageSize);
     }
 }

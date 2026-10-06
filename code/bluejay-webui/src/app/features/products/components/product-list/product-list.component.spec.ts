@@ -10,7 +10,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PageEvent } from '@angular/material/paginator';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { Product } from '../../models/product.model';
+import { Product, ProductQuery } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
 import { ProductListComponent } from './product-list.component';
 
@@ -40,7 +40,7 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
   it('loads the first page on init', async () => {
     await create();
 
-    expect(serviceMock.list).toHaveBeenCalledWith(1, 10);
+    expect(serviceMock.list).toHaveBeenCalledWith({ pageNumber: 1, pageSize: 10 });
     expect(component.products().length).toBe(2);
     expect(component.loading()).toBe(false);
   });
@@ -91,7 +91,7 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
     component.loadPage(-4);
 
     expect(component.page()).toBe(1);
-    expect(serviceMock.list).toHaveBeenLastCalledWith(1, 10);
+    expect(serviceMock.list).toHaveBeenLastCalledWith({ pageNumber: 1, pageSize: 10 });
   });
 
   it('loads the requested page and size on page change', async () => {
@@ -100,7 +100,21 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
 
     expect(component.pageSize()).toBe(25);
     expect(component.page()).toBe(3);
-    expect(serviceMock.list).toHaveBeenLastCalledWith(3, 25);
+    expect(serviceMock.list).toHaveBeenLastCalledWith({ pageNumber: 3, pageSize: 25 });
+  });
+
+  it('applies shared filters and resets back to the first page', async () => {
+    await create();
+    component.loadPage(3);
+    component.applyFilters({ productName: 'Water', categoryName: 'beverage' } satisfies ProductQuery);
+
+    expect(component.page()).toBe(1);
+    expect(serviceMock.list).toHaveBeenLastCalledWith({
+      productName: 'Water',
+      categoryName: 'beverage',
+      pageNumber: 1,
+      pageSize: 10,
+    });
   });
 
   it('adds one extra row to the paginator length when the page is full', async () => {

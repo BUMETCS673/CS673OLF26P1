@@ -1,9 +1,13 @@
 // AI-USAGE SUMMARY
 // Tools: GitHub Copilot
-// Overall AI Contribution: ~70%
-// AI-Assisted Areas: Paginated product table component, load/error handling and paginator length logic
-// Human Contributions: Diagnosed the ExpressionChangedAfterItHasBeenCheckedError (NG0100), directed the move to signal-based state, removed the barcode filtering so search no longer replaces the table, and verified paging in the browser
-// Notes: State uses signals and a computed paginatorLength because the API returns no total count.
+// Overall AI Contribution: ~75%
+// AI-Assisted Areas: Paginated product table component, shared filter state,
+// load/error handling and paginator length logic
+// Human Contributions: Diagnosed the ExpressionChangedAfterItHasBeenCheckedError
+// (NG0100), directed the move to signal-based state, replaced barcode search
+// with shared list filters, and verified paging in the browser
+// Notes: State uses signals and a computed paginatorLength because the API
+// returns no total count.
 // authors: Kimleng
 
 import { CurrencyPipe } from '@angular/common';
@@ -12,7 +16,7 @@ import { finalize } from 'rxjs';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
-import { Product } from '../../models/product.model';
+import { Product, ProductQuery } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
 
 @Component({
@@ -29,6 +33,7 @@ export class ProductListComponent implements OnInit {
   readonly pageSize = signal(10);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly filters = signal<ProductQuery>({});
   readonly displayedColumns = ['name', 'barcode', 'category', 'price'];
 
   // The API returns a page without a total count; one extra row keeps Next available
@@ -50,11 +55,23 @@ export class ProductListComponent implements OnInit {
     this.loadPage(event.pageIndex + 1);
   }
 
+  applyFilters(filters: ProductQuery): void {
+    this.filters.set({
+      productName: filters.productName?.trim() || null,
+      categoryName: filters.categoryName?.trim() || null,
+    });
+    this.loadPage(1);
+  }
+
   loadPage(page: number): void {
     this.page.set(Math.max(1, page));
     this.loading.set(true);
     this.error.set(null);
-    this.productService.list(this.page(), this.pageSize())
+    this.productService.list({
+      ...this.filters(),
+      pageNumber: this.page(),
+      pageSize: this.pageSize(),
+    })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (products) => this.products.set(products),

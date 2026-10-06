@@ -1,16 +1,18 @@
 // AI-USAGE SUMMARY
 // Tools: GitHub Copilot
-// Overall AI Contribution: ~75%
-// AI-Assisted Areas: HttpClient wrapper for create, list, categories and find-by-barcode endpoints
-// Human Contributions: Matched the endpoints, pagination parameters and ApiResponse envelope to the backend product API, and reviewed the mapping
+// Overall AI Contribution: ~80%
+// AI-Assisted Areas: HttpClient wrapper for create, filtered list, categories
+// and find-by-barcode endpoints
+// Human Contributions: Matched the endpoints, filter parameters and ApiResponse
+// envelope to the backend product API, and reviewed the mapping
 // Notes: Unwraps the ApiResponse envelope and URL-encodes the barcode.
 // authors: Kimleng
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { CreateProduct, Product, ProductCategory, ProductQuery } from '../models/product.model';
 import { ApiResponse } from '../../../shared/models/api-response.model';
-import { CreateProduct, Product, ProductCategory } from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -22,8 +24,18 @@ export class ProductService {
     return this.http.post<ApiResponse<Product>>(this.endpoint, product).pipe(map((response) => response.data));
   }
 
-  list(pageNumber = 1, pageSize = 10): Observable<Product[]> {
-    const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+  list(query: ProductQuery = {}): Observable<Product[]> {
+    let params = new HttpParams()
+      .set('pageNumber', query.pageNumber ?? 1)
+      .set('pageSize', query.pageSize ?? 10);
+
+    if (query.productName?.trim()) {
+      params = params.set('productName', query.productName.trim());
+    }
+
+    if (query.categoryName?.trim()) {
+      params = params.set('categoryName', query.categoryName.trim());
+    }
     // @ts-ignore
     return this.http.get<ApiResponse<Product[]>>(this.endpoint, { params }).pipe(map((response) => response.data));
   }

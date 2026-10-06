@@ -80,6 +80,18 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
+    return this.isRole('ROLE_ADMIN');
+  }
+
+  isCashier(): boolean {
+    return this.isRole('ROLE_CASHIER');
+  }
+
+  isManager(): boolean {
+    return this.isRole('ROLE_MANAGER');
+  }
+
+  isRole(role: string): boolean {
     try {
       const token = this.getToken();
       const encodedPayload = token?.split('.')[1];
@@ -91,7 +103,7 @@ export class AuthService {
         '=',
       );
       const claims = JSON.parse(atob(paddedPayload));
-      return Array.isArray(claims.roles) && claims.roles.includes('ROLE_ADMIN');
+      return Array.isArray(claims.roles) && claims.roles.includes(role);
     } catch {
       return false;
     }

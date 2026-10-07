@@ -31,7 +31,7 @@ jobs:
     # 4. Install Vitest provider
     - name: Install Vitest coverage provider
       working-directory: code/bluejay-webui
-      run: npm install --no-save @vitest/coverage-v8@4.1.11
+      run: npm install --no-save --no-audit --no-fund --yes @vitest/coverage-v8@4.1.11
 
     # 5. Execute tests with coverage and JSON output
     - name: Run Tests

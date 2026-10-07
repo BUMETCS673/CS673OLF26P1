@@ -106,7 +106,7 @@ Access services:
 * **API Health Actuator:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
 * **OpenAPI Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 * **Scalar API Reference:** [http://localhost:8080/scalar](http://localhost:8080/scalar)
-* **Web UI (Deployed):** [http://18.191.186.72:4200](http://18.191.186.72:4200)
+* **Web UI (Deployed):** [http://3.145.103.249:4200](http://3.145.103.249:4200)
 
 
 ### 2. Launch Hybrid Development Mode (Rapid Iteration)

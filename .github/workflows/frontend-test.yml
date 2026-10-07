@@ -33,7 +33,152 @@ jobs:
       working-directory: code/bluejay-webui
       run: npm install --no-save @vitest/coverage-v8@4.1.11
 
-    # 5. Execute tests with coverage
+    # 5. Execute tests with coverage and JSON output
     - name: Run Tests
       working-directory: code/bluejay-webui
-      run: npm run-script test -- --coverage --watch=false
+      id: front_end_tests
+      continue-on-error: true
+      run: |
+        npx vitest run \
+          --coverage \
+          --coverage.reporter=text-summary \
+          --coverage.reporter=json-summary \
+          --reporter=json \
+          --outputFile=.vitest-results.json
+
+    # 6. Report high-level and feature-level test results
+    - name: Publish test summary
+      working-directory: code/bluejay-webui
+      if: always()
+      run: |
+        node <<'NODE'
+        const fs = require('fs');
+        const path = require('path');
+
+        const resultPath = path.join(process.cwd(), '.vitest-results.json');
+        const coveragePath = path.join(process.cwd(), 'coverage', 'coverage-summary.json');
+
+        const summary = {
+          totalTests: 0,
+          passed: 0,
+          failed: 0,
+          skipped: 0,
+          durationMs: 0,
+          features: new Map(),
+        };
+
+        function normalizeFeature(filePath) {
+          const relative = filePath.replace(/\\/g, '/');
+          const appMatch = relative.match(/(?:^|\/)src\/app\/(.+)$/);
+          if (!appMatch) return 'other';
+
+          const parts = appMatch[1].split('/');
+          if (parts[0] === 'core') return 'core';
+          if (parts[0] === 'features') return parts[1] || 'features';
+          return parts[0] || 'other';
+        }
+
+        function formatDuration(ms) {
+          if (!Number.isFinite(ms)) return '0.00s';
+          return `${(ms / 1000).toFixed(2)}s`;
+        }
+
+        function addFeatureStats(feature, tests, passed, failed, skipped, durationMs) {
+          const current = summary.features.get(feature) || {
+            tests: 0,
+            passed: 0,
+            failed: 0,
+            skipped: 0,
+            durationMs: 0,
+            coverage: null,
+          };
+
+          current.tests += tests;
+          current.passed += passed;
+          current.failed += failed;
+          current.skipped += skipped;
+          current.durationMs += durationMs;
+          summary.features.set(feature, current);
+        }
+
+        if (fs.existsSync(resultPath)) {
+          const results = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
+          const suites = Array.isArray(results.testResults) ? results.testResults : [];
+
+          for (const suite of suites) {
+            const feature = normalizeFeature(suite.name || suite.file || 'unknown');
+            const assertions = Array.isArray(suite.assertionResults) ? suite.assertionResults : [];
+            const suiteTests = assertions.length;
+            const suitePassed = assertions.filter((test) => test.status === 'passed').length;
+            const suiteFailed = assertions.filter((test) => test.status === 'failed').length;
+            const suiteSkipped = assertions.filter((test) => test.status === 'pending' || test.status === 'skipped').length;
+            const suiteDuration = assertions.reduce((total, test) => total + (Number(test.duration) || 0), 0);
+
+            summary.totalTests += suiteTests;
+            summary.passed += suitePassed;
+            summary.failed += suiteFailed;
+            summary.skipped += suiteSkipped;
+            summary.durationMs += suiteDuration;
+
+            addFeatureStats(feature, suiteTests, suitePassed, suiteFailed, suiteSkipped, suiteDuration);
+          }
+        }
+
+        if (fs.existsSync(coveragePath)) {
+          const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'));
+          const coverageKeys = Object.keys(coverage).filter((key) => key.includes('src/app/'));
+
+          for (const key of coverageKeys) {
+            const feature = normalizeFeature(key);
+            const metrics = coverage[key];
+            const values = [metrics.statements?.pct, metrics.branches?.pct, metrics.functions?.pct, metrics.lines?.pct]
+              .filter((value) => Number.isFinite(Number(value)));
+            const featureStats = summary.features.get(feature) || { tests: 0, passed: 0, failed: 0, skipped: 0, durationMs: 0, coverage: null };
+            featureStats.coverage = values.length > 0 ? values.reduce((total, value) => total + Number(value), 0) / values.length : null;
+            summary.features.set(feature, featureStats);
+          }
+        }
+
+        const passRate = summary.totalTests > 0 ? (summary.passed / summary.totalTests) * 100 : 0;
+        const featureRows = Array.from(summary.features.entries())
+          .map(([feature, stats]) => {
+            const featureRate = stats.tests > 0 ? (stats.passed / stats.tests) * 100 : 0;
+            const coverage = stats.coverage === null ? 'n/a' : `${stats.coverage.toFixed(1)}%`;
+            return `| ${feature} | ${stats.tests} | ${stats.passed} | ${featureRate.toFixed(1)}% | ${formatDuration(stats.durationMs)} | ${coverage} |`;
+          })
+          .sort(([left], [right]) => left.localeCompare(right));
+
+        const lines = [];
+        lines.push('## Frontend Test Health Summary');
+        lines.push('');
+        lines.push(`- Total tests: ${summary.totalTests}`);
+        lines.push(`- Passed: ${summary.passed}`);
+        lines.push(`- Failed: ${summary.failed}`);
+        lines.push(`- Skipped: ${summary.skipped}`);
+        lines.push(`- Pass rate: ${passRate.toFixed(1)}%`);
+        lines.push(`- Total duration: ${formatDuration(summary.durationMs)}`);
+        lines.push('');
+        lines.push('## Feature Coverage and Test Results');
+        lines.push('');
+        lines.push('| Feature | Tests | Passed | Pass Rate | Duration | Coverage |');
+        lines.push('| --- | ---: | ---: | ---: | ---: | ---: |');
+
+        if (featureRows.length === 0) {
+          lines.push('| No feature results available | 0 | 0 | 0.0% | 0.00s | n/a |');
+        } else {
+          lines.push(...featureRows);
+        }
+
+        console.log(lines.join('\n'));
+        fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
+
+        if (summary.failed > 0) {
+          process.exitCode = 1;
+        }
+        NODE
+
+        test_exit_code="${{ steps.front_end_tests.outcome == 'failure' && '1' || '0' }}"
+        if [ "$test_exit_code" -ne 0 ]; then
+          echo "Tests failed; the summary step recorded the failures."
+          exit 1
+        fi

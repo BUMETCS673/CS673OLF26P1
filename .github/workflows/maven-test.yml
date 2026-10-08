@@ -118,7 +118,7 @@ jobs:
             covered = int(values.get("covered", 0))
             total = covered + int(values.get("missed", 0))
             if total == 0:
-                return "—"
+                return "N/A"
             return f"{coverage_percent(covered, total):.1f}%"
 
         category_rows = []

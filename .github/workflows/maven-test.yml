@@ -99,14 +99,14 @@ jobs:
 
         if coverage_report.exists():
             root_element = ET.parse(coverage_report).getroot()
-            for source_file in root_element.findall(".//sourcefile"):
-                source_path = source_file.attrib.get("name", "")
+            for package_element in root_element.findall(".//package"):
+                package_name = package_element.attrib.get("name", "")
                 category = next(
                     (label for label, prefix in CATEGORY_PREFIXES.items()
-                     if source_path.startswith(prefix.replace("/", "/"))),
+                     if package_name.startswith(prefix.replace("/", "."))),
                     "other",
                 )
-                for counter in source_file.findall("counter"):
+                for counter in package_element.findall("counter"):
                     counter_type = counter.attrib.get("type")
                     if counter_type in coverage_summary[category]:
                         values = coverage_summary[category][counter_type]

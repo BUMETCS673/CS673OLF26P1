@@ -103,7 +103,7 @@ jobs:
                 package_name = package_element.attrib.get("name", "")
                 category = next(
                     (label for label, prefix in CATEGORY_PREFIXES.items()
-                     if package_name.startswith(prefix.replace("/", "."))),
+                     if package_name.startswith(prefix)),
                     "other",
                 )
                 for counter in package_element.findall("counter"):

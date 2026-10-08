@@ -33,7 +33,16 @@ jobs:
       working-directory: code/bluejay-webui
       run: npm install --no-save @vitest/coverage-v8@4.1.11
 
-    # 5. Execute tests with coverage
+    # 5. Execute tests with coverage and generate a machine-readable result
     - name: Run Tests
       working-directory: code/bluejay-webui
-      run: npm run-script test -- --coverage --watch=false
+      run: |
+        TEST_REPORT=.tmp-test-results.json
+        npm run-script test -- --coverage --watch=false \
+          --coverage-reporters=json \
+          --reporters=json \
+          --output-file=$TEST_REPORT
+        TEST_EXIT_CODE=$?
+        node scripts/test-summary.mjs $TEST_REPORT
+        rm -f $TEST_REPORT
+        exit $TEST_EXIT_CODE

@@ -9,6 +9,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
+import { provideRouter } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ReportsPage } from './reports-page.component';
 import {
   InventoryReportItem,
@@ -21,17 +23,25 @@ import {
 // AI Contribution: Initial draft (~85%)
 // Modifications:
 // - Stubbed InventoryReportService so no HTTP is involved
+// - Story #29: stubbed AuthService and added a test for the Admin-only sales link
 // Verification:
 // - npm test
 // Confidence: High
 describe('ReportsPage', () => {
   let response: Observable<InventoryReportItem[]>;
+  let admin = false;
+
+  beforeEach(() => {
+    admin = false;
+  });
 
   function render(): HTMLElement {
     TestBed.configureTestingModule({
       imports: [ReportsPage],
       providers: [
+        provideRouter([]),
         { provide: InventoryReportService, useValue: { getInventoryReport: () => response } },
+        { provide: AuthService, useValue: { isAdmin: () => admin } },
       ],
     });
     const fixture = TestBed.createComponent(ReportsPage);
@@ -72,5 +82,14 @@ describe('ReportsPage', () => {
 
     expect(el.querySelector('table')).toBeNull();
     expect(el.textContent).toContain("You don't have permission to view this report");
+  });
+
+  it('shows the sales report link to Admins only (Story #29)', () => {
+    response = of([]);
+    expect(render().querySelector('a[href="/reports/sales"]')).toBeNull();
+
+    TestBed.resetTestingModule();
+    admin = true;
+    expect(render().querySelector('a[href="/reports/sales"]')).not.toBeNull();
   });
 });

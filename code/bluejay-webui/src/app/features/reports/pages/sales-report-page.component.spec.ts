@@ -13,6 +13,8 @@ import { Observable, of, throwError } from 'rxjs';
 import { SalesReportPage, toIsoDate } from './sales-report-page.component';
 import { SalesReportService } from '../services/sales-report.service';
 import { SalesReport } from '../models/sales-report.model';
+import { ProductSalesService } from '../services/product-sales.service';
+import { ProductSalesReport } from '../models/product-sales.model';
 
 // AI-ASSISTED: YES
 // Tool: Claude
@@ -20,12 +22,19 @@ import { SalesReport } from '../models/sales-report.model';
 // AI Contribution: Initial draft (~85%)
 // Modifications:
 // - Stubbed SalesReportService and counted calls to check client-side validation
+// - Story #30: stubbed ProductSalesService and added Sales by Product tests
 // Verification:
 // - npm test
 // Confidence: High
 describe('SalesReportPage', () => {
   let response: Observable<SalesReport>;
   let calls: Array<[string, string]>;
+  let productResponse: Observable<ProductSalesReport>;
+  let productCalls: Array<[string, string]>;
+
+  beforeEach(() => {
+    productResponse = of({ startDate: '2026-10-01', endDate: '2026-10-31', products: [] });
+  });
 
   const report = (overrides: Partial<SalesReport> = {}): SalesReport => ({
     startDate: '2026-10-01',
@@ -40,6 +49,7 @@ describe('SalesReportPage', () => {
 
   function setup() {
     calls = [];
+    productCalls = [];
     TestBed.configureTestingModule({
       imports: [SalesReportPage],
       providers: [
@@ -50,6 +60,15 @@ describe('SalesReportPage', () => {
             getSalesReport: (start: string, end: string) => {
               calls.push([start, end]);
               return response;
+            },
+          },
+        },
+        {
+          provide: ProductSalesService,
+          useValue: {
+            getProductSales: (start: string, end: string) => {
+              productCalls.push([start, end]);
+              return productResponse;
             },
           },
         },
@@ -130,5 +149,41 @@ describe('SalesReportPage', () => {
 
   it('formats dates as YYYY-MM-DD in local time', () => {
     expect(toIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+
+  it('loads product sales for the same date range (Story #30)', () => {
+    response = of(report());
+    productResponse = of({
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+      products: [
+        { productId: 'p1', barcode: '111', name: 'Cooking Oil 2L', quantitySold: 5, totalRevenue: 32.5, totalCost: 20.5, profit: 12 },
+      ],
+    });
+    const { el } = setup();
+
+    expect(productCalls).toEqual(calls);
+    expect(el.textContent).toContain('Sales by Product');
+    expect(el.querySelectorAll('app-product-sales-table tbody tr').length).toBe(1);
+  });
+
+  it('does not load product sales when the date range is invalid (Story #30)', () => {
+    response = of(report());
+    const { fixture } = setup();
+    productCalls = [];
+
+    fixture.componentInstance.startDate.set('2026-10-31');
+    fixture.componentInstance.endDate.set('2026-10-01');
+    fixture.componentInstance.load();
+
+    expect(productCalls).toEqual([]);
+  });
+
+  it('shows an error in the product card when product sales fail (Story #30)', () => {
+    response = of(report());
+    productResponse = throwError(() => new HttpErrorResponse({ status: 500 }));
+    const { el } = setup();
+
+    expect(el.textContent).toContain('Product sales could not be loaded');
   });
 });

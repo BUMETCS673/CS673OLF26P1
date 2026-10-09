@@ -33,48 +33,167 @@ jobs:
       working-directory: code/api
       run: mvn test
 
-    - name: Add backend coverage to Actions summary
+    - name: Add backend test summary to Actions summary
       if: always()
       run: |
         python - <<'PY'
         import os
         import xml.etree.ElementTree as ET
+        from collections import defaultdict
         from pathlib import Path
 
-        report = Path("code/api/target/site/jacoco/jacoco.xml")
+        root = Path("code/api")
+        reports_dir = root / "target/surefire-reports"
+        coverage_report = root / "target/site/jacoco/jacoco.xml"
         summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
 
-        if not report.exists():
-            summary.write_text(
-                "## Backend test coverage\n\n"
-                "JaCoCo report unavailable. Check the Maven test step.\n",
-                encoding="utf-8",
-            )
-            raise SystemExit(0)
-
-        counters = {
-            counter.attrib["type"]: counter.attrib
-            for counter in ET.parse(report).getroot().findall("counter")
+        CATEGORY_PREFIXES = {
+            "auth": "edu/bu/metcs673/bluejay/auth",
+            "inventory": "edu/bu/metcs673/bluejay/inventory",
+            "product": "edu/bu/metcs673/bluejay/product",
+            "report": "edu/bu/metcs673/bluejay/report",
+            "security": "edu/bu/metcs673/bluejay/auth/security",
+            "integration": "edu/bu/metcs673/bluejay/common/integration",
         }
 
-        def coverage_row(label, counter_type):
-            counter = counters.get(counter_type, {})
-            covered = int(counter.get("covered", 0))
-            missed = int(counter.get("missed", 0))
-            total = covered + missed
-            percentage = covered * 100 / total if total else 0
-            return f"| {label} | {covered} | {missed} | {percentage:.1f}% |"
+        def category_for(class_name):
+            normalized = class_name.replace(".", "/")
+            for label, prefix in CATEGORY_PREFIXES.items():
+                if normalized.startswith(prefix):
+                    return label
+            return "other"
+
+        def coverage_percent(covered, total):
+            return (covered * 100 / total) if total else 0.0
+
+        test_summary = defaultdict(lambda: {
+            "tests": 0,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "duration": 0.0,
+            "files": set(),
+        })
+
+        for report in reports_dir.glob("TEST-*.xml"):
+            try:
+                suite = ET.parse(report).getroot()
+            except ET.ParseError:
+                continue
+
+            suite_name = suite.attrib.get("name", report.stem)
+            category = category_for(suite_name)
+            values = test_summary[category]
+            values["tests"] += int(suite.attrib.get("tests", 0))
+            values["failures"] += int(suite.attrib.get("failures", 0))
+            values["errors"] += int(suite.attrib.get("errors", 0))
+            values["skipped"] += int(suite.attrib.get("skipped", 0))
+            values["duration"] += float(suite.attrib.get("time", 0))
+            values["files"].add(report.name)
+
+        coverage_summary = defaultdict(lambda: {
+            "INSTRUCTION": {"covered": 0, "missed": 0},
+            "LINE": {"covered": 0, "missed": 0},
+            "BRANCH": {"covered": 0, "missed": 0},
+        })
+
+        if coverage_report.exists():
+            root_element = ET.parse(coverage_report).getroot()
+            for package_element in root_element.findall(".//package"):
+                package_name = package_element.attrib.get("name", "")
+                category = next(
+                    (label for label, prefix in CATEGORY_PREFIXES.items()
+                     if package_name.startswith(prefix)),
+                    "other",
+                )
+                for counter in package_element.findall("counter"):
+                    counter_type = counter.attrib.get("type")
+                    if counter_type in coverage_summary[category]:
+                        values = coverage_summary[category][counter_type]
+                        values["covered"] += int(counter.attrib.get("covered", 0))
+                        values["missed"] += int(counter.attrib.get("missed", 0))
+
+        def format_metric(category, counter_type):
+            values = coverage_summary.get(category, {}).get(counter_type, {})
+            covered = int(values.get("covered", 0))
+            total = covered + int(values.get("missed", 0))
+            if total == 0:
+                return "N/A"
+            return f"{coverage_percent(covered, total):.1f}%"
+
+        category_rows = []
+        for label in ["auth", "inventory", "product", "report", "security", "integration", "other"]:
+            values = test_summary.get(label, {"tests": 0, "failures": 0, "errors": 0, "skipped": 0, "duration": 0.0, "files": set()})
+            if values["files"]:
+                category_rows.append(
+                    f"| {label.title()} | {len(values['files'])} | "
+                    f"{values['tests'] - values['failures'] - values['errors'] - values['skipped']} | "
+                    f"{values['failures']} | {values['skipped']} | {values['duration']:.1f}s | "
+                    f"{format_metric(label, 'INSTRUCTION')} | {format_metric(label, 'LINE')} | {format_metric(label, 'BRANCH')} |"
+                )
+
+        total_tests = sum(values["tests"] for values in test_summary.values())
+        total_failures = sum(values["failures"] for values in test_summary.values())
+        total_errors = sum(values["errors"] for values in test_summary.values())
+        total_skipped = sum(values["skipped"] for values in test_summary.values())
+        total_passed = total_tests - total_failures - total_errors - total_skipped
+        total_duration = sum(values["duration"] for values in test_summary.values())
+
+        total_coverage = {
+            counter_type: {
+                "covered": sum(
+                    coverage_summary[category].get(counter_type, {}).get("covered", 0)
+                    for category in coverage_summary
+                ),
+                "missed": sum(
+                    coverage_summary[category].get(counter_type, {}).get("missed", 0)
+                    for category in coverage_summary
+                ),
+            }
+            for counter_type in ("INSTRUCTION", "LINE", "BRANCH")
+        }
 
         lines = [
-            "## Backend test coverage (JaCoCo)",
+            "## Backend test summary",
             "",
-            "| Metric | Covered | Missed | Coverage |",
-            "| --- | ---: | ---: | ---: |",
-            coverage_row("Instructions", "INSTRUCTION"),
-            coverage_row("Lines", "LINE"),
-            coverage_row("Branches", "BRANCH"),
+            "| Category | Test Classes | Passed | Failed | Skipped | Duration | Instructions | Lines | Branches |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            *category_rows,
+            "",
+            "### Total",
+            "",
+            f"- **Tests:** {total_tests} total · {total_passed} passed · {total_failures} failed · {total_errors} errors · {total_skipped} skipped",
+            f"- **Duration:** {total_duration:.1f}s",
+            "- **Coverage:** "
+            f"{coverage_percent(total_coverage['INSTRUCTION']['covered'], total_coverage['INSTRUCTION']['covered'] + total_coverage['INSTRUCTION']['missed']):.1f}% instructions, "
+            f"{coverage_percent(total_coverage['LINE']['covered'], total_coverage['LINE']['covered'] + total_coverage['LINE']['missed']):.1f}% lines, "
+            f"{coverage_percent(total_coverage['BRANCH']['covered'], total_coverage['BRANCH']['covered'] + total_coverage['BRANCH']['missed']):.1f}% branches",
             "",
         ]
+
+        if coverage_report.exists():
+            coverage_lines = []
+            for label, counter_type in (("Instructions", "INSTRUCTION"), ("Lines", "LINE"), ("Branches", "BRANCH")):
+                covered = total_coverage[counter_type]["covered"]
+                missed = total_coverage[counter_type]["missed"]
+                percentage = coverage_percent(covered, covered + missed)
+                coverage_lines.append(f"| {label} | {covered} | {missed} | {percentage:.1f}% |")
+            lines.extend([
+                "### Coverage totals",
+                "",
+                "| Metric | Covered | Missed | Coverage |",
+                "| --- | ---: | ---: | ---: |",
+                *coverage_lines,
+                "",
+            ])
+        else:
+            lines.extend([
+                "### Coverage totals",
+                "",
+                "JaCoCo report unavailable. Check the Maven test step.",
+                "",
+            ])
+
         with summary.open("a", encoding="utf-8") as output:
             output.write("\n".join(lines))
         PY

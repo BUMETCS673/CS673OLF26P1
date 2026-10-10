@@ -9,6 +9,8 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import {
   InventoryReportItem,
   InventoryReportService,
@@ -23,80 +25,100 @@ type LoadState = 'loading' | 'loaded' | 'forbidden' | 'error';
 // Modifications:
 // - Shows a clear message on 403 so cashiers know why the report is unavailable
 // - Uses signals, matching the standalone Angular 21 setup
-// - PR review (Sara): styles moved to reports-page.component.scss
+// - PR review (Sara): styles moved out of the component into a stylesheet
+// - Story #29: shows a "Sales report" link to Admins only
+// - Story #29: restyled to the Inventory/Products page layout (eyebrow heading,
+//   card, recent-table, alert) using the shared report-layout.scss
 // Verification:
 // - reports-page.component.spec.ts and ng build
 // Confidence: High
 @Component({
   selector: 'app-reports-page',
   standalone: true,
-  imports: [CurrencyPipe, DecimalPipe],
+  imports: [CurrencyPipe, DecimalPipe, RouterLink],
   template: `
-    <section class="report">
-      <header class="report__header">
-        <div>
-          <h1>Inventory Report</h1>
-          <p class="report__subtitle">Current stock and latest cost for every product.</p>
-        </div>
-        <button type="button" class="report__refresh" (click)="load()" [disabled]="state() === 'loading'">
-          Refresh
-        </button>
+    <main class="page">
+      <header class="page-heading">
+        <p class="eyebrow">REPORTS</p>
+        <h1>Inventory Report</h1>
+        <p>Current stock and latest cost for every product.</p>
       </header>
 
-      @switch (state()) {
-        @case ('loading') {
-          <p class="report__message">Loading inventory…</p>
-        }
-        @case ('forbidden') {
-          <p class="report__message report__message--error" role="alert">
-            You don't have permission to view this report. It is available to Admins and Stock Managers.
-          </p>
-        }
-        @case ('error') {
-          <p class="report__message report__message--error" role="alert">
-            The inventory report could not be loaded. Please try again.
-          </p>
-        }
-        @case ('loaded') {
-          @if (items().length === 0) {
-            <p class="report__message">No products in the catalog yet.</p>
-          } @else {
-            <p class="report__summary">
-              {{ items().length }} products · {{ totalUnits() | number }} units on hand
-            </p>
-            <div class="report__table-wrap">
-              <table class="report__table">
-                <thead>
-                  <tr>
-                    <th scope="col">Product</th>
-                    <th scope="col">Barcode</th>
-                    <th scope="col" class="num">Latest cost</th>
-                    <th scope="col" class="num">On hand</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (item of items(); track item.productId) {
-                    <tr>
-                      <td>{{ item.name }}</td>
-                      <td class="muted">{{ item.barcode ?? '—' }}</td>
-                      <td class="num">{{ item.latestCost | currency }}</td>
-                      <td class="num" [class.out]="item.onHandQuantity <= 0">
-                        {{ item.onHandQuantity | number }}
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Current Stock Levels</h2>
+            @if (state() === 'loaded' && items().length > 0) {
+              <p class="card-subtitle">
+                {{ items().length }} products · {{ totalUnits() | number }} units on hand
+              </p>
+            } @else {
+              <p class="card-subtitle">Every product in the catalog.</p>
+            }
+          </div>
+          <div class="card-actions">
+            @if (isAdmin) {
+              <a class="btn-outline" routerLink="/reports/sales">Sales report →</a>
+            }
+            <button type="button" class="btn-action" (click)="load()" [disabled]="state() === 'loading'">
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        @switch (state()) {
+          @case ('loading') {
+            <p class="card-subtitle">Loading inventory…</p>
+          }
+          @case ('forbidden') {
+            <div class="alert alert-danger" role="alert">
+              You don't have permission to view this report. It is available to Admins and Stock Managers.
             </div>
           }
+          @case ('error') {
+            <div class="alert alert-danger" role="alert">
+              The inventory report could not be loaded. Please try again.
+            </div>
+          }
+          @case ('loaded') {
+            @if (items().length === 0) {
+              <p class="card-subtitle">No products in the catalog yet.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="recent-table">
+                  <thead>
+                    <tr>
+                      <th>PRODUCT</th>
+                      <th>BARCODE</th>
+                      <th class="text-right">LATEST COST</th>
+                      <th class="text-right">ON HAND</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of items(); track item.productId) {
+                      <tr>
+                        <td class="font-medium">{{ item.name }}</td>
+                        <td class="text-muted">{{ item.barcode ?? '—' }}</td>
+                        <td class="text-right">{{ item.latestCost | currency }}</td>
+                        <td class="text-right" [class.text-danger]="item.onHandQuantity <= 0">
+                          {{ item.onHandQuantity | number }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
         }
-      }
-    </section>
+      </div>
+    </main>
   `,
-  styleUrl: './reports-page.component.scss',
+  styleUrl: '../report-layout.scss',
 })
 export class ReportsPage implements OnInit {
   private reportService = inject(InventoryReportService);
+  readonly isAdmin = inject(AuthService).isAdmin();
 
   readonly items = signal<InventoryReportItem[]>([]);
   readonly state = signal<LoadState>('loading');

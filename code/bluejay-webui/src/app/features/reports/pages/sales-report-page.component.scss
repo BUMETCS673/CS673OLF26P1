@@ -1,0 +1,58 @@
+// AI-ASSISTED: YES
+// Tool: Claude
+// Prompt Summary: "Summary figures for the sales report page"
+// AI Contribution: Initial draft (~90%)
+// Modifications:
+// - Page layout, cards, form and alerts come from ../report-layout.scss
+//   (same values as the Inventory page); only the summary figures are here
+// - Colors reuse the Inventory page palette (slate text, healthy green, critical red)
+// Verification:
+// - Visual check of /reports/sales next to /inventory
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1.25rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  .stat__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #64748b;
+  }
+
+  .stat__value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.stat--profit .stat__value {
+    color: #166534;
+  }
+
+  &.stat--loss .stat__value {
+    color: #991b1b;
+  }
+}
+
+.empty-note {
+  margin-top: 1rem;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

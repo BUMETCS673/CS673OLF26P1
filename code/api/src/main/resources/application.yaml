@@ -5,8 +5,8 @@ spring:
   # Database Configuration
   datasource:
     url: jdbc:mysql://bluejay_mysql:3306/bluejay_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: bluejay_user
-    password: bluejay_password
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA & Hibernate Settings
@@ -27,12 +27,13 @@ spring:
     clean-on-validation-error: true
     ignore-migration-patterns: "versioned:*"
 
+  config:
+    import: "optional:aws-parameterstore:/config/bluejay/"
+
 # Custom Security & JWT Application Properties
 app:
   jwt:
-    # 256-bit base64 secret key
-    # TODO: Make more secure later
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    secret: ${jwt.secret}
     expiration-ms: 86400000 # 24 hours
 
 # Actuator Health Endpoint

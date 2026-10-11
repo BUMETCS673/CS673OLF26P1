@@ -1,13 +1,11 @@
 /*
     AI-USAGE SUMMARY
-    Tools: GitHub Copilot
+    Tools: GitHub Copilot / Gemini
     Overall AI Contribution: 90%
-    AI-Assisted Areas: Created unit tests and addeed additional tests based on user prompts
-    regarding the create user page
-    Human Contributions: Prompted to make sure unit tests captures all possible scenarios and
-    hits all the requirements
+    AI-Assisted Areas: Updated unit tests for CreateUserPage to include user role attributes
+    Human Contributions: Added role assertion verifications
     Notes: Unit tests for the create user page
-    Authors: Italia Tran
+    Authors: Italia Tran, Sara Orion
 */
 
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,8 +13,8 @@ import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { UsersService } from '../../../core/services/users/users.service';
-import { CreateUserPage } from './create-user.component';
+import { UsersService } from '../services/users.services';
+import { CreateUserPage } from './create-user-page.component';
 
 describe('CreateUserPage', () => {
   const createUser = vi.fn();
@@ -43,6 +41,7 @@ describe('CreateUserPage', () => {
       id: 'user-1',
       username: 'new-cashier',
       enabled: true,
+      role: 'ROLE_CASHIER',
       createdAt: '2026-10-04T10:00:00',
     }));
     const fixture = createPage();

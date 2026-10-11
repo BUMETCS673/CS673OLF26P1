@@ -86,6 +86,15 @@ public class User {
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
+    public String getRolesAsString() {
+        StringBuilder roleString = new StringBuilder();
+        for (Role role : this.roles) {
+            if (!roleString.isEmpty()) roleString.append(", ");
+            roleString.append(role.getName());
+        }
+        return roleString.toString();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

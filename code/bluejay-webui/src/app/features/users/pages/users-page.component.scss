@@ -349,7 +349,12 @@ tbody tr:first-child td {
 }
 
 .status-disabled {
-  color: #b45309;
+  color: #dc2626; /* Red text for disabled */
+
+  .status-dot {
+    background: #dc2626; /* Red dot for disabled */
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12); /* Red glow ring */
+  }
 }
 
 .state-message {

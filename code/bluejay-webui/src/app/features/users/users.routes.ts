@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from '../../core/guards/admin.guard';
-import { CreateUserPage } from './pages/create-user.component';
-import { UsersPage } from './pages/users.component';
+import { CreateUserPage } from './pages/create-user-page.component';
+import { UsersPage } from './pages/users-page.component';
 
 export const USERS_ROUTES: Routes = [
 	{ path: 'new', component: CreateUserPage, canActivate: [adminGuard] },

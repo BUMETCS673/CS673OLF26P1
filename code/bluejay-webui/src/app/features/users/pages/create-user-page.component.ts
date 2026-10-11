@@ -10,26 +10,23 @@
 
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { CreateUserRequest, UsersService } from '../../../core/services/users/users.service';
+import { CreateUserRequest, RoleOption } from '../models/users.model';
+import { UsersService } from '../services/users.services';
 
 @Component({
   selector: 'app-create-user',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
-  templateUrl: './create-user.component.html',
-  styleUrl: './create-user.component.scss',
+  templateUrl: './create-user-page.component.html',
+  styleUrl: './create-user-page.component.scss',
 })
 export class CreateUserPage {
   private readonly formBuilder = inject(FormBuilder);
   private readonly usersService = inject(UsersService);
 
-  readonly roles = [
+  readonly roles: RoleOption[] = [
     { value: 'ROLE_CASHIER', label: 'Cashier' },
     { value: 'ROLE_MANAGER', label: 'Manager' },
     { value: 'ROLE_ADMIN', label: 'Administrator' },
@@ -37,6 +34,7 @@ export class CreateUserPage {
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
+
   readonly userForm = this.formBuilder.nonNullable.group({
     username: ['', [Validators.required, Validators.maxLength(50)]],
     password: ['', Validators.required],

@@ -6,12 +6,13 @@
     Human Contributions: API authorization and status codes depending on if there is a response
     or if it fails
     Notes: User Controller class that primarily handles user related APIs
-    Authors: Italia Tran
+    Authors: Italia Tran, Sara Orion
 */
 
 package edu.bu.metcs673.bluejay.auth.controller;
 
 import edu.bu.metcs673.bluejay.auth.dto.CreateUserRequest;
+import edu.bu.metcs673.bluejay.auth.dto.UpdateUserRequest;
 import edu.bu.metcs673.bluejay.auth.dto.UserResponse;
 import edu.bu.metcs673.bluejay.auth.service.UserService;
 import edu.bu.metcs673.bluejay.common.dto.ApiResponse;
@@ -23,11 +24,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.TransactionException;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -68,6 +72,34 @@ public class UserController {
             ApiResponse<UserResponse> response = ApiResponse.error(
                 ex.getMessage(),
                 "USER_CREATE_FAILED"
+            );
+            return ResponseEntity.badRequest().body(response);
+        } catch (DataAccessException | TransactionException ex) {
+            ApiResponse<UserResponse> response = ApiResponse.error(
+                "An unexpected internal error occurred",
+                "INTERNAL_SERVER_ERROR"
+            );
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @PatchMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+        @PathVariable String userId,
+        @RequestBody UpdateUserRequest request) {
+        try {
+            UUID uuid = UUID.fromString(userId);
+            UserResponse updatedUser = userService.updateUser(uuid, request);
+            ApiResponse<UserResponse> response = ApiResponse.success(
+                updatedUser,
+                "User updated successfully"
+            );
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            ApiResponse<UserResponse> response = ApiResponse.error(
+                ex.getMessage(),
+                "USER_UPDATE_FAILED"
             );
             return ResponseEntity.badRequest().body(response);
         } catch (DataAccessException | TransactionException ex) {

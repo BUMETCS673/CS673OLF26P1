@@ -11,6 +11,7 @@
 package edu.bu.metcs673.bluejay.auth.service.impl;
 
 import edu.bu.metcs673.bluejay.auth.dto.CreateUserRequest;
+import edu.bu.metcs673.bluejay.auth.dto.UpdateUserRequest;
 import edu.bu.metcs673.bluejay.auth.dto.UserResponse;
 import edu.bu.metcs673.bluejay.auth.entity.Role;
 import edu.bu.metcs673.bluejay.auth.entity.User;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +45,7 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getEnabled(),
+                user.getRolesAsString(),
                 user.getCreatedAt()
             ))
             .toList();
@@ -94,7 +97,47 @@ public class UserServiceImpl implements UserService {
             savedUser.getId(),
             savedUser.getUsername(),
             savedUser.getEnabled(),
+            savedUser.getRolesAsString(),
             savedUser.getCreatedAt()
         );
+    }
+
+    // AI-ASSISTED: YES
+    // Tool: Gemini
+    // Prompt Summary: "Implement updateUser service method for updating role and enabled status partially by user ID."
+    // AI Contribution: Initial draft (~85%)
+    // Modifications: Added transactional scope, validation for non-existent users/roles, and conditional partial field mutation.
+    // Verification: Unit test with Mockito and Spring Boot integration tests
+    // Confidence: High
+    @Override
+    @Transactional
+    public UserResponse updateUser(UUID userId, UpdateUserRequest request) {
+        // 1. Find existing user
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        // 2. Partial Update: Account Enabled Status
+        if (request.enabled() != null) {
+            user.setEnabled(request.enabled());
+        }
+
+        // 3. Partial Update: Role Assignment
+        if (request.role() != null && !request.role().isBlank()) {
+            Role newRole = roleRepository.findByName(request.role())
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + request.role()));
+
+            // Clear existing roles and add the new role to the managed collection
+            user.getRoles().clear();
+            user.getRoles().add(newRole);
+        }
+
+        // 4. Persist updated user
+        User updatedUser = userRepository.save(user);
+
+        // 5. Map updated entity to UserResponse DTO
+        return new UserResponse( updatedUser.getId(), updatedUser.getUsername(),
+            updatedUser.getEnabled(), updatedUser.getRolesAsString(),
+            updatedUser.getCreatedAt() );
+
     }
 }

@@ -17,5 +17,6 @@ public record UserResponse(
     UUID id,
     String username,
     Boolean enabled,
+    String role,
     LocalDateTime createdAt
 ) {}

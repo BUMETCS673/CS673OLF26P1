@@ -1,0 +1,253 @@
+<!--
+  AI-USAGE SUMMARY
+  Tools: Github Copilot
+  Overall AI Contribution: 90%
+  AI-Assisted Areas: Created the HTML page
+  Human Contributions: None
+  Notes: HTML page for the users list
+  Authors: Italia Tran, Sara Orion
+-->
+
+<div class="users-page">
+  <main class="content">
+    <div class="page-heading">
+      <div>
+        <p class="eyebrow">PEOPLE / ACCESS</p>
+        <h1>User directory</h1>
+        <p class="description">Search, browse, and manage user accounts.</p>
+      </div>
+      <div class="heading-actions">
+        <a class="create-button" routerLink="/users/new">Create user</a>
+        <button
+          type="button"
+          class="refresh-button"
+          (click)="loadUsers()"
+          [disabled]="isLoading()"
+        >
+          {{ isLoading() ? 'Refreshing...' : 'Refresh list' }}
+        </button>
+      </div>
+    </div>
+
+    <section class="totals" aria-label="User totals">
+      <div class="total-item">
+        <span class="total-number">{{ users().length }}</span>
+        <span class="total-label">Total accounts</span>
+      </div>
+      <span class="total-rule" aria-hidden="true"></span>
+      <div class="total-item active-total">
+        <span class="active-indicator" aria-hidden="true"></span>
+        <span><strong>{{ enabledCount() }}</strong> enabled</span>
+      </div>
+    </section>
+
+    @if (errorStatus() !== null) {
+      <div class="error-banner" role="alert">
+        <p>{{ errorMessage }}</p>
+        @if (errorStatus() === 401) {
+          <a routerLink="/login">Sign in</a>
+        } @else if (users().length === 0) {
+          <button type="button" (click)="loadUsers()" [disabled]="isLoading()">
+            Retry
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Save/Action errors (e.g., 403 when updating a row) -->
+    @if (actionError(); as errorMsg) {
+      <div class="error-banner" role="alert">
+        <p>{{ errorMsg }}</p>
+      </div>
+    }
+
+    <section class="directory" aria-labelledby="directory-title">
+      <div class="directory-toolbar">
+        <div class="directory-title">
+          <h2 id="directory-title">All users</h2>
+          <span>{{ filteredUsers().length }} shown</span>
+        </div>
+        <label class="search-field">
+          <span class="visually-hidden">Search by username or ID</span>
+          <input
+            type="search"
+            placeholder="Search users"
+            [value]="searchTerm()"
+            (input)="updateSearch($event)"
+          />
+        </label>
+      </div>
+
+      @if (isLoading() && users().length === 0) {
+        <div class="state-message" role="status">Loading accounts...</div>
+      } @else if (errorStatus() !== null && users().length === 0) {
+        <div class="state-message">User records are unavailable.</div>
+      } @else if (users().length === 0) {
+        <div class="state-message">No accounts are in the database.</div>
+      } @else if (filteredUsers().length === 0) {
+        <div class="state-message">No accounts match that search.</div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+            <tr>
+              <th scope="col" [attr.aria-sort]="ariaSort('username')">
+                <button
+                  type="button"
+                  class="sort-button"
+                  data-sort="username"
+                  (click)="sortBy('username')"
+                >
+                  Account
+                  <span
+                    class="sort-indicator"
+                    [class.active]="sortColumn() === 'username'"
+                    [class.descending]="sortColumn() === 'username' && sortDirection() === 'desc'"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('id')">
+                <button type="button" class="sort-button" data-sort="id" (click)="sortBy('id')">
+                  User ID
+                  <span
+                    class="sort-indicator"
+                    [class.active]="sortColumn() === 'id'"
+                    [class.descending]="sortColumn() === 'id' && sortDirection() === 'desc'"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('role')">
+                <button type="button" class="sort-button" data-sort="role" (click)="sortBy('role')">
+                  Role
+                  <span
+                    class="sort-indicator"
+                    [class.active]="sortColumn() === 'role'"
+                    [class.descending]="sortColumn() === 'role' && sortDirection() === 'desc'"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('createdAt')">
+                <button
+                  type="button"
+                  class="sort-button"
+                  data-sort="createdAt"
+                  (click)="sortBy('createdAt')"
+                >
+                  Created
+                  <span
+                    class="sort-indicator"
+                    [class.active]="sortColumn() === 'createdAt'"
+                    [class.descending]="sortColumn() === 'createdAt' && sortDirection() === 'desc'"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('enabled')">
+                <button
+                  type="button"
+                  class="sort-button"
+                  data-sort="enabled"
+                  (click)="sortBy('enabled')"
+                >
+                  Status
+                  <span
+                    class="sort-indicator"
+                    [class.active]="sortColumn() === 'enabled'"
+                    [class.descending]="sortColumn() === 'enabled' && sortDirection() === 'desc'"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </th>
+              <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (user of filteredUsers(); track user.id) {
+                <tr [class.editing-row]="editingUserId() === user.id">
+                  <td>
+                    <div class="account-cell">
+                      <strong>{{ user.username }}</strong>
+                      @if (isCurrentUser(user)) {
+                        <span class="you-badge">(You)</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="user-id">{{ user.id }}</td>
+
+                  <!-- Role Column -->
+                  <td>
+                    @if (editingUserId() === user.id) {
+                      <app-user-role-select
+                        [currentRole]="editRole()"
+                        [disabled]="isSaving()"
+                        [ariaLabel]="'Select role for ' + user.username"
+                        (roleChange)="editRole.set($event)"
+                      />
+                    } @else {
+                      <span class="role-badge">{{ getRoleLabel(user.role) }}</span>
+                    }
+                  </td>
+
+                  <td>
+                    <time [attr.datetime]="user.createdAt">{{ user.createdAt | date: 'MMM d, y' }}</time>
+                  </td>
+
+                  <!-- Status Column -->
+                  <td>
+                    @if (editingUserId() === user.id) {
+                      <app-user-status-badge
+                        [enabled]="editEnabled()"
+                        [disabled]="isSaving()"
+                        (toggle)="toggleEditStatus()"
+                      />
+                    } @else {
+                      <span class="status" [class.status-disabled]="!user.enabled">
+          <span class="status-dot" aria-hidden="true"></span>
+                        {{ user.enabled ? 'Enabled' : 'Disabled' }}
+        </span>
+                    }
+                  </td>
+
+                  <!-- Actions Column -->
+                  <td class="actions-cell">
+                    @if (editingUserId() === user.id) {
+                      <button
+                        type="button"
+                        class="save-button"
+                        (click)="saveEdit(user)"
+                        [disabled]="isSaving()"
+                      >
+                        {{ isSaving() ? 'Saving...' : 'Save' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="cancel-button"
+                        (click)="cancelEdit()"
+                        [disabled]="isSaving()"
+                      >
+                        Cancel
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="edit-button"
+                        (click)="startEdit(user)"
+                        [disabled]="editingUserId() !== null || isCurrentUser(user)"
+                        [title]="isCurrentUser(user) ? 'You cannot edit your own account permissions' : 'Edit user'"
+                      >
+                        Edit
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </main>
+</div>

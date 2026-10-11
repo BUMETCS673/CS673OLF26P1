@@ -1,11 +1,11 @@
 /*
   AI-USAGE SUMMARY
-  Tools: GitHub Copilot
-  Overall AI Contribution: 80%
-  AI-Assisted Areas: Created base unit tests and modified tests based on user input
-  Human Contributions: Prompted for specific unit tests depending on requirements
+  Tools: GitHub Copilot / Gemini
+  Overall AI Contribution: 85%
+  AI-Assisted Areas: Added unit tests for updateUser PATCH requests
+  Human Contributions: Payload assertion configuration
   Notes: Unit test for the user service API
-  Authors: Italia Tran
+  Authors: Italia Tran, Sara Orion
 */
 
 import { provideHttpClient } from '@angular/common/http';
@@ -14,8 +14,13 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { AuthService } from '../../auth/auth.service';
-import { CreateUserRequest, UserRecord, UsersService } from './users.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import {
+  CreateUserRequest,
+  UpdateUserRequest,
+  UserRecord,
+} from '../models/users.model';
+import { UsersService } from './users.services';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -41,6 +46,7 @@ describe('UsersService', () => {
         id: 'user-1',
         username: 'cashier',
         enabled: true,
+        role: 'ROLE_CASHIER',
         createdAt: '2026-10-03T10:00:00',
       },
     ];
@@ -75,6 +81,7 @@ describe('UsersService', () => {
       id: 'user-2',
       username: 'new-cashier',
       enabled: true,
+      role: 'ROLE_CASHIER',
       createdAt: '2026-10-04T10:00:00',
     };
     let result: UserRecord | undefined;
@@ -96,5 +103,37 @@ describe('UsersService', () => {
     });
 
     expect(result).toEqual(createdUser);
+  });
+
+  it('updates a user partially via PATCH endpoint with bearer token', () => {
+    const updateRequest: UpdateUserRequest = {
+      role: 'ROLE_MANAGER',
+      enabled: false,
+    };
+    const updatedUser: UserRecord = {
+      id: 'user-1',
+      username: 'cashier',
+      enabled: false,
+      role: 'ROLE_MANAGER',
+      createdAt: '2026-10-03T10:00:00',
+    };
+    let result: UserRecord | undefined;
+
+    service.updateUser('user-1', updateRequest).subscribe((response) => (result = response));
+
+    const httpRequest = httpTestingController.expectOne('/api/v1/users/user-1');
+    expect(httpRequest.request.method).toBe('PATCH');
+    expect(httpRequest.request.headers.get('Authorization')).toBe('Bearer test-token');
+    expect(httpRequest.request.body).toEqual(updateRequest);
+
+    httpRequest.flush({
+      success: true,
+      message: 'User updated successfully',
+      data: updatedUser,
+      errorCode: null,
+      timestamp: '2026-10-10T10:00:00Z',
+    });
+
+    expect(result).toEqual(updatedUser);
   });
 });

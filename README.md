@@ -5,7 +5,7 @@
 ![Java](https://img.shields.io/badge/Java-21%2B-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1%2B-green)
 ![Angular](https://img.shields.io/badge/Angular-21%2B-red)
-![PostgreSQL](https://img.shields.io/badge/MySQL-8.4%2B-blue)
+![MySQL](https://img.shields.io/badge/MySQL-8.4%2B-blue)
 
 
 **BlueJay POS** is an enterprise-grade web application designed for small-to-medium grocery and retail operations. Evolving from a desktop terminal prototype, BlueJay delivers a modern Angular web interface, a robust Spring Boot RESTful API, role-based access security (JWT), Flyway database migrations, and interactive **Scalar** API documentation.

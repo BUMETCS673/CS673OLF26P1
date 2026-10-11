@@ -318,18 +318,35 @@ Instead of manually building requests in Postman, you can directly sync or impor
 
 ---
 
-## 🔑 Environment Variables
+## 🔑 Environment Variables & Secrets Management
 
-The application relies on the following environment variables (with defaults configured in `application.yaml`):
+The application uses **Spring Cloud AWS Parameter Store** in production to inject secrets directly from AWS SSM at runtime. 
+For local development, secrets are managed via Docker Compose and `.env` overrides to keep the local environment isolated from AWS.
 
-| Variable                     | Description                 | Default Value                                |
-|------------------------------|-----------------------------|----------------------------------------------|
-| `SPRING_DATASOURCE_URL`      | JDBC Connection String      | `jdbc:mysql://bluejay_mysql:3306/bluejay_db` |
-| `SPRING_DATASOURCE_USERNAME` | Database User               | `bluejay_user`                               |
-| `SPRING_DATASOURCE_PASSWORD` | Database Password           | `bluejay_password`                           |
-| `JWT_SECRET`                 | Secret key for signing JWTs | *(Required in Production)*                   |
-| `JWT_EXPIRATION_MS`          | Token validity duration     | `86400000` (24 Hours)                        |
+### 1. Application Configuration
 
+| Variable                     | Description                                  | Local Default                     | Production Source                                 |
+|:-----------------------------|:---------------------------------------------|:----------------------------------|:--------------------------------------------------|
+| `SPRING_PROFILES_ACTIVE`     | Active Spring profile (`local` or `default`) | `local`                           | Set via `deploy.sh` (`default`)                   |
+| `AWS_REGION`                 | AWS Region for SSM parameter fetching        | `us-east-2`                       | Injected via `deploy.sh`                          |
+| `SPRING_DATASOURCE_URL`      | JDBC MySQL connection string                 | `jdbc:mysql://db:3306/bluejay_db` | Configured in `docker-compose.yml`                |
+| `SPRING_DATASOURCE_USERNAME` | Database connection username                 | `bluejay_user`                    | SSM: `/config/bluejay/spring.datasource.username` |
+| `SPRING_DATASOURCE_PASSWORD` | Database connection password                 | `bluejay_password`                | SSM: `/config/bluejay/spring.datasource.password` |
+| `MYSQL_ROOT_PASSWORD`        | MySQL root database password                 | `rootpassword`                    | SSM: `/config/bluejay/mysql.root.password`        |
+| `JWT_SECRET`                 | Secret key for signing JWT tokens            | *(Local secret key)*              | SSM: `/config/bluejay/jwt.secret`                 |
+| `JWT_EXPIRATION_MS`          | Token validity duration in ms                | `86400000` (24 Hours)             | `application.yml`                                 |
+
+---
+
+### 2. How Environment Loading Works
+
+* **Local Development:**
+  When running locally, `SPRING_PROFILES_ACTIVE=local` disables SSM Parameter Store auto-configuration (`SPRING_CLOUD_AWS_PARAMETERSTORE_ENABLED=false`). 
+  Spring Boot falls back to `application-local.yml` and local environment defaults defined in `docker-compose.yml` / `.env`.
+
+* **Production (AWS EC2):**
+  When running on EC2, `deploy.sh` uses the instance's IAM Role (`Bluejay-EC2-SSM-Role`) to fetch secrets directly from AWS SSM Parameter Store. 
+  It outputs an uncommitted `.env` file that `docker-compose` uses to inject secure credentials into the running container.
 ---
 
 ## 🗄️ Database Migrations (Flyway)

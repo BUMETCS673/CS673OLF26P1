@@ -2,9 +2,8 @@
 // Tools: Claude
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: WebMvcTest setup with method security, MockMvc assertions
-// Human Contributions: Story #29 scenarios and sub-issues #40 (totals) and #41 (Admin only)
-// Notes: Controller slice test for GET /api/v1/reports/sales, including the role guard
-//        and parameter validation.
+// Human Contributions: Story #30 scenarios (Admin-only access, per-product rows, invalid range)
+// Notes: Controller slice test for GET /api/v1/reports/sales/products.
 // Authors: Krizma Nagi
 
 package edu.bu.metcs673.bluejay.report.controller;
@@ -12,9 +11,10 @@ package edu.bu.metcs673.bluejay.report.controller;
 import edu.bu.metcs673.bluejay.auth.security.JwtTokenProvider;
 import edu.bu.metcs673.bluejay.auth.security.SecurityConfig;
 import edu.bu.metcs673.bluejay.auth.security.TokenBlacklistService;
-import edu.bu.metcs673.bluejay.report.dto.SalesReport;
 import edu.bu.metcs673.bluejay.common.exception.InvalidDateRangeException;
-import edu.bu.metcs673.bluejay.report.service.SalesReportService;
+import edu.bu.metcs673.bluejay.report.dto.ProductSalesItem;
+import edu.bu.metcs673.bluejay.report.dto.ProductSalesReport;
+import edu.bu.metcs673.bluejay.report.service.ProductSalesService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +30,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -42,20 +43,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // AI-ASSISTED: YES
 // Tool: Claude
-// Prompt Summary: "MockMvc tests for the Admin-only sales report endpoint with date params"
+// Prompt Summary: "MockMvc tests for the Admin-only per-product sales endpoint"
 // AI Contribution: Initial draft (~85%)
 // Modifications:
-//   - Same springSecurity() MockMvc setup as ReportControllerTest (Story #57)
-//   - Covers Admin 200, Manager/Cashier 403, anonymous 401, and 400 for
-//     invalid range, missing parameter and bad date format
+//   - Same springSecurity() MockMvc setup as SalesReportControllerTest (Story #29)
 // Verification:
-//   - Ran ./mvnw test locally: all tests passing 
+//   - Ran ./mvnw test locally: all passed
 // Confidence: High
-@WebMvcTest(SalesReportController.class)
+@WebMvcTest(ProductSalesController.class)
 @Import(SecurityConfig.class)
-class SalesReportControllerTest {
+class ProductSalesControllerTest {
 
-    private static final String URL = "/api/v1/reports/sales";
+    private static final String URL = "/api/v1/reports/sales/products";
     private static final LocalDate OCT_1 = LocalDate.of(2026, 10, 1);
     private static final LocalDate OCT_31 = LocalDate.of(2026, 10, 31);
 
@@ -65,7 +64,7 @@ class SalesReportControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private SalesReportService salesReportService;
+    private ProductSalesService productSalesService;
 
     // Needed so JwtAuthenticationFilter can initialize
     @MockitoBean
@@ -86,11 +85,16 @@ class SalesReportControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("Admin gets total revenue, cost and net profit for the range")
-    void getSalesReport_AsAdmin_Returns200WithTotals() throws Exception {
-        when(salesReportService.getSalesReport(OCT_1, OCT_31)).thenReturn(
-            new SalesReport(OCT_1, OCT_31, new BigDecimal("1250.00"),
-                new BigDecimal("800.50"), new BigDecimal("449.50"), 12, 40)
+    @DisplayName("Admin gets quantity sold, cost and profit per product")
+    void getProductSales_AsAdmin_Returns200WithProducts() throws Exception {
+        when(productSalesService.getProductSales(OCT_1, OCT_31)).thenReturn(
+            new ProductSalesReport(OCT_1, OCT_31, List.of(
+                new ProductSalesItem("p1", "111", "Cooking Oil 2L", 5,
+                    new BigDecimal("32.50"), new BigDecimal("20.50"),
+                    new BigDecimal("12.00")),
+                new ProductSalesItem("p2", "222", "Lemons", 0,
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)
+            ))
         );
 
         mockMvc.perform(get(URL)
@@ -99,42 +103,42 @@ class SalesReportControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.startDate").value("2026-10-01"))
-            .andExpect(jsonPath("$.data.endDate").value("2026-10-31"))
-            .andExpect(jsonPath("$.data.totalRevenue").value(1250.00))
-            .andExpect(jsonPath("$.data.totalCost").value(800.50))
-            .andExpect(jsonPath("$.data.netProfit").value(449.50))
-            .andExpect(jsonPath("$.data.transactionCount").value(12))
-            .andExpect(jsonPath("$.data.unitsSold").value(40));
+            .andExpect(jsonPath("$.data.products.length()").value(2))
+            .andExpect(jsonPath("$.data.products[0].name").value("Cooking Oil 2L"))
+            .andExpect(jsonPath("$.data.products[0].quantitySold").value(5))
+            .andExpect(jsonPath("$.data.products[0].totalCost").value(20.50))
+            .andExpect(jsonPath("$.data.products[0].profit").value(12.00))
+            .andExpect(jsonPath("$.data.products[1].quantitySold").value(0));
     }
 
     @Test
     @WithMockUser(roles = "MANAGER")
     @DisplayName("Manager is rejected with 403")
-    void getSalesReport_AsManager_Returns403() throws Exception {
+    void getProductSales_AsManager_Returns403() throws Exception {
         mockMvc.perform(get(URL)
                 .param("startDate", "2026-10-01")
                 .param("endDate", "2026-10-31"))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
 
-        verify(salesReportService, never()).getSalesReport(any(), any());
+        verify(productSalesService, never()).getProductSales(any(), any());
     }
 
     @Test
     @WithMockUser(roles = "CASHIER")
     @DisplayName("Cashier is rejected with 403")
-    void getSalesReport_AsCashier_Returns403() throws Exception {
+    void getProductSales_AsCashier_Returns403() throws Exception {
         mockMvc.perform(get(URL)
                 .param("startDate", "2026-10-01")
                 .param("endDate", "2026-10-31"))
             .andExpect(status().isForbidden());
 
-        verify(salesReportService, never()).getSalesReport(any(), any());
+        verify(productSalesService, never()).getProductSales(any(), any());
     }
 
     @Test
     @DisplayName("Unauthenticated request is rejected with 401")
-    void getSalesReport_Anonymous_Returns401() throws Exception {
+    void getProductSales_Anonymous_Returns401() throws Exception {
         mockMvc.perform(get(URL)
                 .param("startDate", "2026-10-01")
                 .param("endDate", "2026-10-31"))
@@ -144,41 +148,24 @@ class SalesReportControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("Start date after end date returns 400 INVALID_DATE_RANGE")
-    void getSalesReport_InvalidRange_Returns400() throws Exception {
-        when(salesReportService.getSalesReport(OCT_31, OCT_1))
+    void getProductSales_InvalidRange_Returns400() throws Exception {
+        when(productSalesService.getProductSales(OCT_31, OCT_1))
             .thenThrow(new InvalidDateRangeException(OCT_31, OCT_1));
 
         mockMvc.perform(get(URL)
                 .param("startDate", "2026-10-31")
                 .param("endDate", "2026-10-01"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.errorCode").value("INVALID_DATE_RANGE"));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("Missing endDate returns 400")
-    void getSalesReport_MissingParam_Returns400() throws Exception {
-        mockMvc.perform(get(URL).param("startDate", "2026-10-01"))
+    @DisplayName("Missing startDate returns 400")
+    void getProductSales_MissingParam_Returns400() throws Exception {
+        mockMvc.perform(get(URL).param("endDate", "2026-10-31"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.errorCode")
                 .value("INVALID_REQUEST_PARAMETER"));
-
-        verify(salesReportService, never()).getSalesReport(any(), any());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    @DisplayName("Malformed date returns 400")
-    void getSalesReport_BadDateFormat_Returns400() throws Exception {
-        mockMvc.perform(get(URL)
-                .param("startDate", "10/01/2026")
-                .param("endDate", "2026-10-31"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errorCode")
-                .value("INVALID_REQUEST_PARAMETER"));
-
-        verify(salesReportService, never()).getSalesReport(any(), any());
     }
 }

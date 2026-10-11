@@ -12,6 +12,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { SalesReport } from '../models/sales-report.model';
 import { SalesReportService } from '../services/sales-report.service';
+import { ProductSalesItem } from '../models/product-sales.model';
+import { ProductSalesService } from '../services/product-sales.service';
+import { ProductSalesTableComponent } from '../components/product-sales-table/product-sales-table.component';
 
 type LoadState = 'idle' | 'loading' | 'loaded' | 'forbidden' | 'error';
 
@@ -33,13 +36,15 @@ export function toIsoDate(date: Date): string {
 // - Net profit tile turns red when the period made a loss
 // - Follows the Inventory/Products page layout: eyebrow heading, summary card
 //   on the left, form card on the right (shared report-layout.scss)
+// - Story #30: full-width "Sales by Product" card below the summary and form,
+//   loaded for the same date range (ProductSalesService + ProductSalesTableComponent)
 // Verification:
 // - sales-report-page.component.spec.ts and manual QA with docs/qa/story-29-sales-seed.sql
 // Confidence: High
 @Component({
   selector: 'app-sales-report-page',
   standalone: true,
-  imports: [CurrencyPipe, DecimalPipe, RouterLink],
+  imports: [CurrencyPipe, DecimalPipe, RouterLink, ProductSalesTableComponent],
   template: `
     <main class="page">
       <a class="back-link" routerLink="/reports">← Back to reports</a>
@@ -153,12 +158,38 @@ export function toIsoDate(date: Date): string {
           }
         </div>
       </div>
+
+      <div class="card full-width">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Sales by Product</h2>
+            <p class="card-subtitle">
+              Quantity sold, cost and profit per product. Click Qty sold or Profit to sort.
+            </p>
+          </div>
+        </div>
+
+        @switch (productState()) {
+          @case ('loading') {
+            <p class="card-subtitle">Loading products…</p>
+          }
+          @case ('error') {
+            <div class="alert alert-danger" role="alert">
+              Product sales could not be loaded. Please try again.
+            </div>
+          }
+          @case ('loaded') {
+            <app-product-sales-table [products]="productSales()" />
+          }
+        }
+      </div>
     </main>
   `,
   styleUrls: ['../report-layout.scss', './sales-report-page.component.scss'],
 })
 export class SalesReportPage implements OnInit {
   private salesReportService = inject(SalesReportService);
+  private productSalesService = inject(ProductSalesService);
 
   readonly startDate = signal('');
   readonly endDate = signal('');
@@ -166,6 +197,8 @@ export class SalesReportPage implements OnInit {
   readonly state = signal<LoadState>('idle');
   readonly errorMessage = signal('');
   readonly validationError = signal('');
+  readonly productSales = signal<ProductSalesItem[]>([]);
+  readonly productState = signal<LoadState>('idle');
 
   ngOnInit(): void {
     this.setThisMonth();
@@ -222,6 +255,23 @@ export class SalesReportPage implements OnInit {
             : 'The sales report could not be loaded. Please try again.',
         );
         this.state.set('error');
+      },
+    });
+
+    this.loadProductSales(start, end);
+  }
+
+  private loadProductSales(start: string, end: string): void {
+    this.productState.set('loading');
+    this.productSalesService.getProductSales(start, end).subscribe({
+      next: (report) => {
+        this.productSales.set(report.products);
+        this.productState.set('loaded');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.productSales.set([]);
+        // A 403 is already explained by the summary card's permission message
+        this.productState.set(err.status === 403 ? 'forbidden' : 'error');
       },
     });
   }

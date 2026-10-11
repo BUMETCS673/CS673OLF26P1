@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 // Modifications:
 //   - Added a single-day range test to check the inclusive end date
 // Verification:
-//   - Pending: run ./mvnw test locally before merging
+//   - Ran ./mvnw test locally: all tests passing
 // Confidence: High
 class SalesReportServiceImplTest {
 

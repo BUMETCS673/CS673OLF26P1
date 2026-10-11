@@ -26,7 +26,7 @@ import java.util.List;
 // Verification:
 //   - Checked column names against V1__initial_schema.sql
 // Confidence: Medium (not yet run against the MySQL container)
-// TODO(#57): Replace this JdbcTemplate query with a JPA repository once the
+// TODO(#57): Replace this Jdbc Template query with a JPA repository once the
 // Product entity from the add-new-product brach (#26) is merged into develop.
 @Repository
 public class JdbcInventoryReportRepository

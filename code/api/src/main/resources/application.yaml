@@ -30,6 +30,11 @@ spring:
   config:
     import: "optional:aws-parameterstore:/config/bluejay/"
 
+  cloud:
+    aws:
+      region:
+        static: us-east-2
+
 # Custom Security & JWT Application Properties
 app:
   jwt:

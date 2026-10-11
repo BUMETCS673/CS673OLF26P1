@@ -32,7 +32,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bluejay_db?allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      AWS_REGION: us-east-2
     depends_on:
       db:
         condition: service_healthy

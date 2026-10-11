@@ -3,6 +3,21 @@ spring:
     hibernate:
       ddl-auto: validate # Prevents Hibernate from interfering with Flyway migrations
 
+  config:
+    import: ""
+
   flyway:
     enabled: true
     locations: classpath:db/migration   # Points to src/main/resources/db/migration
+
+  cloud:
+    aws:
+      parameterstore:
+        enabled: false
+
+  datasource:
+    username: bluejay_user
+    password: bluejay_password
+
+jwt:
+  secret: rN4A56wMb98wEuLnGs5t++Cu1MEDwH/IrEfTyn2NHhM=

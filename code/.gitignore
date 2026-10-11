@@ -20,3 +20,7 @@ api/.mvn/wrapper/maven-wrapper.jar
 
 # Ignore macOS system files
 .DS_Store
+
+# Local environment properties
+/.env
+/api/**/application-local.yaml

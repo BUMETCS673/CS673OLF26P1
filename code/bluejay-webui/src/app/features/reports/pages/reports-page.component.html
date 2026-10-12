@@ -1,0 +1,25 @@
+<main class="page reports">
+  <header class="page-heading">
+    <div class="page-heading__copy">
+      <p class="eyebrow">REPORTS</p>
+      <h1>{{ pageHeading().title }}</h1>
+      <p>{{ pageHeading().description }}</p>
+    </div>
+
+    <mat-form-field class="report-type-field" appearance="outline">
+      <mat-label>Report type</mat-label>
+      <mat-select [value]="selectedReportType" (selectionChange)="onReportTypeChange($event.value)">
+        <mat-option value="inventory">Inventory</mat-option>
+        @if (isAdmin) {
+          <mat-option value="sales">Sales</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </header>
+
+  @if (isSalesView) {
+    <app-sales-report />
+  } @else {
+    <app-inventory-report />
+  }
+</main>

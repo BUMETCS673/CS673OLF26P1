@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.springframework.http.HttpStatus;
@@ -49,10 +50,10 @@ public class ProductController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
-    public ResponseEntity<ApiResponse<List<ProductDto>>> getProducts(
+    public ResponseEntity<ApiResponse<ProductPageDto>> getProducts(
         ProductQueryDto productQueryDto) {
-        List<ProductDto> products = productService.getProducts(productQueryDto);
-        ApiResponse<List<ProductDto>> response = ApiResponse.success(
+        ProductPageDto products = productService.getProducts(productQueryDto);
+        ApiResponse<ProductPageDto> response = ApiResponse.success(
             products,
             "Products retrieved successfully"
         );

@@ -43,8 +43,8 @@ describe('ProductService', () => {
     expect(request.request.method).toBe('GET');
     expect(request.request.params.get('pageNumber')).toBe('1');
     expect(request.request.params.get('pageSize')).toBe('10');
-    request.flush({ data: [{ id: '1' }] });
-    expect(result).toEqual([{ id: '1' }]);
+    request.flush({ data: { items: [{ id: '1' }], totalCount: 1, pageNumber: 1, pageSize: 10 } });
+    expect(result).toEqual({ items: [{ id: '1' }], totalCount: 1, pageNumber: 1, pageSize: 10 });
   });
 
   it('lists products with the requested page and size', () => {
@@ -53,7 +53,7 @@ describe('ProductService', () => {
     const request = controller.expectOne((r) => r.url === '/api/v1/product');
     expect(request.request.params.get('pageNumber')).toBe('3');
     expect(request.request.params.get('pageSize')).toBe('25');
-    request.flush({ data: [] });
+    request.flush({ data: { items: [], totalCount: 0, pageNumber: 3, pageSize: 25 } });
   });
 
   it('lists products with product-name and category filters', () => {
@@ -62,7 +62,7 @@ describe('ProductService', () => {
     const request = controller.expectOne((r) => r.url === '/api/v1/product');
     expect(request.request.params.get('productName')).toBe('Water');
     expect(request.request.params.get('categoryName')).toBe('beverage');
-    request.flush({ data: [] });
+    request.flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 10 } });
   });
 
   it('lists products with a combined text and barcode search term', () => {

@@ -7,6 +7,7 @@
 package edu.bu.metcs673.bluejay.product.repository;
 
 import edu.bu.metcs673.bluejay.product.domain.Product;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,8 +40,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
           AND (:categoryName IS NULL OR c.name = :categoryName)
                 ORDER BY CASE WHEN p.barcode = :searchTerm THEN 0 ELSE 1 END, p.name
         """)
-    List<Product> findProducts(
-                @Param("searchTerm") String searchTerm,
+    Page<Product> findProducts(
+        @Param("searchTerm") String searchTerm,
         @Param("productName") String productName,
         @Param("categoryName") String categoryName,
         Pageable pageable
@@ -54,7 +55,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         return findByBarcode(barcode);
     }
 
-    default List<Product> getProducts(
+    default Page<Product> getProducts(
         String searchTerm,
         String productName,
         String categoryName,

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -50,6 +51,16 @@ public class GlobalExceptionHandler {
         ApiResponse<Void> response = ApiResponse.error(
             "Invalid username or password",
             "AUTH_INVALID_CREDENTIALS"
+        );
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDisabledAccount(
+        DisabledException ex) {
+        ApiResponse<Void> response = ApiResponse.error(
+            "Your account has been disabled.",
+            "ACCOUNT_DISABLED"
         );
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }

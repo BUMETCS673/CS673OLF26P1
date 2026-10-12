@@ -12,15 +12,6 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ProductSalesService } from './product-sales.service';
 import { ProductSalesReport } from '../models/product-sales.model';
 
-// AI-ASSISTED: YES
-// Tool: Claude
-// Prompt Summary: "Unit tests for the product sales service"
-// AI Contribution: Initial draft (~85%)
-// Modifications:
-// - Checks the startDate/endDate query params are sent unchanged
-// Verification:
-// - npm test
-// Confidence: High
 describe('ProductSalesService', () => {
   let service: ProductSalesService;
   let httpMock: HttpTestingController;
@@ -62,15 +53,13 @@ describe('ProductSalesService', () => {
 
     service.getProductSales('2026-10-01', '2026-10-31').subscribe((r) => (result = r));
 
-    httpMock
-      .expectOne((r) => r.url === '/api/v1/reports/sales/products')
-      .flush({
-        success: true,
-        message: 'ok',
-        data: { startDate: '2026-10-01', endDate: '2026-10-31', products: [] },
-        errorCode: null,
-        timestamp: '',
-      });
+    httpMock.expectOne((r) => r.url === '/api/v1/reports/sales/products').flush({
+      success: true,
+      message: 'ok',
+      data: { startDate: '2026-10-01', endDate: '2026-10-31', products: [] },
+      errorCode: null,
+      timestamp: '',
+    });
 
     expect(result?.products).toEqual([]);
   });

@@ -1,0 +1,132 @@
+<div class="columns">
+  <div class="summary-column">
+    <section class="card" aria-label="Sales summary">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Summary</h2>
+          @if (state() === 'loaded' && report(); as r) {
+            <p class="card-subtitle">
+              {{ r.startDate }} to {{ r.endDate }} ·
+              {{ r.transactionCount | number }} transactions ·
+              {{ r.unitsSold | number }} units sold
+            </p>
+          } @else {
+            <p class="card-subtitle">Choose a period to run the report.</p>
+          }
+        </div>
+      </div>
+
+      @switch (state()) {
+        @case ('loading') {
+          <p class="card-subtitle">Loading sales…</p>
+        }
+        @case ('forbidden') {
+          <div class="alert alert-danger" role="alert">
+            You don't have permission to view this report. It is available to Admins only.
+          </div>
+        }
+        @case ('error') {
+          <div class="alert alert-danger" role="alert">{{ errorMessage() }}</div>
+        }
+        @case ('loaded') {
+          @if (report(); as r) {
+            <div class="stat-grid">
+              <div class="stat">
+                <span class="stat__label">TOTAL REVENUE</span>
+                <span class="stat__value" data-testid="revenue">{{ r.totalRevenue | currency }}</span>
+              </div>
+              <div class="stat">
+                <span class="stat__label">TOTAL COST</span>
+                <span class="stat__value" data-testid="cost">{{ r.totalCost | currency }}</span>
+              </div>
+              <div class="stat stat--profit" [class.stat--loss]="r.netProfit < 0">
+                <span class="stat__label">NET PROFIT</span>
+                <span class="stat__value" data-testid="profit">{{ r.netProfit | currency }}</span>
+              </div>
+            </div>
+            @if (r.transactionCount === 0) {
+              <p class="card-subtitle empty-note">No sales in this period.</p>
+            }
+          }
+        }
+      }
+    </section>
+
+    @if (state() !== 'forbidden') {
+      <section class="card product-sales-card" aria-label="Sales by product">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Sales by Product</h2>
+            <p class="card-subtitle">
+              Quantity sold, cost and profit per product. Click Qty sold or Profit to sort.
+            </p>
+          </div>
+        </div>
+
+        @switch (productState()) {
+          @case ('loading') {
+            <p class="card-subtitle">Loading products…</p>
+          }
+          @case ('error') {
+            <div class="alert alert-danger" role="alert">
+              Product sales could not be loaded. Please try again.
+            </div>
+          }
+          @case ('loaded') {
+            <app-product-sales-table [products]="productSales()" />
+          }
+        }
+      </section>
+    }
+  </div>
+
+  <div class="period-column">
+    <aside class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Report Period</h2>
+          <p class="card-subtitle">Both dates are included.</p>
+        </div>
+      </div>
+
+      <form class="form-stack" (submit)="$event.preventDefault(); load()">
+        <div class="form-group">
+          <label for="startDate">Start date</label>
+          <input
+            id="startDate"
+            type="date"
+            name="startDate"
+            class="form-control"
+            [value]="startDate()"
+            (change)="startDate.set($any($event.target).value)"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="endDate">End date</label>
+          <input
+            id="endDate"
+            type="date"
+            name="endDate"
+            class="form-control"
+            [value]="endDate()"
+            (change)="endDate.set($any($event.target).value)"
+            required
+          />
+        </div>
+        <div class="presets">
+          <button type="button" class="btn-outline" (click)="setThisMonth()">This month</button>
+          <button type="button" class="btn-outline" (click)="setLastMonth()">Last month</button>
+          <button type="button" class="btn-outline" (click)="setLastDays(30)">Last 30 days</button>
+        </div>
+        <button type="submit" class="btn-action btn-block" [disabled]="state() === 'loading'">
+          {{ state() === 'loading' ? 'Running...' : 'Run Report' }}
+        </button>
+      </form>
+
+      @if (validationError()) {
+        <div class="alert alert-danger" role="alert">{{ validationError() }}</div>
+      }
+    </aside>
+  </div>
+</div>

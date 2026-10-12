@@ -3,7 +3,7 @@
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: Sortable per-product table (profit / quantity sold)
 // Human Contributions: Story #30 columns and sort options
-// Notes: Presentational component; the Sales Report page loads the data and passes it in.
+// Notes: Presentational component; the Sales Report component loads the data and passes it in.
 // authors: Krizma Nagi
 
 import { Component, computed, input, signal } from '@angular/core';
@@ -13,18 +13,6 @@ import { ProductSalesItem } from '../../models/product-sales.model';
 export type ProductSortKey = 'profit' | 'quantitySold';
 export type SortDirection = 'desc' | 'asc';
 
-// AI-ASSISTED: YES
-// Tool: Claude
-// Prompt Summary: "Frontend table showing results per product, sortable by profit or quantity"
-// AI Contribution: Initial draft (~85%)
-// Modifications:
-// - Click Quantity sold or Profit to sort; click again to flip the direction
-// - Default sort: profit, highest first (matches the API order)
-// - Products with no sales are dimmed; negative profit is red
-// - Uses the recent-table styles from report-layout.scss (same as Inventory)
-// Verification:
-// - product-sales-table.component.spec.ts
-// Confidence: High
 @Component({
   selector: 'app-product-sales-table',
   standalone: true,
@@ -76,7 +64,7 @@ export type SortDirection = 'desc' | 'asc';
                 <td class="text-right">{{ item.totalRevenue | currency }}</td>
                 <td class="text-right">{{ item.totalCost | currency }}</td>
                 <td
-                  class="text-right profit"
+                  class="text-right"
                   [class.text-danger]="item.profit < 0"
                   [class.text-success]="item.profit > 0"
                 >
@@ -89,7 +77,7 @@ export type SortDirection = 'desc' | 'asc';
       </div>
     }
   `,
-  styleUrls: ['../../report-layout.scss', './product-sales-table.component.scss'],
+  styleUrls: ['./product-sales-table.component.scss'],
 })
 export class ProductSalesTableComponent {
   readonly products = input<ProductSalesItem[]>([]);
@@ -100,9 +88,7 @@ export class ProductSalesTableComponent {
   readonly sorted = computed(() => {
     const key = this.sortKey();
     const dir = this.sortDirection() === 'desc' ? -1 : 1;
-    return [...this.products()].sort(
-      (a, b) => (a[key] - b[key]) * dir || a.name.localeCompare(b.name),
-    );
+    return [...this.products()].sort((a, b) => (a[key] - b[key]) * dir || a.name.localeCompare(b.name));
   });
 
   sortBy(key: ProductSortKey): void {
@@ -115,12 +101,16 @@ export class ProductSalesTableComponent {
   }
 
   arrow(key: ProductSortKey): string {
-    if (this.sortKey() !== key) return '';
+    if (this.sortKey() !== key) {
+      return '';
+    }
     return this.sortDirection() === 'desc' ? '↓' : '↑';
   }
 
   ariaSort(key: ProductSortKey): string {
-    if (this.sortKey() !== key) return 'none';
+    if (this.sortKey() !== key) {
+      return 'none';
+    }
     return this.sortDirection() === 'desc' ? 'descending' : 'ascending';
   }
 }

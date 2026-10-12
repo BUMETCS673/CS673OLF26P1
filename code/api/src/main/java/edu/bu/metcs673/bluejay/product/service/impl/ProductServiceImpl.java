@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.common.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.common.exception.ProductAlreadyExistedException;
@@ -86,7 +87,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getProducts(ProductQueryDto productQueryDto) {
+    public ProductPageDto getProducts(ProductQueryDto productQueryDto) {
         int pageNumber = productQueryDto.pageNumber() == null
             ? 1
             : productQueryDto.pageNumber();
@@ -106,8 +107,8 @@ public class ProductServiceImpl implements ProductService {
         String productName = normalizeFilter(productQueryDto.productName());
         String categoryName = normalizeFilter(productQueryDto.categoryName());
 
-        List<Product> products = _productRepository.getProducts(
-            searchTerm,
+        var productsPage = _productRepository.getProducts(
+                searchTerm,
             productName,
             categoryName,
             pageNumber,
@@ -119,7 +120,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         List<ProductDto> result = new ArrayList<>();
-        for (Product p : products) {
+        for (Product p : productsPage.getContent()) {
             Optional<Category> c = _categoryRepository.getCategoryBy(p.getCategoryId());
             if (c.isEmpty()) {
                 throw new UnknownProductCategoryException(p.getCategoryId());
@@ -137,7 +138,12 @@ public class ProductServiceImpl implements ProductService {
             ));
         }
 
-        return result;
+        return new ProductPageDto(
+            result,
+            productsPage.getTotalElements(),
+            pageNumber,
+            pageSize
+        );
     }
 
     private String normalizeFilter(String value) {

@@ -11,7 +11,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { CreateProduct, Product, ProductCategory, ProductQuery } from '../models/product.model';
+import { CreateProduct, Product, ProductCategory, ProductPage, ProductQuery } from '../models/product.model';
 import { ApiResponse } from '../../../shared/models/api-response.model';
 
 @Injectable({ providedIn: 'root' })
@@ -24,7 +24,7 @@ export class ProductService {
     return this.http.post<ApiResponse<Product>>(this.endpoint, product).pipe(map((response) => response.data));
   }
 
-  list(query: ProductQuery = {}): Observable<Product[]> {
+  list(query: ProductQuery = {}): Observable<ProductPage> {
     let params = new HttpParams()
       .set('pageNumber', query.pageNumber ?? 1)
       .set('pageSize', query.pageSize ?? 10);
@@ -41,7 +41,7 @@ export class ProductService {
       params = params.set('categoryName', query.categoryName.trim());
     }
     // @ts-ignore
-    return this.http.get<ApiResponse<Product[]>>(this.endpoint, { params }).pipe(map((response) => response.data));
+    return this.http.get<ApiResponse<ProductPage>>(this.endpoint, { params }).pipe(map((response) => response.data));
   }
 
   listCategories(): Observable<ProductCategory[]> {

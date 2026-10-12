@@ -14,8 +14,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Product Filtering Integration Tests")
@@ -32,9 +30,9 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("Should filter products by name using contains matching")
         void shouldFilterProductsByName() {
             // Query directly against seed data created by Flyway migrations
-            List<Product> products = productRepository.getProducts("water", null, null, 1, 10);
+            var products = productRepository.getProducts("Water", null, 1, 10);
 
-            assertThat(products)
+            assertThat(products.getContent())
                 .extracting(Product::getName)
                 .containsExactly("Spring Water");
         }
@@ -80,9 +78,9 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("Should filter products by exact category name")
         void shouldFilterProductsByExactCategoryName() {
             // Query directly against seed data created by Flyway migrations
-            List<Product> products = productRepository.getProducts(null, "fruit", 1, 10);
+            var products = productRepository.getProducts(null, "fruit", 1, 10);
 
-            assertThat(products)
+            assertThat(products.getContent())
                 .extracting(Product::getName)
                 .containsExactlyInAnyOrder("Lemons", "Raspberries");
         }

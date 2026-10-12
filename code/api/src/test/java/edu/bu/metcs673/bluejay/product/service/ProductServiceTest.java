@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.common.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.common.exception.ProductAlreadyExistedException;
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -203,16 +206,21 @@ public class ProductServiceTest {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 2, 1);
 
         when(productRepository.getProducts(null, null, null, 2, 1))
-                .thenReturn(List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)));
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)),
+                    PageRequest.of(1, 1),
+                    2
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(queryDto);
+        ProductPageDto products = productService.getProducts(queryDto);
 
         assertNotNull(products);
-        assertFalse(products.isEmpty());
-        assertEquals(1, products.size());
+        assertFalse(products.items().isEmpty());
+        assertEquals(1, products.items().size());
+        assertEquals(2, products.totalCount());
 
-        ProductDto firstProduct = products.getFirst();
+        ProductDto firstProduct = products.items().getFirst();
         assertNotNull(firstProduct);
         assertNotNull(firstProduct.id());
         assertEquals("product-existed", firstProduct.name());
@@ -222,14 +230,18 @@ public class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw product not found exception when requested page has no records")
-    public void shouldThrowProductNotFoundExceptionWhenRequestedPageHasNoRecords() {
+    @DisplayName("Should return an empty page when requested page has no records")
+    public void shouldReturnEmptyPageWhenRequestedPageHasNoRecords() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
-        when(productRepository.getProducts(null, null, null, 1, 1)).thenReturn(List.of());
+        when(productRepository.getProducts(null, null, null, 1, 1))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
-        assertThrows(ProductNotFoundException.class,
-                () -> productService.getProducts(queryDto));
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertTrue(products.items().isEmpty());
+        assertEquals(0, products.totalCount());
     }
 
     @Test
@@ -238,7 +250,11 @@ public class ProductServiceTest {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
         when(productRepository.getProducts(null, null, null, 1, 1))
-                .thenReturn(List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)));
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)),
+                    PageRequest.of(0, 1),
+                    1
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.empty());
 
         assertThrows(UnknownProductCategoryException.class,
@@ -251,15 +267,22 @@ public class ProductServiceTest {
         ProductQueryDto queryDto = createProductQueryDto("Water", "beverage", 1, 10);
 
         when(productRepository.getProducts(null, "Water", "beverage", 1, 10))
-                .thenReturn(List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)));
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)),
+                    PageRequest.of(0, 10),
+                    1
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(queryDto);
+        ProductPageDto products = productService.getProducts(queryDto);
 
         assertNotNull(products);
+        assertEquals(1, products.items().size());
+        assertEquals("Spring Water", products.items().getFirst().name());
         assertEquals(1, products.size());
+
         assertEquals("Spring Water", products.getFirst().name());
-        assertEquals(2.5, products.getFirst().price());
+        assertEquals(2.5, products.items().getFirst().price());
     }
 
     @Test
@@ -268,13 +291,17 @@ public class ProductServiceTest {
         ProductQueryDto queryDto = createProductQueryDto("Milk", "dairy", null, null);
 
         when(productRepository.getProducts(null, "Milk", "dairy", 1, 10))
-                .thenReturn(List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)));
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)),
+                    PageRequest.of(0, 10),
+                    1
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(queryDto);
+        ProductPageDto products = productService.getProducts(queryDto);
 
         assertNotNull(products);
-        assertEquals(1, products.size());
+        assertEquals(1, products.items().size());
     }
 
     @Test

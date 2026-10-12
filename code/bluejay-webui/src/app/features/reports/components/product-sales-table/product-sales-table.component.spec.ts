@@ -10,15 +10,6 @@ import { TestBed } from '@angular/core/testing';
 import { ProductSalesTableComponent } from './product-sales-table.component';
 import { ProductSalesItem } from '../../models/product-sales.model';
 
-// AI-ASSISTED: YES
-// Tool: Claude
-// Prompt Summary: "Component tests for the sortable product sales table"
-// AI Contribution: Initial draft (~85%)
-// Modifications:
-// - Reads row order from the rendered table to check sorting
-// Verification:
-// - npm test
-// Confidence: High
 describe('ProductSalesTableComponent', () => {
   const products: ProductSalesItem[] = [
     { productId: 'p1', barcode: '111', name: 'Cooking Oil 2L', quantitySold: 5, totalRevenue: 32.5, totalCost: 20.5, profit: 12 },
@@ -33,8 +24,7 @@ describe('ProductSalesTableComponent', () => {
     fixture.componentRef.setInput('products', items);
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
-    const names = () =>
-      Array.from(el.querySelectorAll('tbody tr td:first-child')).map((td) => td.textContent?.trim());
+    const names = () => Array.from(el.querySelectorAll('tbody tr td:first-child')).map((td) => td.textContent?.trim());
     const click = (testId: string) => {
       (el.querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement).click();
       fixture.detectChanges();

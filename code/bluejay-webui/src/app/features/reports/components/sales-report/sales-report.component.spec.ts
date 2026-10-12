@@ -3,30 +3,20 @@
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: Component test setup with a stubbed service
 // Human Contributions: Story #29 scenarios (totals, empty range, invalid range, 403)
-// Notes: Rendering and validation tests for the sales report page.
+// Notes: Rendering and validation tests for the sales report component.
 // authors: Krizma Nagi
 
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
-import { SalesReportPage, toIsoDate } from './sales-report-page.component';
-import { SalesReportService } from '../services/sales-report.service';
-import { SalesReport } from '../models/sales-report.model';
-import { ProductSalesService } from '../services/product-sales.service';
-import { ProductSalesReport } from '../models/product-sales.model';
+import { SalesReportComponent, toIsoDate } from './sales-report.component';
+import { ProductSalesReport } from '../../models/product-sales.model';
+import { SalesReportService } from '../../services/sales-report.service';
+import { ProductSalesService } from '../../services/product-sales.service';
+import { SalesReport } from '../../models/sales-report.model';
 
-// AI-ASSISTED: YES
-// Tool: Claude
-// Prompt Summary: "Component tests for the sales report page"
-// AI Contribution: Initial draft (~85%)
-// Modifications:
-// - Stubbed SalesReportService and counted calls to check client-side validation
-// - Story #30: stubbed ProductSalesService and added Sales by Product tests
-// Verification:
-// - npm test
-// Confidence: High
-describe('SalesReportPage', () => {
+describe('SalesReportComponent', () => {
   let response: Observable<SalesReport>;
   let calls: Array<[string, string]>;
   let productResponse: Observable<ProductSalesReport>;
@@ -51,7 +41,7 @@ describe('SalesReportPage', () => {
     calls = [];
     productCalls = [];
     TestBed.configureTestingModule({
-      imports: [SalesReportPage],
+      imports: [SalesReportComponent],
       providers: [
         provideRouter([]),
         {
@@ -74,7 +64,7 @@ describe('SalesReportPage', () => {
         },
       ],
     });
-    const fixture = TestBed.createComponent(SalesReportPage);
+    const fixture = TestBed.createComponent(SalesReportComponent);
     fixture.detectChanges();
     return { fixture, el: fixture.nativeElement as HTMLElement };
   }
@@ -151,14 +141,12 @@ describe('SalesReportPage', () => {
     expect(toIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 
-  it('loads product sales for the same date range (Story #30)', () => {
+  it('loads product sales for the same date range', () => {
     response = of(report());
     productResponse = of({
       startDate: '2026-10-01',
       endDate: '2026-10-31',
-      products: [
-        { productId: 'p1', barcode: '111', name: 'Cooking Oil 2L', quantitySold: 5, totalRevenue: 32.5, totalCost: 20.5, profit: 12 },
-      ],
+      products: [{ productId: 'p1', barcode: '111', name: 'Cooking Oil 2L', quantitySold: 5, totalRevenue: 32.5, totalCost: 20.5, profit: 12 }],
     });
     const { el } = setup();
 
@@ -167,7 +155,7 @@ describe('SalesReportPage', () => {
     expect(el.querySelectorAll('app-product-sales-table tbody tr').length).toBe(1);
   });
 
-  it('does not load product sales when the date range is invalid (Story #30)', () => {
+  it('does not load product sales when the date range is invalid', () => {
     response = of(report());
     const { fixture } = setup();
     productCalls = [];
@@ -179,7 +167,7 @@ describe('SalesReportPage', () => {
     expect(productCalls).toEqual([]);
   });
 
-  it('shows an error in the product card when product sales fail (Story #30)', () => {
+  it('shows an error in the product card when product sales fail', () => {
     response = of(report());
     productResponse = throwError(() => new HttpErrorResponse({ status: 500 }));
     const { el } = setup();

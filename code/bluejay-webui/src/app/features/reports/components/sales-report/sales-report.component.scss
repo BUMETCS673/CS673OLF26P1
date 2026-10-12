@@ -1,0 +1,248 @@
+@use 'sass:color';
+
+$bg-card: #ffffff;
+$bg-main: #f8fafc;
+$text-primary: #0f172a;
+$text-secondary: #64748b;
+$border-color: #e2e8f0;
+$input-bg: #f8fafc;
+$primary-blue: #2563eb;
+$primary-blue-hover: #1d4ed8;
+$primary-blue-focus: rgba(37, 99, 235, 0.15);
+$status-healthy-bg: #dcfce7;
+$status-healthy-text: #166534;
+$status-healthy-fill: #16a34a;
+$status-critical-bg: #fee2e2;
+$status-critical-text: #991b1b;
+$status-critical-fill: #dc2626;
+
+:host {
+  display: block;
+}
+
+.columns {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+  }
+}
+
+.summary-column {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.period-column {
+  display: flex;
+  align-self: flex-start;
+  flex: 0 0 380px;
+  width: 380px;
+  max-width: 380px;
+  min-width: 320px;
+
+  @media (max-width: 900px) {
+    align-self: stretch;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+.summary-column > *,
+.period-column > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.card {
+  background: $bg-card;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin: 0 0 0.25rem 0;
+      color: $text-primary;
+    }
+  }
+}
+
+.card-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: $text-secondary;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background-color: $input-bg;
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      border-color: $primary-blue;
+      box-shadow: 0 0 0 3px $primary-blue-focus;
+      background-color: #ffffff;
+    }
+  }
+}
+
+.btn-action {
+  padding: 0.75rem 1rem;
+  background-color: $primary-blue;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: $primary-blue-hover;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.btn-block {
+    width: 100%;
+  }
+}
+
+.btn-outline {
+  padding: 0.5rem 0.875rem;
+  background-color: $bg-card;
+  color: $primary-blue;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    border-color: $primary-blue;
+    background-color: $input-bg;
+  }
+}
+
+.alert {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  &.alert-success {
+    background-color: $status-healthy-bg;
+    color: $status-healthy-text;
+    border: 1px solid color.adjust($status-healthy-fill, $lightness: 30%);
+  }
+
+  &.alert-danger {
+    background-color: $status-critical-bg;
+    color: $status-critical-text;
+    border: 1px solid color.adjust($status-critical-fill, $lightness: 30%);
+  }
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1.25rem;
+  background-color: $bg-main;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+
+  .stat__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: $text-secondary;
+  }
+
+  .stat__value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: $text-primary;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.stat--profit .stat__value {
+    color: $status-healthy-text;
+  }
+
+  &.stat--loss .stat__value {
+    color: $status-critical-text;
+  }
+}
+
+.empty-note {
+  margin-top: 1rem;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.product-sales-card {
+  width: 100%;
+  min-width: 0;
+}

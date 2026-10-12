@@ -34,17 +34,9 @@ export class ProductListComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly filters = signal<ProductQuery>({});
+  readonly totalCount = signal(0);
   readonly displayedColumns = ['name', 'barcode', 'category', 'price'];
-
-  // The API returns a page without a total count; one extra row keeps Next available
-  // when the current page is full. The next response determines whether it exists.
-  readonly paginatorLength = computed(() => {
-    const size = this.pageSize();
-    const count = this.products().length;
-    const endOfCurrentPage = (this.page() - 1) * size + count;
-    if (count === size) return endOfCurrentPage + 1;
-    return Math.max(endOfCurrentPage, this.page() * size);
-  });
+  readonly paginatorLength = computed(() => this.totalCount());
 
   ngOnInit(): void {
     this.loadPage(1);
@@ -74,9 +66,13 @@ export class ProductListComponent implements OnInit {
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: (products) => this.products.set(products),
+        next: (result) => {
+          this.products.set(result.items);
+          this.totalCount.set(result.totalCount);
+        },
         error: (error) => {
           this.products.set([]);
+          this.totalCount.set(0);
           this.error.set(error?.error?.message || 'Could not load the product catalog.');
         },
       });

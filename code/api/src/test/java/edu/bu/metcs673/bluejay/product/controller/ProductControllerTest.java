@@ -16,8 +16,8 @@ import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
-import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.common.exception.ProductNotFoundException;
+import edu.bu.metcs673.bluejay.product.dto.UpdateLowStockRequest;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,11 +36,13 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,7 +84,8 @@ private static final UUID PRODUCT_ID =
                 "barcode-test-12345",
                 1L,
                 null,
-                null
+                null,
+                1
             );
 
             Product product = new Product();
@@ -121,7 +124,8 @@ private static final UUID PRODUCT_ID =
                 1L,
                 "test-category",
                 "test-description",
-                3.75
+                3.75,
+                1
             );
 
             when(productService.getProducts(argThat(query ->
@@ -200,7 +204,8 @@ private static final UUID PRODUCT_ID =
                 1L,
                 "test-category",
                 "test-description",
-                3.75
+                3.75,
+                1
             );
 
             when(productService.getProductBy(PRODUCT_BARCODE)).thenReturn(product);
@@ -232,6 +237,40 @@ private static final UUID PRODUCT_ID =
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("PRODUCT_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /product/{id}/low-stock Tests")
+    class UpdateLowStockEndpoint {
+
+        @Test
+        @DisplayName("Should allow manager to update low stock threshold and return 200")
+        void updateLowStock_Manager_Returns200() throws Exception {
+            UpdateLowStockRequest request = new UpdateLowStockRequest(15);
+            ProductDto updatedProduct = new ProductDto(
+                PRODUCT_ID,
+                "product-mock",
+                PRODUCT_BARCODE,
+                1L,
+                "test-category",
+                "test-description",
+                3.75,
+                15
+            );
+
+            when(productService.updateLowStock(eq(PRODUCT_ID), eq(15))).thenReturn(updatedProduct);
+
+            mockMvc.perform(patch("/api/v1/product/{id}/low-stock", PRODUCT_ID)
+                    .with(user("manager").roles("MANAGER"))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Low stock threshold updated successfully"))
+                .andExpect(jsonPath("$.data.id").value(PRODUCT_ID.toString()))
+                .andExpect(jsonPath("$.data.lowStock").value(15));
         }
     }
 }

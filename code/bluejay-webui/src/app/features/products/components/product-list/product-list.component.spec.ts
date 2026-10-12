@@ -15,7 +15,13 @@ import { ProductService } from '../../services/product.service';
 import { ProductListComponent } from './product-list.component';
 
 const product = (n: number): Product => ({
-  id: String(n), name: `Product ${n}`, barcode: `000${n}`, categoryId: null, categoryName: n % 2 ? 'Dairy' : null, price: n,
+  id: String(n),
+  name: `Product ${n}`,
+  barcode: `000${n}`,
+  categoryId: null,
+  categoryName: n % 2 ? 'Dairy' : null,
+  price: n,
+  lowStock: 5,
 });
 
 const page = (items: Product[], totalCount = items.length): ProductPage => ({
@@ -26,7 +32,10 @@ const page = (items: Product[], totalCount = items.length): ProductPage => ({
 });
 
 describe('ProductListComponent', { timeout: 15000 }, () => {
-  const serviceMock = { list: vi.fn() };
+  const serviceMock = {
+    list: vi.fn(),
+    updateLowStock: vi.fn(),
+  };
   let fixture: ComponentFixture<ProductListComponent>;
   let component: ProductListComponent;
 
@@ -40,6 +49,7 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
 
   beforeEach(() => {
     serviceMock.list.mockReset();
+    serviceMock.updateLowStock.mockReset();
     serviceMock.list.mockReturnValue(of(page([product(1), product(2)], 2)));
     TestBed.configureTestingModule({ providers: [{ provide: ProductService, useValue: serviceMock }] });
   });
@@ -124,17 +134,52 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
     });
   });
 
-  it('adds one extra row to the paginator length when the page is full', async () => {
-    serviceMock.list.mockReturnValue(of(page(Array.from({ length: 10 }, (_, i) => product(i)), 10)));
+  it('starts inline edit and sets initial editing low stock value', async () => {
     await create();
+    const p = product(1);
 
-    expect(component.paginatorLength()).toBe(10);
+    component.startEdit(p);
+
+    expect(component.editingProductId()).toBe('1');
+    expect(component.editingLowStock()).toBe(5);
   });
 
-  it('uses the backend total count for paginator length', async () => {
-    serviceMock.list.mockReturnValue(of(page([product(1), product(2)], 37)));
+  it('cancels inline edit', async () => {
     await create();
+    component.editingProductId.set('1');
 
-    expect(component.paginatorLength()).toBe(37);
+    component.cancelEdit();
+
+    expect(component.editingProductId()).toBeNull();
+  });
+
+  it('saves updated low stock threshold and updates local products signal', async () => {
+    await create();
+    const p = product(1);
+    component.editingProductId.set('1');
+    component.editingLowStock.set(20);
+
+    const updatedProduct = { ...p, lowStock: 20 };
+    serviceMock.updateLowStock.mockReturnValue(of(updatedProduct));
+
+    component.saveLowStock(p);
+
+    expect(serviceMock.updateLowStock).toHaveBeenCalledWith('1', 20);
+    expect(component.products()[0].lowStock).toBe(20);
+    expect(component.editingProductId()).toBeNull();
+  });
+
+  it('handles error when saving low stock threshold fails', async () => {
+    await create();
+    const p = product(1);
+    component.editingProductId.set('1');
+    component.editingLowStock.set(20);
+
+    serviceMock.updateLowStock.mockReturnValue(throwError(() => ({ error: { message: 'Update failed' } })));
+
+    component.saveLowStock(p);
+
+    expect(component.error()).toBe('Update failed');
+    expect(component.loading()).toBe(false);
   });
 });

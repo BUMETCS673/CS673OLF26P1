@@ -13,11 +13,14 @@ import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
+import edu.bu.metcs673.bluejay.product.dto.UpdateLowStockRequest;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/product")
@@ -76,6 +80,18 @@ public class ProductController {
         ApiResponse<ProductDto> response = ApiResponse.success(
             product,
             "Product retrieved successfully"
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/low-stock")
+    public ResponseEntity<ApiResponse<ProductDto>> updateLowStock(
+        @PathVariable("id") UUID id,
+        @Valid @RequestBody UpdateLowStockRequest request) {
+        ProductDto product = productService.updateLowStock(id, request.lowStock());
+        ApiResponse<ProductDto> response = ApiResponse.success(
+            product,
+            "Low stock threshold updated successfully"
         );
         return ResponseEntity.ok(response);
     }

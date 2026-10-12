@@ -29,7 +29,8 @@ public record StockEntryResponse(
     String productName,
     Integer quantityAdded,
     Integer newTotalStock,
-    BigDecimal costPrice,
+    BigDecimal stockCost,
+    BigDecimal salePrice,
     String userId,
     LocalDateTime createdAt,
     String message

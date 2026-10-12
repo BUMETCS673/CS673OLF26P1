@@ -1,5 +1,6 @@
 package edu.bu.metcs673.bluejay.product.dto;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public record ProductDto(
@@ -9,6 +10,7 @@ public record ProductDto(
     Long categoryId,
     String categoryName,
     String categoryDescription,
-    double price
+    double price,
+    int lowStock
 ) {
 }

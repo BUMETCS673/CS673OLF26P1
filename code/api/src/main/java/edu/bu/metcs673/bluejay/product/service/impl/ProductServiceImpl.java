@@ -21,11 +21,13 @@ import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -44,10 +46,11 @@ public class ProductServiceImpl implements ProductService {
         product.setBarcode(productDto.barcode());
         product.setName(productDto.name());
         product.setCategoryId(productDto.categoryId());
-        product.setCostPrice(BigDecimal.ZERO);
+        product.setLowStock(productDto.lowStock());
+        product.setStockCost(BigDecimal.ZERO);
         product.setSalePrice(BigDecimal.ZERO);
 
-        var p = _productRepository.getProductBy(productDto.barcode());
+        Optional<Product> p = _productRepository.getProductBy(productDto.barcode());
 
         if (p.isPresent()) {
             throw new ProductAlreadyExistedException(productDto.barcode());
@@ -60,10 +63,10 @@ public class ProductServiceImpl implements ProductService {
             return _productRepository.addProduct(product);
         }
 
-        var categoryEntity = new Category();
+        Category categoryEntity = new Category();
         categoryEntity.setName(productDto.categoryName());
         categoryEntity.setDescription(productDto.categoryDescription());
-        var category = _categoryRepository.addCategory(categoryEntity);
+        Category category = _categoryRepository.addCategory(categoryEntity);
         product.setCategoryId(category.getId());
         product.setCategory(category);
 
@@ -127,7 +130,8 @@ public class ProductServiceImpl implements ProductService {
                 p.getCategoryId(),
                 c.get().getName(),
                 c.get().getDescription(),
-                0
+                0,
+                p.getLowStock()
             ));
         }
 
@@ -173,7 +177,33 @@ public class ProductServiceImpl implements ProductService {
             product.getCategoryId(),
             category.get().getName(),
             category.get().getDescription(),
-            product.getSalePrice().doubleValue()
+            product.getSalePrice().doubleValue(),
+            product.getLowStock()
+        );
+    }
+
+    @Override
+    @Transactional
+    public ProductDto updateLowStock(UUID id, int lowStock) {
+        Product product = _productRepository.findById(id)
+            .orElseThrow(() -> new ProductNotFoundException(id.toString()));
+
+        product.setLowStock(lowStock);
+        Product savedProduct = _productRepository.save(product);
+
+        Optional<Category> category = _categoryRepository.getCategoryBy(savedProduct.getCategoryId());
+        String categoryName = category.map(Category::getName).orElse(null);
+        String categoryDesc = category.map(Category::getDescription).orElse(null);
+
+        return new ProductDto(
+            savedProduct.getId(),
+            savedProduct.getName(),
+            savedProduct.getBarcode(),
+            savedProduct.getCategoryId(),
+            categoryName,
+            categoryDesc,
+            savedProduct.getSalePrice() != null ? savedProduct.getSalePrice().doubleValue() : 0.0,
+            savedProduct.getLowStock()
         );
     }
 }

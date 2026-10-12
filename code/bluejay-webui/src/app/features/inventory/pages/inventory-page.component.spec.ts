@@ -6,59 +6,49 @@
 // authors: Sara Orion
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Observable, of} from 'rxjs';
-import {InventoryPage} from './inventory-page.component';
-import {InventoryService} from '../services/inventory.service';
-import {
-  InventoryHealthComponent
-} from '../components/inventory-health/inventory-health.component';
-import {
-  InventoryListComponent
-} from '../components/inventory-list/inventory-list.component';
-import {
-  StockEntryFormComponent
-} from '../components/stock-entry-form/stock-entry-form.component';
-import {ApiResponse} from '../../../shared/models/api-response.model';
-import {
-  InventoryHealthItem,
-  InventoryItem,
-  StockEntry
-} from '../models/inventory.model';
+import { of } from 'rxjs';
+import { InventoryPage } from './inventory-page.component';
+import { InventoryService } from '../services/inventory.service';
+import { InventoryHealthComponent } from '../components/inventory-health/inventory-health.component';
+import { InventoryListComponent } from '../components/inventory-list/inventory-list.component';
+import { StockEntryFormComponent } from '../components/stock-entry-form/stock-entry-form.component';
+import { ApiResponse } from '../../../shared/models/api-response.model';
+import { InventoryStockItem, InventoryItem, StockEntry } from '../models/inventory.model';
 
 describe('InventoryPage', () => {
   let component: InventoryPage;
   let fixture: ComponentFixture<InventoryPage>;
   let inventoryServiceMock: {
-    getInventoryHealth: { mockReturnValue: (arg0: Observable<ApiResponse<InventoryHealthItem[]>>) => void; };
-    getStockInventory: { mockReturnValue: (arg0: Observable<ApiResponse<InventoryItem[]>>) => void; };
-    recordStockEntry: { mockReturnValue: (arg0: Observable<ApiResponse<StockEntry>>) => void; };
+    getInventoryStock: ReturnType<typeof vi.fn>;
+    getInventory: ReturnType<typeof vi.fn>;
+    recordStockEntry: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
     inventoryServiceMock = {
-      getInventoryHealth: vi.fn(),
-      getStockInventory: vi.fn(),
+      getInventoryStock: vi.fn(),
+      getInventory: vi.fn(),
       recordStockEntry: vi.fn()
     };
 
-    const healthResponse: ApiResponse<InventoryHealthItem[]> = {
+    const stockHealthResponse: ApiResponse<InventoryStockItem[]> = {
       success: true,
-      message: 'Health loaded',
+      message: 'Stock health loaded',
       data: [],
       errorCode: null,
       timestamp: '2026-10-05T12:00:00Z'
     };
 
-    const stockResponse: ApiResponse<InventoryItem[]> = {
+    const inventoryResponse: ApiResponse<InventoryItem[]> = {
       success: true,
-      message: 'Stock loaded',
+      message: 'Inventory loaded',
       data: [],
       errorCode: null,
       timestamp: '2026-10-05T12:00:00Z'
     };
 
-    inventoryServiceMock.getInventoryHealth.mockReturnValue(of(healthResponse));
-    inventoryServiceMock.getStockInventory.mockReturnValue(of(stockResponse));
+    inventoryServiceMock.getInventoryStock.mockReturnValue(of(stockHealthResponse));
+    inventoryServiceMock.getInventory.mockReturnValue(of(inventoryResponse));
 
     await TestBed.configureTestingModule({
       imports: [

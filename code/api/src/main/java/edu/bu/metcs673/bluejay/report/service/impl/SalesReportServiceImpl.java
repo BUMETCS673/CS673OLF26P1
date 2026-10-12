@@ -21,12 +21,12 @@ import java.time.LocalDateTime;
 
 // AI-ASSISTED: YES
 // Tool: Claude
-// Prompt Summary: "Calculate total revenue, total cost, and net profit from the query results"
+// Prompt Summary: "Calculate total revenue, total stockCost, and net profit from the query results"
 // AI Contribution: Initial draft (~85%)
 // Modifications:
 //   - Rejects startDate after endDate before touching the database
 //   - Converts inclusive dates to [startDate 00:00, endDate+1 00:00)
-//   - Net profit = total revenue - total cost
+//   - Net profit = total revenue - total stockCost
 // Verification:
 //   - SalesReportServiceImplTest (sales in range, empty range, invalid range)
 // Confidence: High

@@ -1,7 +1,7 @@
 // AI-USAGE SUMMARY
 // Tools: Gemini
 // Overall AI Contribution: 100%
-// AI-Assisted Areas: Unit tests for stock entry processing, validation, cost updates, and audit movement recording.
+// AI-Assisted Areas: Unit tests for stock entry processing, validation, stockCost updates, and audit movement recording.
 // Human Contributions: Custom business logic, validation, security refactoring.
 // Notes: Initial code generated via AI; requires student verification, refactoring, and testing before integration.
 // authors: Sara Orion
@@ -70,7 +70,8 @@ class StockEntryServiceImplTest {
         existingProduct.setBarcode("123456");
         existingProduct.setName("Coffee Beans");
         existingProduct.setCurrentStock(10);
-        existingProduct.setCostPrice(new BigDecimal("12.50"));
+        existingProduct.setStockCost(new BigDecimal("12.50"));
+        existingProduct.setSalePrice(new BigDecimal("17.50"));
 
         restockMovementType = new MovementType();
         restockMovementType.setId(1L);
@@ -78,9 +79,9 @@ class StockEntryServiceImplTest {
     }
 
     @Test
-    @DisplayName("processStockEntry should update stock, cost price, save product & movement when given valid request")
+    @DisplayName("processStockEntry should update stock, stockCost salePrice, save product & movement when given valid request")
     void processStockEntry_Success_UpdatesStockCostAndSavesMovement() {
-        StockEntryRequest request = new StockEntryRequest("123456", new BigDecimal("14.00"), 5);
+        StockEntryRequest request = new StockEntryRequest("123456", new BigDecimal("14.00"), new BigDecimal("20.00"), 5);
 
         when(productRepository.findByBarcode("123456")).thenReturn(Optional.of(existingProduct));
         when(movementTypeRepository.findByCode(MovementTypeCode.RESTOCK.name())).thenReturn(Optional.of(restockMovementType));
@@ -97,13 +98,14 @@ class StockEntryServiceImplTest {
         assertEquals("Coffee Beans", response.productName());
         assertEquals(5, response.quantityAdded());
         assertEquals(15, response.newTotalStock());
-        assertEquals(new BigDecimal("14.00"), response.costPrice());
+        assertEquals(new BigDecimal("14.00"), response.stockCost());
+        assertEquals(new BigDecimal("20.00"), response.salePrice());
         assertEquals(String.valueOf(mockUserId), response.userId());
 
         // Verify Product Stock & Cost updates saved
         verify(productRepository).save(existingProduct);
         assertEquals(15, existingProduct.getCurrentStock());
-        assertEquals(new BigDecimal("14.00"), existingProduct.getCostPrice());
+        assertEquals(new BigDecimal("14.00"), existingProduct.getStockCost());
 
         // Verify InventoryMovement created with matching fields
         ArgumentCaptor<InventoryMovement> movementCaptor = ArgumentCaptor.forClass(InventoryMovement.class);
@@ -117,9 +119,9 @@ class StockEntryServiceImplTest {
     }
 
     @Test
-    @DisplayName("processStockEntry should update stock without updating cost when cost is null or empty")
+    @DisplayName("processStockEntry should update stock without updating stockCost when stockCost is null or empty")
     void processStockEntry_Success_WithoutCostUpdate() {
-        StockEntryRequest request = new StockEntryRequest("123456", null, 10);
+        StockEntryRequest request = new StockEntryRequest("123456", null, null, 10);
 
         when(productRepository.findByBarcode("123456")).thenReturn(Optional.of(existingProduct));
         when(movementTypeRepository.findByCode(MovementTypeCode.RESTOCK.name())).thenReturn(Optional.of(restockMovementType));
@@ -132,14 +134,14 @@ class StockEntryServiceImplTest {
         stockEntryService.processStockEntry(request);
 
         assertEquals(20, existingProduct.getCurrentStock());
-        assertEquals(new BigDecimal("12.50"), existingProduct.getCostPrice()); // Unchanged
+        assertEquals(new BigDecimal("12.50"), existingProduct.getStockCost()); // Unchanged
     }
 
     @Test
     @DisplayName("processStockEntry should throw InvalidQuantityException when quantity is null or <= 0")
     void processStockEntry_InvalidQuantity_ThrowsException() {
-        StockEntryRequest zeroQtyRequest = new StockEntryRequest("123456", new BigDecimal("10.00"), 0);
-        StockEntryRequest nullQtyRequest = new StockEntryRequest("123456", new BigDecimal("10.00"), null);
+        StockEntryRequest zeroQtyRequest = new StockEntryRequest("123456", new BigDecimal("10.00"), new BigDecimal("15.00"), 0);
+        StockEntryRequest nullQtyRequest = new StockEntryRequest("123456", new BigDecimal("10.00"), new BigDecimal("15.00"), null);
 
         assertThrows(InvalidQuantityException.class, () -> stockEntryService.processStockEntry(zeroQtyRequest));
         assertThrows(InvalidQuantityException.class, () -> stockEntryService.processStockEntry(nullQtyRequest));
@@ -150,7 +152,7 @@ class StockEntryServiceImplTest {
     @Test
     @DisplayName("processStockEntry should throw ProductNotFoundException when barcode does not exist")
     void processStockEntry_ProductNotFound_ThrowsException() {
-        StockEntryRequest request = new StockEntryRequest("999999", new BigDecimal("10.00"), 5);
+        StockEntryRequest request = new StockEntryRequest("999999", new BigDecimal("10.00"), new BigDecimal("10.00"),5);
         when(productRepository.findByBarcode("999999")).thenReturn(Optional.empty());
 
         assertThrows(ProductNotFoundException.class, () -> stockEntryService.processStockEntry(request));
@@ -161,7 +163,7 @@ class StockEntryServiceImplTest {
     @Test
     @DisplayName("processStockEntry should throw IllegalStateException when RESTOCK movement type is missing")
     void processStockEntry_RestockTypeNotFound_ThrowsException() {
-        StockEntryRequest request = new StockEntryRequest("123456", new BigDecimal("10.00"), 5);
+        StockEntryRequest request = new StockEntryRequest("123456", new BigDecimal("10.00"), new BigDecimal("10.00"),5);
 
         when(productRepository.findByBarcode("123456")).thenReturn(Optional.of(existingProduct));
         when(movementTypeRepository.findByCode(MovementTypeCode.RESTOCK.name())).thenReturn(Optional.empty());

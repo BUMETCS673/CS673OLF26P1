@@ -40,6 +40,11 @@ authors: Kimleng
       <textarea matInput name="categoryDescription" [(ngModel)]="categoryDescription" rows="3"></textarea>
     </mat-form-field>
 
+    <mat-form-field appearance="outline">
+      <mat-label>Low Stock Threshold</mat-label>
+      <input matInput type="number" name="lowStockThreshold" [(ngModel)]="lowStockThreshold" required />
+    </mat-form-field>
+
     @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
 
     <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !name.trim() || !barcode.trim()">

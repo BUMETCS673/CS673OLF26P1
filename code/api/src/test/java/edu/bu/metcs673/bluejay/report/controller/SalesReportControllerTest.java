@@ -86,7 +86,7 @@ class SalesReportControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("Admin gets total revenue, cost and net profit for the range")
+    @DisplayName("Admin gets total revenue, stockCost and net profit for the range")
     void getSalesReport_AsAdmin_Returns200WithTotals() throws Exception {
         when(salesReportService.getSalesReport(OCT_1, OCT_31)).thenReturn(
             new SalesReport(OCT_1, OCT_31, new BigDecimal("1250.00"),

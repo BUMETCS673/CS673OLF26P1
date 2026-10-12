@@ -105,7 +105,7 @@ describe('ProductFormComponent', { timeout: 15000 }, () => {
     expect(serviceMock.create).not.toHaveBeenCalled();
   });
 
-  it('submits a trimmed product with the selected existing category', async () => {
+  it('submits a trimmed product with the selected existing category and default low stock threshold', async () => {
     await create();
     component.name = ' Milk ';
     component.barcode = ' 123 ';
@@ -118,15 +118,17 @@ describe('ProductFormComponent', { timeout: 15000 }, () => {
       categoryName: 'Dairy',
       categoryId: 1,
       categoryDescription: 'Milk and cheese',
+      lowStock: 1,
     });
   });
 
-  it('submits a new category by name with a null id', async () => {
+  it('submits a new category by name with a null id and custom low stock threshold', async () => {
     await create();
     await type('categoryName', 'Snacks');
     component.name = 'Chips';
     component.barcode = '555';
     component.categoryDescription = ' Crunchy ';
+    component.lowStockThreshold = 10;
     component.submit();
 
     expect(serviceMock.create).toHaveBeenCalledWith({
@@ -135,6 +137,7 @@ describe('ProductFormComponent', { timeout: 15000 }, () => {
       categoryName: 'Snacks',
       categoryId: null,
       categoryDescription: 'Crunchy',
+      lowStock: 10,
     });
   });
 
@@ -158,6 +161,7 @@ describe('ProductFormComponent', { timeout: 15000 }, () => {
     expect(created).toHaveBeenCalledTimes(1);
     expect(component.name).toBe('');
     expect(component.barcode).toBe('');
+    expect(component.lowStockThreshold).toBe(1);
     expect(component.saving()).toBe(false);
   });
 

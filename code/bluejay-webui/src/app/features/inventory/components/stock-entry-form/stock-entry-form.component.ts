@@ -39,6 +39,7 @@ export class StockEntryFormComponent {
   stockForm = this.fb.group({
     barcode: ['', [Validators.required]],
     cost: [0.00, [Validators.min(0)]],
+    price: [0.00, [Validators.min(0)]],
     quantity: [1, [Validators.required, positiveIntegerValidator]]
   });
 
@@ -56,13 +57,14 @@ export class StockEntryFormComponent {
       return;
     }
 
-    const { barcode, cost, quantity } = this.stockForm.getRawValue();
+    const { barcode, cost, price, quantity } = this.stockForm.getRawValue();
     this.isSubmitting.set(true);
 
     this.inventoryService.recordStockEntry({
       barcode: barcode!,
       quantity: Number(quantity),
-      cost: cost ? Number(cost) : undefined
+      stockCost: cost ? Number(cost) : undefined,
+      salePrice: price ? Number(price) : undefined
     }).subscribe({
       next: (response: ApiResponse<StockEntry>) => {
         this.isSubmitting.set(false);
@@ -76,6 +78,7 @@ export class StockEntryFormComponent {
           this.stockForm.patchValue({
             barcode: '',
             cost: 0.00,
+            price: 0.00,
             quantity: 1
           });
           this.stockForm.markAsUntouched();

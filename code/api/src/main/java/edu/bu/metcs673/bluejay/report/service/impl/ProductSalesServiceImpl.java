@@ -24,11 +24,11 @@ import java.util.List;
 
 // AI-ASSISTED: YES
 // Tool: Claude
-// Prompt Summary: "Calculate per-product quantity sold, total cost, and profit"
+// Prompt Summary: "Calculate per-product quantity sold, total stockCost, and profit"
 // AI Contribution: Initial draft (~85%)
 // Modifications:
 //   - Same validation and inclusive day boundaries as SalesReportServiceImpl (#29)
-//   - Profit = revenue - cost for each product
+//   - Profit = revenue - stockCost for each product
 //   - Default order: profit high to low, then name, so the best performers
 //     are on top and products with no sales sit at the bottom
 // Verification:

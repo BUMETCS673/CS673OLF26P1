@@ -10,14 +10,14 @@ package edu.bu.metcs673.bluejay.inventory.dto;
 
 // AI-ASSISTED: YES
 // Tool: Gemini
-// Prompt Summary: "Create InventoryHealthResponse record representing dynamic stock level metrics and alert status."
+// Prompt Summary: "Create InventoryStockResponse record representing dynamic stock level metrics and alert status."
 // AI Contribution: Initial draft (~100%)
-// Modifications: Formatted fields for stock level percentage calculation and health status display.
+// Modifications: Formatted fields for stock quantities and low stock threshold.
 // Verification: Jackson JSON serialization test.
 // Confidence: High
-public record InventoryHealthResponse(
+public record InventoryStockResponse(
     String id,
     String productName,
-    int percentage,
-    String status
+    int currentStock,
+    int lowStockThreshold
 ) {}

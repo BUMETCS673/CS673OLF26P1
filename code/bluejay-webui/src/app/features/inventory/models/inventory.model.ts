@@ -15,7 +15,8 @@
 export interface CreateStockEntry {
   barcode: string;
   quantity: number;
-  cost?: number | null;
+  stockCost?: number;
+  salePrice?: number;
 }
 
 export interface StockEntry {
@@ -25,7 +26,8 @@ export interface StockEntry {
   productName: string;
   quantityAdded: number;
   newTotalStock: number;
-  costPrice: number;
+  stockCost: number;
+  salePrice: number;
   userId: string;
   createdAt: string;
   message: string;
@@ -35,7 +37,8 @@ export interface InventoryItem {
   id: string;
   barcode: string;
   productName: string;
-  cost: number;
+  stockCost: number;
+  salePrice: number;
   quantity: number;
 }
 
@@ -46,9 +49,15 @@ export interface InventoryItem {
 // Modifications: Added explicit union type for health status levels.
 // Verification: Angular compiler type check.
 // Confidence: High
-export interface InventoryHealthItem {
+export interface InventoryStockItem {
   id: string;
   productName: string;
+  currentStock: number;
+  lowStockThreshold: number;
+}
+
+export interface StockHealth {
   percentage: number;
   status: 'Healthy' | 'Low' | 'Critical';
+  color: string;
 }

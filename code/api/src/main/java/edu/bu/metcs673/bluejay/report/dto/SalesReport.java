@@ -2,7 +2,7 @@
 // Tools: Claude
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: Response record for the sales report
-// Human Contributions: Story #29 fields (total revenue, total cost, net profit)
+// Human Contributions: Story #29 fields (total revenue, total stockCost, net profit)
 // Notes: Response body of GET /api/v1/reports/sales.
 // Authors: Krizma Nagi
 

@@ -91,6 +91,17 @@ describe('ProductService', () => {
     controller.expectOne('/api/v1/product/a%2Fb%20c').flush({ data: {} });
   });
 
+  it('updates low stock threshold and unwraps response', () => {
+    let result: unknown;
+    service.updateLowStock('1', 15).subscribe((p) => (result = p));
+
+    const request = controller.expectOne('/api/v1/product/1/low-stock');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ lowStock: 15 });
+    request.flush({ data: { id: '1', name: 'Milk', lowStock: 15 } });
+    expect(result).toEqual({ id: '1', name: 'Milk', lowStock: 15 });
+  });
+
   it('propagates API errors such as 422 PRODUCT_PRICE_MISSING', () => {
     let status = 0;
     let code = '';

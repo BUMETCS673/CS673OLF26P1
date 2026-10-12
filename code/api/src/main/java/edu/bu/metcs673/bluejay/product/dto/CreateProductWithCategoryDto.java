@@ -11,6 +11,7 @@ public record CreateProductWithCategoryDto(
     String barcode,
     Long categoryId,
     String categoryName,
-    String categoryDescription
+    String categoryDescription,
+    int lowStock
 ) {
 }

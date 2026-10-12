@@ -85,7 +85,7 @@ class ProductSalesControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("Admin gets quantity sold, cost and profit per product")
+    @DisplayName("Admin gets quantity sold, stockCost and profit per product")
     void getProductSales_AsAdmin_Returns200WithProducts() throws Exception {
         when(productSalesService.getProductSales(OCT_1, OCT_31)).thenReturn(
             new ProductSalesReport(OCT_1, OCT_31, List.of(

@@ -83,7 +83,7 @@ class ReportControllerTest {
 
     @Test
     @WithMockUser(roles = "MANAGER")
-    @DisplayName("Stock Manager gets name, latest cost and on-hand quantity per product")
+    @DisplayName("Stock Manager gets name, latest stockCost and on-hand quantity per product")
     void getInventoryReport_AsManager_Returns200WithProducts()
         throws Exception {
         when(inventoryReportService.getInventoryReport()).thenReturn(List.of(

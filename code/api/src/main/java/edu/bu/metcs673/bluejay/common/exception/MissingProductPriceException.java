@@ -1,7 +1,7 @@
 // AI-ASSISTED: YES
 // Tool: GitHub Copilot
 // Prompt Summary: "Promote product domain exceptions to BaseAppException for REST controller responses"
-// AI Contribution: HTTP status and error-code mapping for missing product price failures (~80%)
+// AI Contribution: HTTP status and error-code mapping for missing product salePrice failures (~80%)
 // Confidence: High
 
 package edu.bu.metcs673.bluejay.common.exception;

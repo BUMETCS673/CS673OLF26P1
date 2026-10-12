@@ -24,7 +24,7 @@ import java.time.LocalDate;
 public interface ProductSalesService {
 
     /**
-     * Builds per-product quantity sold, revenue, cost and profit for every
+     * Builds per-product quantity sold, revenue, stockCost and profit for every
      * sale from the start of {@code startDate} through the end of
      * {@code endDate}, sorted by profit (highest first).
      *

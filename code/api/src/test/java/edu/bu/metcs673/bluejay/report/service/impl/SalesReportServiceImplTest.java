@@ -52,7 +52,7 @@ class SalesReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("Range with sales returns revenue, cost and net profit")
+    @DisplayName("Range with sales returns revenue, stockCost and net profit")
     void getSalesReport_RangeWithSales_CalculatesNetProfit() {
         // Given
         when(repository.findSalesTotals(any(), any())).thenReturn(
@@ -74,7 +74,7 @@ class SalesReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("Net profit is negative when cost is higher than revenue")
+    @DisplayName("Net profit is negative when stockCost is higher than revenue")
     void getSalesReport_LossMaking_ReturnsNegativeNetProfit() {
         when(repository.findSalesTotals(any(), any())).thenReturn(
             new SalesTotals(new BigDecimal("100.00"),

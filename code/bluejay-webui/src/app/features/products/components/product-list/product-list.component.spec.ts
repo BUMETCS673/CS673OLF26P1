@@ -10,12 +10,19 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PageEvent } from '@angular/material/paginator';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { Product, ProductQuery } from '../../models/product.model';
+import { Product, ProductPage, ProductQuery } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
 import { ProductListComponent } from './product-list.component';
 
 const product = (n: number): Product => ({
   id: String(n), name: `Product ${n}`, barcode: `000${n}`, categoryId: null, categoryName: n % 2 ? 'Dairy' : null, price: n,
+});
+
+const page = (items: Product[], totalCount = items.length): ProductPage => ({
+  items,
+  totalCount,
+  pageNumber: 1,
+  pageSize: 10,
 });
 
 describe('ProductListComponent', { timeout: 15000 }, () => {
@@ -33,7 +40,7 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
 
   beforeEach(() => {
     serviceMock.list.mockReset();
-    serviceMock.list.mockReturnValue(of([product(1), product(2)]));
+    serviceMock.list.mockReturnValue(of(page([product(1), product(2)], 2)));
     TestBed.configureTestingModule({ providers: [{ provide: ProductService, useValue: serviceMock }] });
   });
 
@@ -63,7 +70,7 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
   });
 
   it('shows the empty message when there are no products', async () => {
-    serviceMock.list.mockReturnValue(of([]));
+    serviceMock.list.mockReturnValue(of(page([], 0)));
     await create();
 
     expect(fixture.nativeElement.textContent).toContain('No products found.');
@@ -118,17 +125,16 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
   });
 
   it('adds one extra row to the paginator length when the page is full', async () => {
-    serviceMock.list.mockReturnValue(of(Array.from({ length: 10 }, (_, i) => product(i))));
+    serviceMock.list.mockReturnValue(of(page(Array.from({ length: 10 }, (_, i) => product(i)), 10)));
     await create();
 
-    expect(component.paginatorLength()).toBe(11);
+    expect(component.paginatorLength()).toBe(10);
   });
 
-  it('does not add an extra row when the page is not full', async () => {
-    serviceMock.list.mockReturnValue(of([product(1), product(2)]));
+  it('uses the backend total count for paginator length', async () => {
+    serviceMock.list.mockReturnValue(of(page([product(1), product(2)], 37)));
     await create();
-    component.loadPage(2);
 
-    expect(component.paginatorLength()).toBe(20);
+    expect(component.paginatorLength()).toBe(37);
   });
 });

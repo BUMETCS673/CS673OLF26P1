@@ -37,3 +37,10 @@ export interface ProductQuery {
   pageNumber?: number;
   pageSize?: number;
 }
+
+export interface ProductPage {
+  items: Product[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+}

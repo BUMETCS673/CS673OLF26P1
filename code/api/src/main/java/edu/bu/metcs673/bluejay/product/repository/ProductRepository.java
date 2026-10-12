@@ -7,6 +7,7 @@
 package edu.bu.metcs673.bluejay.product.repository;
 
 import edu.bu.metcs673.bluejay.product.domain.Product;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,7 +30,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         WHERE (:productName IS NULL OR p.name LIKE CONCAT('%', :productName, '%'))
           AND (:categoryName IS NULL OR c.name = :categoryName)
         """)
-    List<Product> findProducts(
+    Page<Product> findProducts(
         @Param("productName") String productName,
         @Param("categoryName") String categoryName,
         Pageable pageable
@@ -43,7 +44,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         return findByBarcode(barcode);
     }
 
-    default List<Product> getProducts(
+    default Page<Product> getProducts(
         String productName,
         String categoryName,
         int pageNumber,

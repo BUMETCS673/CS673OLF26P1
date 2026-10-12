@@ -15,6 +15,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.common.exception.ProductNotFoundException;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
@@ -129,7 +130,7 @@ private static final UUID PRODUCT_ID =
                     && "test-category".equals(query.categoryName())
                     && Integer.valueOf(1).equals(query.pageNumber())
                     && Integer.valueOf(1).equals(query.pageSize())
-            ))).thenReturn(List.of(product));
+            ))).thenReturn(new ProductPageDto(List.of(product), 1, 1, 1));
 
             mockMvc.perform(get("/api/v1/product")
                     .with(user("manager").roles("MANAGER"))
@@ -140,8 +141,9 @@ private static final UUID PRODUCT_ID =
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Products retrieved successfully"))
-                .andExpect(jsonPath("$.data[0].id").value(PRODUCT_ID.toString()))
-                .andExpect(jsonPath("$.data[0].categoryName").value("test-category"));
+                .andExpect(jsonPath("$.data.totalCount").value(1))
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT_ID.toString()))
+                .andExpect(jsonPath("$.data.items[0].categoryName").value("test-category"));
         }
 
         @Test

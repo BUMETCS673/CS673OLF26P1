@@ -308,27 +308,33 @@ public class ProductServiceTest {
         ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
 
         when(productRepository.getProducts(searchTerm, null, null, 1, 10))
-                .thenReturn(List.of(createExistingProduct(searchTerm, "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)));
+            .thenReturn(new PageImpl<>(
+                List.of(createExistingProduct(searchTerm, "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)),
+                PageRequest.of(0, 10),
+                1
+            ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(queryDto);
+        ProductPageDto products = productService.getProducts(queryDto);
 
-        assertEquals(1, products.size());
-        assertEquals(searchTerm, products.getFirst().barcode());
-        assertEquals("Spring Water", products.getFirst().name());
+        assertEquals(1, products.items().size());
+        assertEquals(searchTerm, products.items().getFirst().barcode());
+        assertEquals("Spring Water", products.items().getFirst().name());
     }
 
     @Test
-    @DisplayName("Should report no products when combined search term has no match")
+    @DisplayName("Should return an empty page when combined search term has no match")
     public void shouldReturnNoProductsForUnmatchedSearchTerm() {
         String searchTerm = "missing-product-12345";
         ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
 
         when(productRepository.getProducts(searchTerm, null, null, 1, 10))
-                .thenReturn(List.of());
+            .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
-        assertThrows(ProductNotFoundException.class,
-                () -> productService.getProducts(queryDto));
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertTrue(products.items().isEmpty());
+        assertEquals(0, products.totalCount());
     }
 
     @Test

@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Product Filtering Integration Tests")
@@ -40,11 +42,14 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("Should match a barcode using the combined search term")
         void shouldFindProductsByBarcodeSearchTerm() {
-            Product seededProduct = productRepository.getProducts("Spring Water", null, 1, 10).getFirst();
+            Product seededProduct = productRepository
+                .getProducts(null, "Spring Water", null, 1, 10)
+                .getContent()
+                .getFirst();
 
             List<Product> products = productRepository.getProducts(
                 seededProduct.getBarcode(), null, null, 1, 10
-            );
+            ).getContent();
 
             assertThat(products)
                 .extracting(Product::getBarcode)
@@ -56,7 +61,7 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         void shouldReturnEmptyWhenSearchTermDoesNotMatch() {
             List<Product> products = productRepository.getProducts(
                 "no-product-matches-this-term", null, null, 1, 10
-            );
+            ).getContent();
 
             assertThat(products).isEmpty();
         }
@@ -78,7 +83,7 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("Should filter products by exact category name")
         void shouldFilterProductsByExactCategoryName() {
             // Query directly against seed data created by Flyway migrations
-            var products = productRepository.getProducts(null, "fruit", 1, 10);
+            var products = productRepository.getProducts(null, null, "fruit", 1, 10);
 
             assertThat(products.getContent())
                 .extracting(Product::getName)

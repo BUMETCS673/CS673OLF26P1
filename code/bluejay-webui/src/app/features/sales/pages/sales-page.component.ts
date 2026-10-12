@@ -118,7 +118,7 @@ export class SalesPage {
       switchMap((term) => timer(term ? 250 : 0).pipe(
         switchMap(() => term
           ? this.productService.list({ searchTerm: term, pageNumber: 1, pageSize: 10 }).pipe(
-            map((products): ProductSearchResponse => ({ term, products, error: null })),
+            map((page): ProductSearchResponse => ({ term, products: page.items, error: null })),
             catchError((error: HttpErrorResponse) => of<ProductSearchResponse>({
               term,
               products: [],

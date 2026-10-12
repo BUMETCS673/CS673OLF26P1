@@ -47,15 +47,20 @@ describe('SalesPage', () => {
       r.url === '/api/v1/product' && r.params.get('searchTerm') === 'Water'
     );
     request.flush({
-      data: [{
-        id: 'product-1',
-        name: 'Spring Water',
-        barcode: '12345',
-        categoryId: 1,
-        categoryName: 'beverages',
-        price: 2.5,
-        currentStock: 5,
-      } satisfies Product],
+      data: {
+        items: [{
+          id: 'product-1',
+          name: 'Spring Water',
+          barcode: '12345',
+          categoryId: 1,
+          categoryName: 'beverages',
+          price: 2.5,
+          currentStock: 5,
+        } satisfies Product],
+        totalCount: 1,
+        pageNumber: 1,
+        pageSize: 10,
+      },
     });
     fixture.detectChanges();
 

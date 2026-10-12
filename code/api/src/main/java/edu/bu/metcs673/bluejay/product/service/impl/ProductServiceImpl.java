@@ -115,10 +115,6 @@ public class ProductServiceImpl implements ProductService {
             pageSize
         );
 
-        if (products.isEmpty()) {
-            throw new ProductNotFoundException();
-        }
-
         List<ProductDto> result = new ArrayList<>();
         for (Product p : productsPage.getContent()) {
             Optional<Category> c = _categoryRepository.getCategoryBy(p.getCategoryId());

@@ -186,13 +186,13 @@ private static final UUID PRODUCT_ID =
                 query != null
                     && PRODUCT_BARCODE.equals(query.searchTerm())
                     && query.productName() == null
-            ))).thenReturn(List.of(product));
+            ))).thenReturn(new ProductPageDto(List.of(product), 1, 1, 10));
 
             mockMvc.perform(get("/api/v1/product")
                     .with(user("cashier").roles("CASHIER"))
                     .param("searchTerm", PRODUCT_BARCODE))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].barcode").value(PRODUCT_BARCODE));
+                .andExpect(jsonPath("$.data.items[0].barcode").value(PRODUCT_BARCODE));
         }
     }
 

@@ -108,7 +108,7 @@ public class ProductServiceImpl implements ProductService {
         String categoryName = normalizeFilter(productQueryDto.categoryName());
 
         var productsPage = _productRepository.getProducts(
-                searchTerm,
+            searchTerm,
             productName,
             categoryName,
             pageNumber,

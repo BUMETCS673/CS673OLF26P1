@@ -30,7 +30,7 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("Should filter products by name using contains matching")
         void shouldFilterProductsByName() {
             // Query directly against seed data created by Flyway migrations
-            var products = productRepository.getProducts("Water", null, 1, 10);
+            var products = productRepository.getProducts("water", null, null, 1, 10);
 
             assertThat(products.getContent())
                 .extracting(Product::getName)

@@ -279,9 +279,6 @@ public class ProductServiceTest {
         assertNotNull(products);
         assertEquals(1, products.items().size());
         assertEquals("Spring Water", products.items().getFirst().name());
-        assertEquals(1, products.size());
-
-        assertEquals("Spring Water", products.getFirst().name());
         assertEquals(2.5, products.items().getFirst().price());
     }
 
@@ -348,7 +345,6 @@ public class ProductServiceTest {
         assertEquals("product-mock", product.name());
         assertEquals("test-category", product.categoryName());
         assertEquals(3.75, product.price());
-        assertEquals(12, product.currentStock());
     }
 
     @Test

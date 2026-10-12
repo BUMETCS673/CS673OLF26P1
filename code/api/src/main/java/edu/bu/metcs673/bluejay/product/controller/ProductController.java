@@ -50,7 +50,6 @@ public class ProductController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
-    public ResponseEntity<ApiResponse<List<ProductDto>>> getProducts(
     public ResponseEntity<ApiResponse<ProductPageDto>> getProducts(
         ProductQueryDto productQueryDto) {
         ProductPageDto products = productService.getProducts(productQueryDto);

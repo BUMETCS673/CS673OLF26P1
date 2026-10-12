@@ -41,7 +41,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
                 ORDER BY CASE WHEN p.barcode = :searchTerm THEN 0 ELSE 1 END, p.name
         """)
     Page<Product> findProducts(
-            @Param("searchTerm") String searchTerm,
+        @Param("searchTerm") String searchTerm,
         @Param("productName") String productName,
         @Param("categoryName") String categoryName,
         Pageable pageable
@@ -56,7 +56,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     }
 
     default Page<Product> getProducts(
-            String searchTerm,
+        String searchTerm,
         String productName,
         String categoryName,
         int pageNumber,

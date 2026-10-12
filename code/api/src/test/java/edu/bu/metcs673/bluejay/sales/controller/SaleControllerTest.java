@@ -73,23 +73,29 @@ class SaleControllerTest {
     }
 
     @Test
-    void deniesManagerFromCompletingSale() throws Exception {
+    void allowsManagerToCompleteSale() throws Exception {
+      when(saleService.checkout(any(SaleRequest.class))).thenReturn(null);
+
         mockMvc.perform(post("/api/v1/sales")
                 .with(user("manager").roles("MANAGER"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validRequest()))
-            .andExpect(status().isForbidden());
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
-    void deniesAdminFromCompletingSale() throws Exception {
+    void allowsAdminToCompleteSale() throws Exception {
+      when(saleService.checkout(any(SaleRequest.class))).thenReturn(null);
+
         mockMvc.perform(post("/api/v1/sales")
                 .with(user("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validRequest()))
-            .andExpect(status().isForbidden());
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test

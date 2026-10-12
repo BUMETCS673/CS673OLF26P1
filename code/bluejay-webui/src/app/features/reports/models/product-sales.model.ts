@@ -6,15 +6,6 @@
 // Notes: Matches ProductSalesReport / ProductSalesItem from GET /api/v1/reports/sales/products.
 // authors: Krizma Nagi
 
-// AI-ASSISTED: YES
-// Tool: Claude
-// Prompt Summary: "TypeScript models for the per-product sales response"
-// AI Contribution: Initial draft (~85%)
-// Modifications:
-// - Dates are ISO strings (YYYY-MM-DD), the format the API sends and accepts
-// Verification:
-// - product-sales.service.spec.ts
-// Confidence: High
 export interface ProductSalesItem {
   productId: string;
   barcode: string | null;

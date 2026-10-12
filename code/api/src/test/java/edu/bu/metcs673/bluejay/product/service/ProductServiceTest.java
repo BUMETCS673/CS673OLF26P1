@@ -202,7 +202,7 @@ public class ProductServiceTest {
     public void shouldReturnProductsWithCategoryWhenRequestedPageHasRecords() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 2, 1);
 
-        when(productRepository.getProducts(null, null, 2, 1))
+        when(productRepository.getProducts(null, null, null, 2, 1))
                 .thenReturn(List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
@@ -218,6 +218,7 @@ public class ProductServiceTest {
         assertEquals("product-existed", firstProduct.name());
         assertTrue(firstProduct.categoryId() > 0);
         assertEquals("test-category", firstProduct.categoryName());
+        assertEquals(12, firstProduct.currentStock());
     }
 
     @Test
@@ -225,7 +226,7 @@ public class ProductServiceTest {
     public void shouldThrowProductNotFoundExceptionWhenRequestedPageHasNoRecords() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
-        when(productRepository.getProducts(null, null, 1, 1)).thenReturn(List.of());
+        when(productRepository.getProducts(null, null, null, 1, 1)).thenReturn(List.of());
 
         assertThrows(ProductNotFoundException.class,
                 () -> productService.getProducts(queryDto));
@@ -236,7 +237,7 @@ public class ProductServiceTest {
     public void shouldThrowUnknownProductCategoryExceptionWhenProductCategoryDoesNotExist() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
-        when(productRepository.getProducts(null, null, 1, 1))
+        when(productRepository.getProducts(null, null, null, 1, 1))
                 .thenReturn(List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.empty());
 
@@ -249,7 +250,7 @@ public class ProductServiceTest {
     public void shouldFilterProductsByProductNameAndCategoryName() {
         ProductQueryDto queryDto = createProductQueryDto("Water", "beverage", 1, 10);
 
-        when(productRepository.getProducts("Water", "beverage", 1, 10))
+        when(productRepository.getProducts(null, "Water", "beverage", 1, 10))
                 .thenReturn(List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
@@ -258,6 +259,7 @@ public class ProductServiceTest {
         assertNotNull(products);
         assertEquals(1, products.size());
         assertEquals("Spring Water", products.getFirst().name());
+        assertEquals(2.5, products.getFirst().price());
     }
 
     @Test
@@ -265,7 +267,7 @@ public class ProductServiceTest {
     public void shouldDefaultProductQueryPagination() {
         ProductQueryDto queryDto = createProductQueryDto("Milk", "dairy", null, null);
 
-        when(productRepository.getProducts("Milk", "dairy", 1, 10))
+        when(productRepository.getProducts(null, "Milk", "dairy", 1, 10))
                 .thenReturn(List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
@@ -273,6 +275,36 @@ public class ProductServiceTest {
 
         assertNotNull(products);
         assertEquals(1, products.size());
+    }
+
+    @Test
+    @DisplayName("Should search products using a combined name or barcode term")
+    public void shouldSearchProductsUsingCombinedSearchTerm() {
+        String searchTerm = "barcode-water-12345";
+        ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
+
+        when(productRepository.getProducts(searchTerm, null, null, 1, 10))
+                .thenReturn(List.of(createExistingProduct(searchTerm, "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        List<ProductDto> products = productService.getProducts(queryDto);
+
+        assertEquals(1, products.size());
+        assertEquals(searchTerm, products.getFirst().barcode());
+        assertEquals("Spring Water", products.getFirst().name());
+    }
+
+    @Test
+    @DisplayName("Should report no products when combined search term has no match")
+    public void shouldReturnNoProductsForUnmatchedSearchTerm() {
+        String searchTerm = "missing-product-12345";
+        ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
+
+        when(productRepository.getProducts(searchTerm, null, null, 1, 10))
+                .thenReturn(List.of());
+
+        assertThrows(ProductNotFoundException.class,
+                () -> productService.getProducts(queryDto));
     }
 
     @Test
@@ -289,6 +321,7 @@ public class ProductServiceTest {
         assertEquals("product-mock", product.name());
         assertEquals("test-category", product.categoryName());
         assertEquals(3.75, product.price());
+        assertEquals(12, product.currentStock());
     }
 
     @Test
@@ -331,6 +364,7 @@ public class ProductServiceTest {
         product.setName(name);
         product.setCategoryId(categoryId);
         product.setSalePrice(BigDecimal.valueOf(salePrice));
+        product.setCurrentStock(12);
         return product;
     }
 
@@ -348,6 +382,16 @@ public class ProductServiceTest {
         Integer pageNumber,
         Integer pageSize
     ) {
-        return new ProductQueryDto(productName, categoryName, pageNumber, pageSize);
+        return new ProductQueryDto(null, productName, categoryName, pageNumber, pageSize);
+    }
+
+    private ProductQueryDto createProductQueryDto(
+        String searchTerm,
+        String productName,
+        String categoryName,
+        Integer pageNumber,
+        Integer pageSize
+    ) {
+        return new ProductQueryDto(searchTerm, productName, categoryName, pageNumber, pageSize);
     }
 }

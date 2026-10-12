@@ -29,6 +29,10 @@ export class ProductService {
       .set('pageNumber', query.pageNumber ?? 1)
       .set('pageSize', query.pageSize ?? 10);
 
+    if (query.searchTerm?.trim()) {
+      params = params.set('searchTerm', query.searchTerm.trim());
+    }
+
     if (query.productName?.trim()) {
       params = params.set('productName', query.productName.trim());
     }

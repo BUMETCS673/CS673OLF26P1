@@ -15,7 +15,7 @@ import { ProductService } from '../../services/product.service';
 import { ProductListComponent } from './product-list.component';
 
 const product = (n: number): Product => ({
-  id: String(n), name: `Product ${n}`, barcode: `000${n}`, categoryId: null, categoryName: n % 2 ? 'Dairy' : null, price: n,
+  id: String(n), name: `Product ${n}`, barcode: `000${n}`, categoryId: null, categoryName: n % 2 ? 'Dairy' : null, price: n, currentStock: 12,
 });
 
 describe('ProductListComponent', { timeout: 15000 }, () => {

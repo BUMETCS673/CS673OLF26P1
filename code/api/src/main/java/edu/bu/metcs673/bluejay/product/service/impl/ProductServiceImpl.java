@@ -102,10 +102,12 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("pageSize must be greater than 0");
         }
 
+        String searchTerm = normalizeFilter(productQueryDto.searchTerm());
         String productName = normalizeFilter(productQueryDto.productName());
         String categoryName = normalizeFilter(productQueryDto.categoryName());
 
         List<Product> products = _productRepository.getProducts(
+            searchTerm,
             productName,
             categoryName,
             pageNumber,
@@ -130,7 +132,8 @@ public class ProductServiceImpl implements ProductService {
                 p.getCategoryId(),
                 c.get().getName(),
                 c.get().getDescription(),
-                0
+                p.getSalePrice() == null ? 0 : p.getSalePrice().doubleValue(),
+                p.getCurrentStock()
             ));
         }
 
@@ -171,7 +174,8 @@ public class ProductServiceImpl implements ProductService {
             product.getCategoryId(),
             category.get().getName(),
             category.get().getDescription(),
-            product.getSalePrice().doubleValue()
+            product.getSalePrice().doubleValue(),
+            product.getCurrentStock()
         );
     }
 }

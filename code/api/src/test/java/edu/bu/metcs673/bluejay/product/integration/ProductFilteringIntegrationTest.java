@@ -32,11 +32,48 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("Should filter products by name using contains matching")
         void shouldFilterProductsByName() {
             // Query directly against seed data created by Flyway migrations
-            List<Product> products = productRepository.getProducts("Water", null, 1, 10);
+            List<Product> products = productRepository.getProducts("water", null, null, 1, 10);
 
             assertThat(products)
                 .extracting(Product::getName)
                 .containsExactly("Spring Water");
+        }
+
+        @Test
+        @DisplayName("Should match a barcode using the combined search term")
+        void shouldFindProductsByBarcodeSearchTerm() {
+            Product seededProduct = productRepository.getProducts("Spring Water", null, 1, 10).getFirst();
+
+            List<Product> products = productRepository.getProducts(
+                seededProduct.getBarcode(), null, null, 1, 10
+            );
+
+            assertThat(products)
+                .extracting(Product::getBarcode)
+                .containsExactly(seededProduct.getBarcode());
+        }
+
+        @Test
+        @DisplayName("Should return no products when the combined search term does not match")
+        void shouldReturnEmptyWhenSearchTermDoesNotMatch() {
+            List<Product> products = productRepository.getProducts(
+                "no-product-matches-this-term", null, null, 1, 10
+            );
+
+            assertThat(products).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should seed every demo product with a positive price and stock")
+        void shouldSeedProductsWithPricesAndStock() {
+            List<Product> products = productRepository.findAll();
+
+            assertThat(products)
+                .isNotEmpty()
+                .allSatisfy(product -> {
+                    assertThat(product.getSalePrice()).isPositive();
+                    assertThat(product.getCurrentStock()).isPositive();
+                });
         }
 
         @Test

@@ -9,6 +9,7 @@ public record ProductDto(
     Long categoryId,
     String categoryName,
     String categoryDescription,
-    double price
+    double price,
+    int currentStock
 ) {
 }

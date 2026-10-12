@@ -21,7 +21,7 @@ public class SaleController {
     private final SaleService saleService;
 
     @PostMapping
-    @PreAuthorize("hasRole('CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<ApiResponse<SaleResponse>> checkout(
         @Valid @RequestBody SaleRequest request
     ) {

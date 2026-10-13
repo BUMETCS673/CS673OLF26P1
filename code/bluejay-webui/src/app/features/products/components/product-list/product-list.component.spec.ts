@@ -21,6 +21,7 @@ const product = (n: number): Product => ({
   categoryId: null,
   categoryName: n % 2 ? 'Dairy' : null,
   price: n,
+  currentStock: 12,
   lowStock: 5,
 });
 
@@ -132,6 +133,20 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
       pageNumber: 1,
       pageSize: 10,
     });
+  });
+
+  it('adds one extra row to the paginator length when the page is full', async () => {
+    serviceMock.list.mockReturnValue(of(page(Array.from({ length: 10 }, (_, i) => product(i)), 10)));
+    await create();
+
+    expect(component.paginatorLength()).toBe(10);
+  });
+
+  it('uses the backend total count for paginator length', async () => {
+    serviceMock.list.mockReturnValue(of(page([product(1), product(2)], 37)));
+    await create();
+
+    expect(component.paginatorLength()).toBe(37);
   });
 
   it('starts inline edit and sets initial editing low stock value', async () => {

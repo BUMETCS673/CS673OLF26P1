@@ -63,10 +63,10 @@ public class ProductServiceImpl implements ProductService {
             return _productRepository.addProduct(product);
         }
 
-        Category categoryEntity = new Category();
+        var categoryEntity = new Category();
         categoryEntity.setName(productDto.categoryName());
         categoryEntity.setDescription(productDto.categoryDescription());
-        Category category = _categoryRepository.addCategory(categoryEntity);
+        var category = _categoryRepository.addCategory(categoryEntity);
         product.setCategoryId(category.getId());
         product.setCategory(category);
 
@@ -106,10 +106,12 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("pageSize must be greater than 0");
         }
 
+        String searchTerm = normalizeFilter(productQueryDto.searchTerm());
         String productName = normalizeFilter(productQueryDto.productName());
         String categoryName = normalizeFilter(productQueryDto.categoryName());
 
         var productsPage = _productRepository.getProducts(
+            searchTerm,
             productName,
             categoryName,
             pageNumber,
@@ -130,7 +132,8 @@ public class ProductServiceImpl implements ProductService {
                 p.getCategoryId(),
                 c.get().getName(),
                 c.get().getDescription(),
-                0,
+                p.getSalePrice() == null ? 0 : p.getSalePrice().doubleValue(),
+                p.getCurrentStock(),
                 p.getLowStock()
             ));
         }
@@ -178,6 +181,7 @@ public class ProductServiceImpl implements ProductService {
             category.get().getName(),
             category.get().getDescription(),
             product.getSalePrice().doubleValue(),
+            product.getCurrentStock(),
             product.getLowStock()
         );
     }
@@ -203,6 +207,7 @@ public class ProductServiceImpl implements ProductService {
             categoryName,
             categoryDesc,
             savedProduct.getSalePrice() != null ? savedProduct.getSalePrice().doubleValue() : 0.0,
+            savedProduct.getCurrentStock(),
             savedProduct.getLowStock()
         );
     }

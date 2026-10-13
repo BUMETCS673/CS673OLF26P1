@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Product Filtering Integration Tests")
@@ -30,7 +32,7 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("Should filter products by name using contains matching")
         void shouldFilterProductsByName() {
             // Query directly against seed data created by Flyway migrations
-            var products = productRepository.getProducts("Water", null, 1, 10);
+            var products = productRepository.getProducts("water", null, null, 1, 10);
 
             assertThat(products.getContent())
                 .extracting(Product::getName)
@@ -38,10 +40,50 @@ class ProductFilteringIntegrationTest extends AbstractIntegrationTest {
         }
 
         @Test
+        @DisplayName("Should match a barcode using the combined search term")
+        void shouldFindProductsByBarcodeSearchTerm() {
+            Product seededProduct = productRepository
+                .getProducts(null, "Spring Water", null, 1, 10)
+                .getContent()
+                .getFirst();
+
+            List<Product> products = productRepository.getProducts(
+                seededProduct.getBarcode(), null, null, 1, 10
+            ).getContent();
+
+            assertThat(products)
+                .extracting(Product::getBarcode)
+                .containsExactly(seededProduct.getBarcode());
+        }
+
+        @Test
+        @DisplayName("Should return no products when the combined search term does not match")
+        void shouldReturnEmptyWhenSearchTermDoesNotMatch() {
+            List<Product> products = productRepository.getProducts(
+                "no-product-matches-this-term", null, null, 1, 10
+            ).getContent();
+
+            assertThat(products).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should seed every demo product with a positive price and stock")
+        void shouldSeedProductsWithPricesAndStock() {
+            List<Product> products = productRepository.findAll();
+
+            assertThat(products)
+                .isNotEmpty()
+                .allSatisfy(product -> {
+                    assertThat(product.getSalePrice()).isPositive();
+                    assertThat(product.getCurrentStock()).isPositive();
+                });
+        }
+
+        @Test
         @DisplayName("Should filter products by exact category name")
         void shouldFilterProductsByExactCategoryName() {
             // Query directly against seed data created by Flyway migrations
-            var products = productRepository.getProducts(null, "fruit", 1, 10);
+            var products = productRepository.getProducts(null, null, "fruit", 1, 10);
 
             assertThat(products.getContent())
                 .extracting(Product::getName)

@@ -15,6 +15,7 @@ export interface Product {
   categoryName: string | null;
   categoryDescription?: string | null;
   price: number;
+  currentStock: number;
   lowStock: number;
 }
 
@@ -34,6 +35,7 @@ export interface ProductCategory {
 }
 
 export interface ProductQuery {
+  searchTerm?: string | null;
   productName?: string | null;
   categoryName?: string | null;
   pageNumber?: number;

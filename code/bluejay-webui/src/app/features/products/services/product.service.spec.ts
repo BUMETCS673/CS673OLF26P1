@@ -65,6 +65,14 @@ describe('ProductService', () => {
     request.flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 10 } });
   });
 
+  it('lists products with a combined text and barcode search term', () => {
+    service.list({ searchTerm: '123456' }).subscribe();
+
+    const request = controller.expectOne((r) => r.url === '/api/v1/product');
+    expect(request.request.params.get('searchTerm')).toBe('123456');
+    request.flush({ data: [] });
+  });
+
   it('lists categories', () => {
     let result: unknown;
     service.listCategories().subscribe((c) => (result = c));

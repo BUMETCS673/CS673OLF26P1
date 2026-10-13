@@ -1,0 +1,167 @@
+<section class="sales-page">
+  <header class="page-heading">
+    <h1>Sales Terminal</h1>
+    <p class="subtitle">Create a sale for a customer through the checkout process.</p>
+  </header>
+
+  <div class="checkout-panel card-panel">
+    <div class="scanner-row">
+      <div class="barcode-search">
+        <label class="field barcode-field" aria-label="Barcode or product name">
+          <span class="field-label">Barcode or product name</span>
+          <input
+            type="search"
+            [ngModel]="searchTerm"
+            (ngModelChange)="onSearchTermChange($event)"
+            placeholder="Scan barcode or search products"
+          />
+        </label>
+        @if (dropdownOpen()) {
+          <ul class="search-dropdown" aria-label="Product search results">
+            @if (searchLoading()) {
+              <li class="search-state" role="status">Searching...</li>
+            } @else if (searchError()) {
+              <li class="search-state error-message" role="alert">{{ searchError() }}</li>
+            } @else if (searchResults().length === 0) {
+              <li class="search-state" role="status">No matching products.</li>
+            } @else {
+              @for (product of searchResults(); track product.id) {
+                <li>
+                  <button type="button" class="search-option" (click)="selectProduct(product)">
+                    <span class="result-name">
+                      <strong>{{ product.name }}</strong>
+                      <span>{{ product.barcode }}</span>
+                      <span>{{ product.currentStock }} available</span>
+                    </span>
+                    <span class="result-price">{{ product.price | currency }}</span>
+                    <span class="result-action">Add</span>
+                  </button>
+                </li>
+              }
+            }
+          </ul>
+        }
+      </div>
+
+      <label class="field quantity-field" aria-label="Quantity field">
+        <span class="field-label">Qty</span>
+        <div class="quantity-input">
+          <input type="number" [(ngModel)]="quantity" min="1" />
+        </div>
+      </label>
+
+    </div>
+    @if (cartError()) {
+      <p class="cart-error" role="alert">{{ cartError() }}</p>
+    }
+
+    <div class="table-shell">
+      <div class="table-header-row">
+        <span>Product</span>
+        <span>Quantity</span>
+        <span>Price</span>
+        <span>Subtotal</span>
+        <span>Action</span>
+      </div>
+
+      @if (cartItems().length === 0) {
+        <div class="empty-row" aria-live="polite">No items in the cart yet.</div>
+      } @else {
+        @for (item of cartItems(); track item.product.id) {
+          <div class="cart-row">
+            <span>{{ item.product.name }}</span>
+            <span>{{ item.quantity }}</span>
+            <span>{{ item.product.price | currency }}</span>
+            <span>{{ cartItemSubtotal(item) | currency }}</span>
+            <button
+              type="button"
+              class="remove-item-button"
+              [attr.aria-label]="'Remove ' + item.product.name + ' from cart'"
+              (click)="removeFromCart(item.product.id)"
+            >
+              Remove
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <aside class="summary-panel">
+    <div class="grand-total card-panel">
+      <div class="grand-total-label">GRAND TOTAL</div>
+      <div class="grand-total-amount">{{ cartTotal() | currency }}</div>
+    </div>
+
+    <div class="payment-panel card-panel">
+      <h2>Payment</h2>
+      <p>Enter the amount received to calculate change.</p>
+
+      @if (completedSale(); as sale) {
+        <div class="sale-success-card" role="region" aria-label="Transaction receipt">
+          <div class="receipt-header">
+            <strong>Sale Complete!</strong>
+            <button type="button" class="dismiss-receipt-button" (click)="dismissReceipt()" aria-label="Dismiss receipt">✕</button>
+          </div>
+          <p class="receipt-number">Receipt #: <strong>{{ sale.receiptNumber }}</strong></p>
+          <div class="receipt-breakdown">
+            <div><span>Total:</span> <strong>{{ sale.grandTotal | currency }}</strong></div>
+            <div><span>Paid:</span> <strong>{{ sale.cashReceived | currency }}</strong></div>
+            <div><span>Change:</span> <strong>{{ sale.changeDue | currency }}</strong></div>
+          </div>
+        </div>
+      }
+
+      @if (checkoutError()) {
+        <p class="checkout-error" role="alert">{{ checkoutError() }}</p>
+      }
+
+      <div class="payment-entry">
+        <label class="field cash-field" aria-label="Cash received field">
+          <span class="field-label">Cash Received</span>
+          <div class="cash-input-wrap">
+            <input
+              type="text"
+              inputmode="decimal"
+              placeholder="0.00"
+              aria-label="Cash received amount"
+              [ngModel]="cashReceived()"
+              (ngModelChange)="cashReceived.set($event)"
+            />
+          </div>
+        </label>
+
+        <button
+          type="button"
+          class="primary-button pay-button"
+          [disabled]="!canPay()"
+          (click)="onPay()"
+        >
+          {{ isProcessingSale() ? 'Processing...' : 'Pay' }}
+        </button>
+      </div>
+
+      <div class="change-box">
+        <div class="change-header">
+          <span>Change Due</span>
+          <strong>{{ changeDueCents() / 100 | currency }}</strong>
+        </div>
+        <ul aria-live="polite">
+          @if (paymentState() === 'empty') {
+            <li>Enter cash received to calculate change.</li>
+          } @else if (paymentState() === 'invalid') {
+            <li>Enter a valid amount with up to two decimal places.</li>
+          } @else if (paymentState() === 'insufficient') {
+            <li class="payment-error">Additional amount needed: {{ cashShortfallCents() / 100 | currency }}</li>
+          } @else if (paymentState() === 'exact') {
+            <li>Exact payment received.</li>
+          } @else {
+            @for (denomination of changeBreakdown(); track denomination.valueCents) {
+              <li>{{ denomination.count }} x {{ denomination.label }}</li>
+            }
+          }
+        </ul>
+      </div>
+    </div>
+  </aside>
+</section>

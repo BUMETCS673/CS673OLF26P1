@@ -7,6 +7,7 @@
 package edu.bu.metcs673.bluejay.product.dto;
 
 public record ProductQueryDto(
+    String searchTerm,
     String productName,
     String categoryName,
     Integer pageNumber,

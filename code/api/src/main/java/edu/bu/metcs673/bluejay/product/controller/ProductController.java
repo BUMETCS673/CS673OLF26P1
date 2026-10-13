@@ -32,7 +32,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/product")
-@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 public class ProductController {
 
     private final ProductService productService;
@@ -42,6 +41,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ApiResponse<Product>> createProduct(
         @RequestBody CreateProductWithCategoryDto productDto) {
         Product product = productService.createProduct(productDto);
@@ -53,6 +53,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<ApiResponse<ProductPageDto>> getProducts(
         ProductQueryDto productQueryDto) {
         ProductPageDto products = productService.getProducts(productQueryDto);
@@ -64,6 +65,7 @@ public class ProductController {
     }
 
     @GetMapping("/categories")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ApiResponse<List<CategoryDto>>> getProductCategories() {
         List<CategoryDto> categories = productService.getProductCategories();
         ApiResponse<List<CategoryDto>> response = ApiResponse.success(
@@ -74,6 +76,7 @@ public class ProductController {
     }
 
     @GetMapping("/{barcode}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<ApiResponse<ProductDto>> getProductBy(
         @PathVariable String barcode) {
         ProductDto product = productService.getProductBy(barcode);

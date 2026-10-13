@@ -1,6 +1,8 @@
 package edu.bu.metcs673.bluejay.sales.controller;
 
 import edu.bu.metcs673.bluejay.common.dto.ApiResponse;
+import edu.bu.metcs673.bluejay.sales.dto.PrintReceiptRequest;
+import edu.bu.metcs673.bluejay.sales.dto.PrintReceiptResponse;
 import edu.bu.metcs673.bluejay.sales.dto.SaleRequest;
 import edu.bu.metcs673.bluejay.sales.dto.SaleResponse;
 import edu.bu.metcs673.bluejay.sales.service.SaleService;
@@ -28,6 +30,17 @@ public class SaleController {
         SaleResponse response = saleService.checkout(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
             ApiResponse.success(response, "Sale completed successfully")
+        );
+    }
+    
+    @PostMapping("/printReceipt")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<ApiResponse<PrintReceiptResponse>> printReceipt(
+        @Valid @RequestBody PrintReceiptRequest request
+    ) {
+        PrintReceiptResponse response = saleService.printReceipt(request);
+        return ResponseEntity.status(HttpStatus.OK).body(
+            ApiResponse.success(response)
         );
     }
 }

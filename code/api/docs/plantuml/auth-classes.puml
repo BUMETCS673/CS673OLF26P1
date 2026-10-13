@@ -4,12 +4,24 @@
 top to bottom direction
 skinparam linetype ortho
 
-' --- CLASSES & RECORDS ---
+' --- CONTROLLERS ---
 
 class AuthController {
   - authService: AuthService
+  - tokenBlacklistService: TokenBlacklistService
+  - jwtTokenProvider: JwtTokenProvider
   + login(LoginRequest): ResponseEntity<ApiResponse<AuthResponse>>
+  + logout(String): ResponseEntity<ApiResponse<Void>>
 }
+
+class UserController {
+  - userService: UserService
+  + getAllUsers(): ResponseEntity<ApiResponse<List<UserResponse>>>
+  + createUser(CreateUserRequest): ResponseEntity<ApiResponse<UserResponse>>
+  + updateUser(String, UpdateUserRequest): ResponseEntity<ApiResponse<UserResponse>>
+}
+
+' --- SERVICES & IMPLEMENTATIONS ---
 
 interface AuthService << interface >> {
   + login(LoginRequest): AuthResponse
@@ -21,18 +33,27 @@ class AuthServiceImpl {
   + login(LoginRequest): AuthResponse
 }
 
-record AuthResponse << record >> {
-  - username: String
-  - token: String
-  - tokenType: String
-  - expiresIn: Long
-  + of(String, String, Long): AuthResponse
+interface UserService << interface >> {
+  + getAllUsers(): List<UserResponse>
+  + createUser(CreateUserRequest): UserResponse
+  + updateUser(UUID, UpdateUserRequest): UserResponse
 }
 
-record LoginRequest << record >> {
-  - username: String
-  - password: String
+class UserServiceImpl {
+  - userRepository: UserRepository
+  - roleRepository: RoleRepository
+  - passwordEncoder: PasswordEncoder
+  + getAllUsers(): List<UserResponse>
+  + createUser(CreateUserRequest): UserResponse
+  + updateUser(UUID, UpdateUserRequest): UserResponse
 }
+
+class UserDetailsServiceImpl {
+  - userRepository: UserRepository
+  + loadUserByUsername(String): UserDetails
+}
+
+' --- SECURITY & FILTERS ---
 
 class JwtTokenProvider {
   - key: SecretKey
@@ -40,15 +61,17 @@ class JwtTokenProvider {
   + generateToken(Authentication): String
   + getUsernameFromToken(String): String
   + validateToken(String): boolean
+  + getExpirationMs(): long
 }
 
 class JwtAuthenticationFilter {
   - tokenProvider: JwtTokenProvider
   - userDetailsService: UserDetailsService
+  - tokenBlacklistService: TokenBlacklistService
   - AUTHORIZATION_HEADER: String
   - BEARER_PREFIX: String
   # doFilterInternal(HttpServletRequest, HttpServletResponse, FilterChain): void
-  - parseJwt(HttpServletRequest): String?
+  - parseJwt(HttpServletRequest): String
 }
 
 class SecurityConfig {
@@ -59,13 +82,57 @@ class SecurityConfig {
   + authenticationManager(AuthenticationConfiguration): AuthenticationManager
 }
 
-class UserDetailsServiceImpl {
-  - userRepository: UserRepository
-  + loadUserByUsername(String): UserDetails
+class TokenBlacklistService {
+  - jwtTokenProvider: JwtTokenProvider
+  - revokedTokens: Map<String, Instant>
+  + revoke(String): void
+  + isRevoked(String): boolean
+  - purgeExpired(): void
 }
+
+' --- REPOSITORIES ---
 
 interface UserRepository << interface >> {
   + findByUsernameWithRolesAndPermissions(String): Optional<User>
+}
+
+interface RoleRepository << interface >> {
+  + findByName(String): Optional<Role>
+}
+
+' --- DTOS & RECORDS ---
+
+record AuthResponse << record >> {
+  - token: String
+  - tokenType: String
+  - username: String
+  - expiresIn: Long
+  + of(String, String, Long): AuthResponse
+}
+
+record LoginRequest << record >> {
+  - username: String
+  - password: String
+}
+
+record CreateUserRequest << record >> {
+  - username: String
+  - password: String
+  - enabled: Boolean
+  - role: String
+}
+
+record UpdateUserRequest << record >> {
+  - role: String
+  - enabled: Boolean
+}
+
+record UserResponse << record >> {
+  - id: UUID
+  - username: String
+  - enabled: Boolean
+  - role: String
+  - createdAt: LocalDateTime
 }
 
 record CustomUserDetails << record >> {
@@ -77,16 +144,16 @@ record CustomUserDetails << record >> {
   - extractAuthorities(User): Set<GrantedAuthority>
 }
 
-' --- DOMAIN ENTITIES WITH JPA / DB TABLE MAPPINGS ---
+' --- DOMAIN ENTITIES ---
 
-entity User << Table: users >>  {
+entity User << Table: users >> {
   - id: UUID <<PK>>
   - username: String <<UQ, Not Null>>
   - passwordHash: String <<Not Null>>
   - enabled: Boolean <<Not Null>>
   - createdAt: LocalDateTime <<Not Null>>
   - roles: Set<Role>
-  + builder(): UserBuilder
+  + getRolesAsString(): String
 }
 
 entity Role << Table: roles >> {
@@ -94,17 +161,16 @@ entity Role << Table: roles >> {
   - name: String <<UQ, Not Null>>
   - description: String
   - permissions: Set<Permission>
-  + builder(): RoleBuilder
 }
 
 entity Permission << Table: permissions >> {
   - id: Long <<PK, AutoIncrement>>
   - name: String <<UQ, Not Null>>
   - description: String
-  + builder(): PermissionBuilder
 }
 
-' --- EXTERNAL INTERFACES (SPRING SECURITY) ---
+' --- EXTERNAL INTERFACES ---
+
 interface UserDetailsService << interface >> {
   + loadUserByUsername(String): UserDetails
 }
@@ -112,37 +178,54 @@ interface UserDetailsService << interface >> {
 interface UserDetails << interface >> {
 }
 
-' --- RELATIONSHIPS ---
+interface JpaRepository << interface >> {
+}
 
-' Structural Associations (Field Injections / Inclusions)
+' --- RELATIONSHIPS & ASSOCIATIONS ---
+
+' Controller Injections
 AuthController          "1" --> "1" AuthService             : authService
+AuthController          "1" --> "1" TokenBlacklistService   : tokenBlacklistService
+AuthController          "1" --> "1" JwtTokenProvider        : jwtTokenProvider
+UserController          "1" --> "1" UserService             : userService
+
+' Service & Security Injections
 AuthServiceImpl         "1" --> "1" JwtTokenProvider        : tokenProvider
+UserServiceImpl         "1" --> "1" UserRepository          : userRepository
+UserServiceImpl         "1" --> "1" RoleRepository          : roleRepository
 JwtAuthenticationFilter "1" --> "1" JwtTokenProvider        : tokenProvider
 JwtAuthenticationFilter "1" --> "1" UserDetailsService      : userDetailsService
+JwtAuthenticationFilter "1" --> "1" TokenBlacklistService   : tokenBlacklistService
 SecurityConfig          "1" --> "1" JwtAuthenticationFilter : jwtAuthenticationFilter
+TokenBlacklistService   "1" --> "1" JwtTokenProvider        : jwtTokenProvider
 UserDetailsServiceImpl "1" --> "1" UserRepository          : userRepository
-
-' --- JUNCTION TABLES (MANY-TO-MANY RELATIONSHIPS) ---
-
-User "1" *-- "*" Role : user_roles\n(user_id <<FK>>, role_id <<FK>>) >
-Role "1" *-- "*" Permission : role_permissions\n(role_id <<FK>>, permission_id <<FK>>) >
 
 ' Interface Realizations
 AuthServiceImpl        ..|> AuthService
+UserServiceImpl        ..|> UserService
 UserDetailsServiceImpl ..|> UserDetailsService
 CustomUserDetails      ..|> UserDetails
+UserRepository         --|> JpaRepository
+RoleRepository         --|> JpaRepository
 
-' Behavioral Dependencies (Method Inputs / Outputs)
-AuthController          ..> LoginRequest : uses
-AuthController          ..> AuthResponse : returns
-AuthService             ..> LoginRequest : accepts
-AuthService             ..> AuthResponse : returns
-AuthServiceImpl         ..> LoginRequest : accepts
-AuthServiceImpl         ..> AuthResponse : returns
-AuthServiceImpl         ..> CustomUserDetails : authenticates
+' Junction Tables & Database Mappings
+User "1" *-- "*" Role : user_roles\n(user_id <<FK>>, role_id <<FK>>) >
+Role "1" *-- "*" Permission : role_permissions\n(role_id <<FK>>, permission_id <<FK>>) >
 
-UserDetailsServiceImpl  ..> UserRepository : queries
-UserRepository          ..> User : retrieves
-CustomUserDetails       ..> User : constructs from
+' Behavioral Dependencies
+AuthController          ..> LoginRequest      : uses
+AuthController          ..> AuthResponse      : returns
+UserController          ..> CreateUserRequest : uses
+UserController          ..> UpdateUserRequest : uses
+UserController          ..> UserResponse      : returns
+AuthService             ..> LoginRequest      : accepts
+AuthService             ..> AuthResponse      : returns
+UserService             ..> CreateUserRequest : accepts
+UserService             ..> UpdateUserRequest : accepts
+UserService             ..> UserResponse      : returns
+UserDetailsServiceImpl  ..> UserRepository    : queries
+UserRepository          ..> User              : retrieves
+RoleRepository          ..> Role              : retrieves
+CustomUserDetails       ..> User              : constructs from
 
 @enduml

@@ -1,0 +1,193 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+' --- CONTROLLERS ---
+
+class ProductSalesController {
+  - productSalesService: ProductSalesService
+  + getProductSales(LocalDate, LocalDate): ResponseEntity<ApiResponse<ProductSalesReport>>
+}
+
+class ReportController {
+  - inventoryReportService: InventoryReportService
+  + getInventoryReport(): ResponseEntity<ApiResponse<List<InventoryReportItem>>>
+}
+
+class SalesReportController {
+  - salesReportService: SalesReportService
+  + getSalesReport(LocalDate, LocalDate): ResponseEntity<ApiResponse<SalesReport>>
+}
+
+' --- SERVICES & IMPLEMENTATIONS ---
+
+interface InventoryReportService << interface >> {
+  + getInventoryReport(): List<InventoryReportItem>
+}
+
+class InventoryReportServiceImpl {
+  - inventoryReportRepository: InventoryReportRepository
+  + getInventoryReport(): List<InventoryReportItem>
+}
+
+interface ProductSalesService << interface >> {
+  + getProductSales(LocalDate, LocalDate): ProductSalesReport
+}
+
+class ProductSalesServiceImpl {
+  - BY_PROFIT_DESC: Comparator<ProductSalesItem>
+  - productSalesRepository: ProductSalesRepository
+  + getProductSales(LocalDate, LocalDate): ProductSalesReport
+  - toItem(ProductSalesRow): ProductSalesItem
+}
+
+interface SalesReportService << interface >> {
+  + getSalesReport(LocalDate, LocalDate): SalesReport
+}
+
+class SalesReportServiceImpl {
+  - salesReportRepository: SalesReportRepository
+  + getSalesReport(LocalDate, LocalDate): SalesReport
+}
+
+' --- REPOSITORIES & JDBC IMPLEMENTATIONS ---
+
+interface InventoryReportRepository << interface >> {
+  + findInventoryReport(): List<InventoryReportItem>
+}
+
+class JdbcInventoryReportRepository {
+  - INVENTORY_REPORT_SQL: String
+  - jdbcTemplate: JdbcTemplate
+  + findInventoryReport(): List<InventoryReportItem>
+}
+
+interface ProductSalesRepository << interface >> {
+  + findProductSales(LocalDateTime, LocalDateTime): List<ProductSalesRow>
+}
+
+class JdbcProductSalesRepository {
+  - PRODUCT_SALES_SQL: String
+  - jdbcTemplate: JdbcTemplate
+  + findProductSales(LocalDateTime, LocalDateTime): List<ProductSalesRow>
+  - orZero(BigDecimal): BigDecimal
+}
+
+interface SalesReportRepository << interface >> {
+  + findSalesTotals(LocalDateTime, LocalDateTime): SalesTotals
+}
+
+class JdbcSalesReportRepository {
+  - SALES_TOTALS_SQL: String
+  - jdbcTemplate: JdbcTemplate
+  + findSalesTotals(LocalDateTime, LocalDateTime): SalesTotals
+  - orZero(BigDecimal): BigDecimal
+}
+
+' --- DTOS & RECORDS ---
+
+record InventoryReportItem << record >> {
+  - productId: String
+  - barcode: String
+  - name: String
+  - latestCost: BigDecimal
+  - onHandQuantity: int
+}
+
+record ProductSalesItem << record >> {
+  - productId: String
+  - barcode: String
+  - name: String
+  - quantitySold: long
+  - totalRevenue: BigDecimal
+  - totalCost: BigDecimal
+  - profit: BigDecimal
+}
+
+record ProductSalesReport << record >> {
+  - startDate: LocalDate
+  - endDate: LocalDate
+  - products: List<ProductSalesItem>
+}
+
+record ProductSalesRow << record >> {
+  - productId: String
+  - barcode: String
+  - name: String
+  - quantitySold: long
+  - totalRevenue: BigDecimal
+  - totalCost: BigDecimal
+}
+
+record SalesReport << record >> {
+  - startDate: LocalDate
+  - endDate: LocalDate
+  - totalRevenue: BigDecimal
+  - totalCost: BigDecimal
+  - netProfit: BigDecimal
+  - transactionCount: long
+  - unitsSold: long
+}
+
+record SalesTotals << record >> {
+  - totalRevenue: BigDecimal
+  - totalCost: BigDecimal
+  - transactionCount: long
+  - unitsSold: long
+  + empty(): SalesTotals
+}
+
+' --- EXTERNAL DEPENDENCIES ---
+
+class JdbcTemplate {
+}
+
+' --- RELATIONSHIPS & ASSOCIATIONS ---
+
+' Controller Structural Associations
+ProductSalesController "1" --> "1" ProductSalesService   : productSalesService
+ReportController       "1" --> "1" InventoryReportService : inventoryReportService
+SalesReportController  "1" --> "1" SalesReportService    : salesReportService
+
+' Service Structural Associations
+InventoryReportServiceImpl "1" --> "1" InventoryReportRepository : inventoryReportRepository
+ProductSalesServiceImpl    "1" --> "1" ProductSalesRepository    : productSalesRepository
+SalesReportServiceImpl     "1" --> "1" SalesReportRepository     : salesReportRepository
+
+' Repository Structural Associations
+JdbcInventoryReportRepository "1" --> "1" JdbcTemplate : jdbcTemplate
+JdbcProductSalesRepository    "1" --> "1" JdbcTemplate : jdbcTemplate
+JdbcSalesReportRepository     "1" --> "1" JdbcTemplate : jdbcTemplate
+
+' Interface Realizations
+InventoryReportServiceImpl    ..|> InventoryReportService
+ProductSalesServiceImpl       ..|> ProductSalesService
+SalesReportServiceImpl        ..|> SalesReportService
+
+JdbcInventoryReportRepository ..|> InventoryReportRepository
+JdbcProductSalesRepository    ..|> ProductSalesRepository
+JdbcSalesReportRepository     ..|> SalesReportRepository
+
+' Behavioral & Data Dependencies
+ProductSalesController  ..> ProductSalesReport    : returns
+ReportController        ..> InventoryReportItem   : returns
+SalesReportController   ..> SalesReport           : returns
+
+ProductSalesService     ..> ProductSalesReport    : returns
+InventoryReportService  ..> InventoryReportItem   : returns
+SalesReportService      ..> SalesReport           : returns
+
+ProductSalesServiceImpl ..> ProductSalesRow       : transforms
+ProductSalesServiceImpl ..> ProductSalesItem      : creates
+
+SalesReportServiceImpl  ..> SalesTotals           : processes
+
+ProductSalesReport "1" *-- "*" ProductSalesItem    : contains
+
+InventoryReportRepository ..> InventoryReportItem : returns
+ProductSalesRepository    ..> ProductSalesRow     : returns
+SalesReportRepository     ..> SalesTotals         : returns
+
+@enduml

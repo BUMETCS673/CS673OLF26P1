@@ -52,6 +52,7 @@ jobs:
             "inventory": "edu/bu/metcs673/bluejay/inventory",
             "product": "edu/bu/metcs673/bluejay/product",
             "report": "edu/bu/metcs673/bluejay/report",
+            "sales": "edu/bu/metcs673/bluejay/sales",
             "security": "edu/bu/metcs673/bluejay/auth/security",
             "integration": "edu/bu/metcs673/bluejay/common/integration",
         }
@@ -122,7 +123,7 @@ jobs:
             return f"{coverage_percent(covered, total):.1f}%"
 
         category_rows = []
-        for label in ["auth", "inventory", "product", "report", "security", "integration", "other"]:
+        for label in ["auth", "inventory", "product", "report", "sales", "security", "integration", "other"]:
             values = test_summary.get(label, {"tests": 0, "failures": 0, "errors": 0, "skipped": 0, "duration": 0.0, "files": set()})
             if values["files"]:
                 category_rows.append(

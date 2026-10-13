@@ -16,6 +16,7 @@ const featureLabels = new Map([
   ['inventory', 'Inventory'],
   ['products', 'Products'],
   ['reports', 'Reports'],
+  ['sales', 'Sales'],
   ['users', 'Users'],
   ['core', 'Core'],
 ]);

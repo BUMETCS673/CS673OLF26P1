@@ -105,6 +105,17 @@ private static final UUID PRODUCT_ID =
                 .andExpect(jsonPath("$.data.id").value(PRODUCT_ID.toString()))
                 .andExpect(jsonPath("$.data.name").value("Milk"));
         }
+
+            @Test
+            @DisplayName("Should deny cashier from creating a product")
+            void createProduct_Cashier_Returns403() throws Exception {
+                mockMvc.perform(post("/api/v1/product")
+                    .with(user("cashier").roles("CASHIER"))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
+                .andExpect(status().isForbidden());
+            }
     }
 
     @Nested
@@ -121,7 +132,8 @@ private static final UUID PRODUCT_ID =
                 1L,
                 "test-category",
                 "test-description",
-                3.75
+                3.75,
+                12
             );
 
             when(productService.getProducts(argThat(query ->
@@ -154,6 +166,33 @@ private static final UUID PRODUCT_ID =
                     .param("pageNumber", "1")
                     .param("pageSize", "1"))
                 .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("Should allow cashier to search products by text or barcode")
+        void getProducts_CashierSearch_Returns200() throws Exception {
+            ProductDto product = new ProductDto(
+                PRODUCT_ID,
+                "Spring Water",
+                PRODUCT_BARCODE,
+                1L,
+                "beverages",
+                "drinks",
+                3.75,
+                12
+            );
+
+            when(productService.getProducts(argThat(query ->
+                query != null
+                    && PRODUCT_BARCODE.equals(query.searchTerm())
+                    && query.productName() == null
+            ))).thenReturn(new ProductPageDto(List.of(product), 1, 1, 10));
+
+            mockMvc.perform(get("/api/v1/product")
+                    .with(user("cashier").roles("CASHIER"))
+                    .param("searchTerm", PRODUCT_BARCODE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].barcode").value(PRODUCT_BARCODE));
         }
     }
 
@@ -200,7 +239,8 @@ private static final UUID PRODUCT_ID =
                 1L,
                 "test-category",
                 "test-description",
-                3.75
+                3.75,
+                12
             );
 
             when(productService.getProductBy(PRODUCT_BARCODE)).thenReturn(product);
@@ -213,6 +253,35 @@ private static final UUID PRODUCT_ID =
                 .andExpect(jsonPath("$.data.id").value(PRODUCT_ID.toString()))
                 .andExpect(jsonPath("$.data.price").value(3.75));
         }
+
+            @Test
+            @DisplayName("Should allow cashier to get a product by barcode")
+            void getProductByBarcode_Cashier_Returns200() throws Exception {
+                ProductDto product = new ProductDto(
+                PRODUCT_ID,
+                "product-mock",
+                PRODUCT_BARCODE,
+                1L,
+                "test-category",
+                "test-description",
+                    3.75,
+                    12
+                );
+                when(productService.getProductBy(PRODUCT_BARCODE)).thenReturn(product);
+
+                mockMvc.perform(get("/api/v1/product/{barcode}", PRODUCT_BARCODE)
+                    .with(user("cashier").roles("CASHIER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.barcode").value(PRODUCT_BARCODE));
+            }
+
+            @Test
+            @DisplayName("Should deny cashier from listing product categories")
+            void getProductCategories_Cashier_Returns403() throws Exception {
+                mockMvc.perform(get("/api/v1/product/categories")
+                    .with(user("cashier").roles("CASHIER")))
+                .andExpect(status().isForbidden());
+            }
 
         @Test
         @DisplayName("Should require authentication to get product by barcode")

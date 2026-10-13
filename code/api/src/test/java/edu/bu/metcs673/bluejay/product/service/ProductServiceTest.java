@@ -205,7 +205,7 @@ public class ProductServiceTest {
     public void shouldReturnProductsWithCategoryWhenRequestedPageHasRecords() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 2, 1);
 
-        when(productRepository.getProducts(null, null, 2, 1))
+        when(productRepository.getProducts(null, null, null, 2, 1))
                 .thenReturn(new PageImpl<>(
                     List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)),
                     PageRequest.of(1, 1),
@@ -226,6 +226,7 @@ public class ProductServiceTest {
         assertEquals("product-existed", firstProduct.name());
         assertTrue(firstProduct.categoryId() > 0);
         assertEquals("test-category", firstProduct.categoryName());
+        assertEquals(12, firstProduct.currentStock());
     }
 
     @Test
@@ -233,7 +234,7 @@ public class ProductServiceTest {
     public void shouldReturnEmptyPageWhenRequestedPageHasNoRecords() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
-        when(productRepository.getProducts(null, null, 1, 1))
+        when(productRepository.getProducts(null, null, null, 1, 1))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
         ProductPageDto products = productService.getProducts(queryDto);
@@ -248,7 +249,7 @@ public class ProductServiceTest {
     public void shouldThrowUnknownProductCategoryExceptionWhenProductCategoryDoesNotExist() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
-        when(productRepository.getProducts(null, null, 1, 1))
+        when(productRepository.getProducts(null, null, null, 1, 1))
                 .thenReturn(new PageImpl<>(
                     List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)),
                     PageRequest.of(0, 1),
@@ -265,7 +266,7 @@ public class ProductServiceTest {
     public void shouldFilterProductsByProductNameAndCategoryName() {
         ProductQueryDto queryDto = createProductQueryDto("Water", "beverage", 1, 10);
 
-        when(productRepository.getProducts("Water", "beverage", 1, 10))
+        when(productRepository.getProducts(null, "Water", "beverage", 1, 10))
                 .thenReturn(new PageImpl<>(
                     List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)),
                     PageRequest.of(0, 10),
@@ -278,6 +279,7 @@ public class ProductServiceTest {
         assertNotNull(products);
         assertEquals(1, products.items().size());
         assertEquals("Spring Water", products.items().getFirst().name());
+        assertEquals(2.5, products.items().getFirst().price());
     }
 
     @Test
@@ -285,7 +287,7 @@ public class ProductServiceTest {
     public void shouldDefaultProductQueryPagination() {
         ProductQueryDto queryDto = createProductQueryDto("Milk", "dairy", null, null);
 
-        when(productRepository.getProducts("Milk", "dairy", 1, 10))
+        when(productRepository.getProducts(null, "Milk", "dairy", 1, 10))
                 .thenReturn(new PageImpl<>(
                     List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)),
                     PageRequest.of(0, 10),
@@ -297,6 +299,42 @@ public class ProductServiceTest {
 
         assertNotNull(products);
         assertEquals(1, products.items().size());
+    }
+
+    @Test
+    @DisplayName("Should search products using a combined name or barcode term")
+    public void shouldSearchProductsUsingCombinedSearchTerm() {
+        String searchTerm = "barcode-water-12345";
+        ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
+
+        when(productRepository.getProducts(searchTerm, null, null, 1, 10))
+            .thenReturn(new PageImpl<>(
+                List.of(createExistingProduct(searchTerm, "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)),
+                PageRequest.of(0, 10),
+                1
+            ));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertEquals(1, products.items().size());
+        assertEquals(searchTerm, products.items().getFirst().barcode());
+        assertEquals("Spring Water", products.items().getFirst().name());
+    }
+
+    @Test
+    @DisplayName("Should return an empty page when combined search term has no match")
+    public void shouldReturnNoProductsForUnmatchedSearchTerm() {
+        String searchTerm = "missing-product-12345";
+        ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
+
+        when(productRepository.getProducts(searchTerm, null, null, 1, 10))
+            .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertTrue(products.items().isEmpty());
+        assertEquals(0, products.totalCount());
     }
 
     @Test
@@ -355,6 +393,7 @@ public class ProductServiceTest {
         product.setName(name);
         product.setCategoryId(categoryId);
         product.setSalePrice(BigDecimal.valueOf(salePrice));
+        product.setCurrentStock(12);
         return product;
     }
 
@@ -372,6 +411,16 @@ public class ProductServiceTest {
         Integer pageNumber,
         Integer pageSize
     ) {
-        return new ProductQueryDto(productName, categoryName, pageNumber, pageSize);
+        return new ProductQueryDto(null, productName, categoryName, pageNumber, pageSize);
+    }
+
+    private ProductQueryDto createProductQueryDto(
+        String searchTerm,
+        String productName,
+        String categoryName,
+        Integer pageNumber,
+        Integer pageSize
+    ) {
+        return new ProductQueryDto(searchTerm, productName, categoryName, pageNumber, pageSize);
     }
 }

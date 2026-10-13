@@ -120,8 +120,10 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductDto> result = new ArrayList<>();
         for (Product p : productsPage.getContent()) {
-            Optional<Category> c = _categoryRepository.getCategoryBy(p.getCategoryId());
-            if (c.isEmpty()) {
+            Optional<Category> c = p.getCategoryId() == null
+                ? Optional.empty()
+                : _categoryRepository.getCategoryBy(p.getCategoryId());
+            if (p.getCategoryId() != null && c.isEmpty()) {
                 throw new UnknownProductCategoryException(p.getCategoryId());
             }
 
@@ -130,8 +132,8 @@ public class ProductServiceImpl implements ProductService {
                 p.getName(),
                 p.getBarcode(),
                 p.getCategoryId(),
-                c.get().getName(),
-                c.get().getDescription(),
+                c.map(Category::getName).orElse(null),
+                c.map(Category::getDescription).orElse(null),
                 p.getSalePrice() == null ? 0 : p.getSalePrice().doubleValue(),
                 p.getCurrentStock(),
                 p.getLowStock()
@@ -163,8 +165,10 @@ public class ProductServiceImpl implements ProductService {
         }
 
         var product = p.get();
-        Optional<Category> category = _categoryRepository.getCategoryBy(product.getCategoryId());
-        if (category.isEmpty()) {
+        Optional<Category> category = product.getCategoryId() == null
+            ? Optional.empty()
+            : _categoryRepository.getCategoryBy(product.getCategoryId());
+        if (product.getCategoryId() != null && category.isEmpty()) {
             throw new UnknownProductCategoryException(product.getCategoryId());
         }
 
@@ -178,8 +182,8 @@ public class ProductServiceImpl implements ProductService {
             product.getName(),
             product.getBarcode(),
             product.getCategoryId(),
-            category.get().getName(),
-            category.get().getDescription(),
+            category.map(Category::getName).orElse(null),
+            category.map(Category::getDescription).orElse(null),
             product.getSalePrice().doubleValue(),
             product.getCurrentStock(),
             product.getLowStock()
@@ -195,7 +199,9 @@ public class ProductServiceImpl implements ProductService {
         product.setLowStock(lowStock);
         Product savedProduct = _productRepository.save(product);
 
-        Optional<Category> category = _categoryRepository.getCategoryBy(savedProduct.getCategoryId());
+        Optional<Category> category = savedProduct.getCategoryId() == null
+            ? Optional.empty()
+            : _categoryRepository.getCategoryBy(savedProduct.getCategoryId());
         String categoryName = category.map(Category::getName).orElse(null);
         String categoryDesc = category.map(Category::getDescription).orElse(null);
 

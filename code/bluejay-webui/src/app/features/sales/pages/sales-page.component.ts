@@ -259,8 +259,6 @@ export class SalesPage {
                 </body>
             </html>
         `);
-
-        // 3. Close the document stream to ensure the browser finishes loading the page
         printWindow.document.close();
       }
     });

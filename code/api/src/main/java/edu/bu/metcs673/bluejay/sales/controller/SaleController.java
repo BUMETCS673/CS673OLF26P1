@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: Github Copilot
+    Overall AI Contribution: 90%
+    AI-Assisted Areas: API creation
+    Human Contributions: Prompting to make sure only authorized users can access the API
+    Notes: Sales Controller class that primarily handles sales related API
+    Authors: Italia Tran, Sara Orion
+*/
+
 package edu.bu.metcs673.bluejay.sales.controller;
 
 import edu.bu.metcs673.bluejay.common.dto.ApiResponse;

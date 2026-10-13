@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: Github Copilot
+    Overall AI Contribution: 100%
+    AI-Assisted Areas: Domain creation and mapping to sale_transaction table
+    Human Contributions: None
+    Notes: Mapping to the sales_transaction table
+    Authors: Italia Tran
+*/
+
 package edu.bu.metcs673.bluejay.sales.domain;
 
 import jakarta.persistence.Column;

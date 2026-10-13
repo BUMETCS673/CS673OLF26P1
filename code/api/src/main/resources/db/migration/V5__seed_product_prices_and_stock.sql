@@ -1,5 +1,10 @@
--- Assign demo retail prices and on-hand quantities to the products seeded in V3.
--- Preserve any prices or stock levels that have already been configured.
+-- AI-USAGE SUMMARY
+-- Tools: GitHub Copilot
+-- Overall AI Contribution: 90%
+-- AI-Assisted Areas: Generated products for sales testing
+-- Human Contributions: Prompted what was needed for the products and how to generate the numbers
+-- Notes: Generated products prices and quantity
+-- Authors: Italia Tran
 
 UPDATE products
 SET sale_price = CASE barcode

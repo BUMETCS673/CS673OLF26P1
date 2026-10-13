@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: GitHub Copilot
+    Overall AI Contribution: 90%
+    AI-Assisted Areas: Added front end unit tests for the sales page
+    Human Contributions: Prompted what tests to cover and how to generate the data
+    Notes: The unit tests for sales page
+    Authors: Italia Tran
+*/
+
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';

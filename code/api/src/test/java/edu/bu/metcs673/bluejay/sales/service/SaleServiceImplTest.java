@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: Github Copilot
+    Overall AI Contribution: 90%
+    AI-Assisted Areas: Creating unit tests for sale service
+    Human Contributions: Prompted what tests should be added
+    Notes: Unit tests for sale service
+    Authors: Italia Tran
+*/
+
 package edu.bu.metcs673.bluejay.sales.service;
 
 import edu.bu.metcs673.bluejay.common.exception.InsufficientCashReceivedException;

@@ -109,16 +109,25 @@ private static final UUID PRODUCT_ID =
                 .andExpect(jsonPath("$.data.name").value("Milk"));
         }
 
-            @Test
-            @DisplayName("Should deny cashier from creating a product")
-            void createProduct_Cashier_Returns403() throws Exception {
-                mockMvc.perform(post("/api/v1/product")
-                    .with(user("cashier").roles("CASHIER"))
-                    .with(csrf())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{}"))
-                .andExpect(status().isForbidden());
-            }
+        @Test
+        @DisplayName("Should deny cashier from creating a product")
+        void createProduct_Cashier_Returns403() throws Exception {
+            CreateProductWithCategoryDto request = new CreateProductWithCategoryDto(
+                "Milk",
+                "barcode-test-12345",
+                1L,
+                null,
+                null,
+                1
+            );
+
+            mockMvc.perform(post("/api/v1/product")
+                .with(user("cashier").roles("CASHIER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isForbidden());
+        }
     }
 
     @Nested

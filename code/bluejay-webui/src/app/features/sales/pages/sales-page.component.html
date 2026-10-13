@@ -103,7 +103,7 @@
             <strong>Sale Complete!</strong>
             <button type="button" class="dismiss-receipt-button" (click)="dismissReceipt()" aria-label="Dismiss receipt">✕</button>
           </div>
-          <p class="receipt-number">Receipt #: <strong>{{ sale.receiptNumber }}</strong></p>
+          <p class="receipt-number">Receipt #: <strong>{{ sale.receiptNumber }}</strong>&nbsp;<strong (click)="printReceipt(sale.transactionId)">[Print]</strong></p>
           <div class="receipt-breakdown">
             <div><span>Total:</span> <strong>{{ sale.grandTotal | currency }}</strong></div>
             <div><span>Paid:</span> <strong>{{ sale.cashReceived | currency }}</strong></div>

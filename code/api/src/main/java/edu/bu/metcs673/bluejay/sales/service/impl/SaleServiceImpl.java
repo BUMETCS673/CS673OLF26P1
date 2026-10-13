@@ -70,7 +70,7 @@ public class SaleServiceImpl implements SaleService {
         final var saleItems = saleItemRepository.findByTransactionId(request.getTransactionId());
         final var saleItemsLine = new ArrayList<String>();
         saleItems.forEach(line -> {
-            saleItemsLine.add(String.format("%s - %s - %s", "product", line.getQuantity(), line.getSubtotal()));
+            saleItemsLine.add(String.format("%s - %s - %s", productRepository.findById(line.getProductId()).get().getName(), line.getQuantity(), line.getSubtotal()));
         });
         return new PrintReceiptResponse(
             request.getTransactionId(),

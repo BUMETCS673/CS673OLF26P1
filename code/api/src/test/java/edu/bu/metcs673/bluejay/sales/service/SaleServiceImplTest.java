@@ -144,8 +144,9 @@ class SaleServiceImplTest {
         product.setName("Spring Water");
         product.setBarcode("012345123455");
         product.setSalePrice(new BigDecimal("2.50"));
-        product.setCostPrice(new BigDecimal("1.20"));
+        product.setStockCost(new BigDecimal("1.20"));
         product.setCurrentStock(stock);
+        product.setLowStock(1);
         return product;
     }
 }

@@ -2,8 +2,8 @@
 // Tools: Claude
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: Aggregate SQL over sale_transactions + sale_items, row mapping
-// Human Contributions: Use the sale_items cost/price snapshots per DB_SCHEMA_CHANGELOG.md
-// Notes: Revenue and cost come from the per-sale snapshots in sale_items, so later
+// Human Contributions: Use the sale_items stockCost/salePrice snapshots per DB_SCHEMA_CHANGELOG.md
+// Notes: Revenue and stockCost come from the per-sale snapshots in sale_items, so later
 //        changes to products.cost_price / sale_price never change past reports.
 // Authors: Krizma Nagi
 
@@ -20,10 +20,10 @@ import java.util.Objects;
 
 // AI-ASSISTED: YES
 // Tool: Claude
-// Prompt Summary: "Design query joining sale records with product cost data, filtered by date range"
+// Prompt Summary: "Design query joining sale records with product stockCost data, filtered by date range"
 // AI Contribution: Initial draft (~85%)
 // Modifications:
-//   - Cost is sale_items.unit_cost * quantity (cost snapshot at time of sale),
+//   - Cost is sale_items.unit_cost * quantity (stockCost snapshot at time of sale),
 //     not products.cost_price, so historical profit stays correct
 //   - Revenue is the sum of sale_items.subtotal
 //   - Half-open window (>= from, < to) so a whole end day is included

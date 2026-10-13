@@ -213,34 +213,14 @@
 
                   <!-- Actions Column -->
                   <td class="actions-cell">
-                    @if (editingUserId() === user.id) {
-                      <button
-                        type="button"
-                        class="save-button"
-                        (click)="saveEdit(user)"
-                        [disabled]="isSaving()"
-                      >
-                        {{ isSaving() ? 'Saving...' : 'Save' }}
-                      </button>
-                      <button
-                        type="button"
-                        class="cancel-button"
-                        (click)="cancelEdit()"
-                        [disabled]="isSaving()"
-                      >
-                        Cancel
-                      </button>
-                    } @else {
-                      <button
-                        type="button"
-                        class="edit-button"
-                        (click)="startEdit(user)"
-                        [disabled]="editingUserId() !== null || isCurrentUser(user)"
-                        [title]="isCurrentUser(user) ? 'You cannot edit your own account permissions' : 'Edit user'"
-                      >
-                        Edit
-                      </button>
-                    }
+                    <app-inline-action-buttons
+                      [isEditing]="editingUserId() === user.id"
+                      [loading]="isSaving()"
+                      [editDisabled]="editingUserId() !== null || isCurrentUser(user)"
+                      [editTitle]="isCurrentUser(user) ? 'You cannot edit your own account permissions' : 'Edit user'"
+                      (edit)="startEdit(user)"
+                      (save)="saveUser(user)"
+                      (cancel)="cancelEdit()" />
                   </td>
                 </tr>
               }

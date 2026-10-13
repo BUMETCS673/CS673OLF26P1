@@ -124,7 +124,7 @@ describe('UsersPage directory & row editing behavior', () => {
 
     component.editRole.set('ROLE_MANAGER');
     component.toggleEditStatus(); // Flip enabled to false
-    component.saveEdit(zoeUser);
+    component.saveUser(zoeUser);
 
     expect(usersServiceMock.updateUser).toHaveBeenCalledWith('user-z', {
       role: 'ROLE_MANAGER',
@@ -144,7 +144,7 @@ describe('UsersPage directory & row editing behavior', () => {
 
     component.startEdit(blairUser);
     component.editRole.set('ROLE_ADMIN');
-    component.saveEdit(blairUser);
+    component.saveUser(blairUser);
     fixture.detectChanges();
 
     expect(component.actionError()).toContain('You do not have administrative privileges');

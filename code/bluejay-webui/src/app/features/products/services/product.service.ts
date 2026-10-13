@@ -53,4 +53,17 @@ export class ProductService {
     // @ts-ignore
     return this.http.get<ApiResponse<Product>>(`${this.endpoint}/${encodeURIComponent(barcode)}`).pipe(map((response) => response.data));
   }
+
+  // AI-ASSISTED: YES
+// Tool: Gemini
+// Prompt Summary: "Add updateLowStock method to ProductService calling PATCH /api/v1/product/{id}/low-stock."
+// AI Contribution: Initial draft (~90%)
+// Modifications: Added non-null assertion to response.data! to satisfy strict null checking.
+// Verification: Browser network tab inspection.
+// Confidence: High
+  updateLowStock(id: string, lowStock: number): Observable<Product> {
+    return this.http
+      .patch<ApiResponse<Product>>(`${this.endpoint}/${id}/low-stock`, { lowStock })
+      .pipe(map((response) => response.data!));
+  }
 }

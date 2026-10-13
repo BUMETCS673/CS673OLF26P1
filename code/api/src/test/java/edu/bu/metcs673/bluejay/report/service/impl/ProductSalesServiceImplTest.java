@@ -91,7 +91,7 @@ class ProductSalesServiceImplTest {
     }
 
     @Test
-    @DisplayName("A product with zero sales is included with zero quantity, cost and profit")
+    @DisplayName("A product with zero sales is included with zero quantity, stockCost and profit")
     void getProductSales_ProductWithNoSales_IncludedWithZeros() {
         when(repository.findProductSales(any(), any())).thenReturn(List.of(
             row("p1", "Lemons", 0, "0", "0"),

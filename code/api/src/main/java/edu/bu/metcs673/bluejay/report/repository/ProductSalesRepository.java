@@ -26,7 +26,7 @@ public interface ProductSalesRepository {
 
     /**
      * Returns one row per product in the catalog with the quantity, revenue
-     * and cost of its sales whose transaction_date is on or after
+     * and stockCost of its sales whose transaction_date is on or after
      * {@code from} and before {@code to}. Products with no sales in the
      * window are included with zero totals.
      */

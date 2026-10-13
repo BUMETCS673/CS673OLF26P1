@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 public interface SalesReportRepository {
 
     /**
-     * Sums revenue, cost, transactions and units for sales whose
+     * Sums revenue, stockCost, transactions and units for sales whose
      * transaction_date is on or after {@code from} and before {@code to}.
      * Returns zero totals when there are no sales in the window.
      */

@@ -16,6 +16,7 @@ export interface Product {
   categoryDescription?: string | null;
   price: number;
   currentStock: number;
+  lowStock: number;
 }
 
 export interface CreateProduct {
@@ -24,6 +25,7 @@ export interface CreateProduct {
   categoryId?: number | null;
   categoryName?: string | null;
   categoryDescription?: string | null;
+  lowStock?: number | null;
 }
 
 export interface ProductCategory {

@@ -38,6 +38,7 @@ export class ProductFormComponent implements OnInit {
   readonly categoryForm = form(this.categoryModel);
   private selectedCategory: ProductCategory | null = null;
   categoryDescription = '';
+  lowStockThreshold = 1;
 
   ngOnInit(): void {
     this.productService.listCategories().subscribe({
@@ -75,6 +76,7 @@ export class ProductFormComponent implements OnInit {
       categoryName: this.selectedCategory?.name ?? this.categoryModel().name.trim(),
       categoryId: this.selectedCategory?.id ?? null,
       categoryDescription: this.categoryDescription.trim() || null,
+      lowStock: this.lowStockThreshold,
     };
 
     this.saving.set(true);
@@ -95,6 +97,7 @@ export class ProductFormComponent implements OnInit {
     this.categoryModel.update((category) => ({ ...category, name: '' }));
     this.selectedCategory = null;
     this.categoryDescription = '';
+    this.lowStockThreshold = 1;
     this.categoryForm().reset();
   }
 }

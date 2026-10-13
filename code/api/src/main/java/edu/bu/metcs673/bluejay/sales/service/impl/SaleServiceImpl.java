@@ -83,9 +83,9 @@ public class SaleServiceImpl implements SaleService {
             }
 
             BigDecimal unitPrice = product.getSalePrice().setScale(2, RoundingMode.UNNECESSARY);
-            BigDecimal unitCost = product.getCostPrice() == null
+            BigDecimal unitCost = product.getStockCost() == null
                 ? BigDecimal.ZERO.setScale(2)
-                : product.getCostPrice().setScale(2, RoundingMode.UNNECESSARY);
+                : product.getStockCost().setScale(2, RoundingMode.UNNECESSARY);
             BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
             grandTotal = grandTotal.add(subtotal);
             preparedLines.add(new PreparedSaleLine(

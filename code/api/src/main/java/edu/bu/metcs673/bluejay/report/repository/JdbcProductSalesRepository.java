@@ -2,7 +2,7 @@
 // Tools: Claude
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: Per-product aggregate SQL over products + sale_items + sale_transactions
-// Human Contributions: Use the sale_items cost/price snapshots per DB_SCHEMA_CHANGELOG.md
+// Human Contributions: Use the sale_items stockCost/salePrice snapshots per DB_SCHEMA_CHANGELOG.md
 // Notes: Extends the Story #29 date-range query by grouping per product.
 // Authors: Krizma Nagi
 

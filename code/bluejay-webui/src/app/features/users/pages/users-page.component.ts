@@ -8,14 +8,6 @@
   Authors: Italia Tran, Sara Orion
 */
 
-// AI-USAGE SUMMARY
-// Tools: Gemini
-// Overall AI Contribution: 90%
-// AI-Assisted Areas: Logged-in user check to prevent self-editing, guard checks in startEdit, and contextual error handling
-// Human Contributions: Integration with AuthService user claims
-// Notes: Initial code generated via AI; requires student verification, refactoring, and testing before integration.
-// authors: Sara Orion
-
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
@@ -25,6 +17,8 @@ import { UserRoleSelectComponent } from '../components/user-role-select.componen
 import { UserStatusBadgeComponent } from '../components/user-status-badge.component';
 import { RoleOption, UserRecord } from '../models/users.model';
 import { UsersService } from '../services/users.services';
+import { InlineActionButtonsComponent } from '../../../shared/components/inline-action-buttons.component';
+
 
 type SortColumn = 'username' | 'id' | 'createdAt' | 'enabled' | 'role';
 type SortDirection = 'asc' | 'desc';
@@ -37,6 +31,7 @@ type SortDirection = 'asc' | 'desc';
     RouterLink,
     UserRoleSelectComponent,
     UserStatusBadgeComponent,
+    InlineActionButtonsComponent
   ],
   templateUrl: './users-page.component.html',
   styleUrl: './users-page.component.scss',
@@ -137,7 +132,7 @@ export class UsersPage implements OnInit {
     this.actionError.set(null);
   }
 
-  saveEdit(user: UserRecord): void {
+  saveUser(user: UserRecord): void {
     const updatedRole = this.editRole();
     const updatedEnabled = this.editEnabled();
 

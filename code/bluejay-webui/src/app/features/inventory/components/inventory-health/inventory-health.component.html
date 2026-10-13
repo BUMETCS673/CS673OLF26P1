@@ -17,19 +17,22 @@ authors: Sara Orion
   @if (isLoading()) {
     <p class="card-subtitle">Loading inventory health metrics...</p>
   } @else {
-    @for (item of healthItems(); track item.id) {
+    @for (item of stockItems(); track item.id) {
+      <!-- Calculate health dynamically on the client side -->
+      @let health = calculateStockHealth(item.currentStock, item.lowStockThreshold);
+
       <div class="health-item">
         <div class="health-info">
           <span class="product-name">{{ item.productName }}</span>
-          <span class="health-status" [ngClass]="'status-' + getStatusClass(item.status)">
-            {{ item.percentage }}% &nbsp; {{ item.status }}
+          <span class="health-status" [ngClass]="'status-' + getStatusClass(health.status)">
+            {{ item.currentStock }} units &nbsp;|&nbsp; {{ health.status }}
           </span>
         </div>
         <div class="progress-bar">
           <div
             class="progress-fill"
-            [ngClass]="'fill-' + getStatusClass(item.status)"
-            [style.width.%]="item.percentage">
+            [ngClass]="'fill-' + getStatusClass(health.status)"
+            [style.width.%]="health.percentage">
           </div>
         </div>
       </div>

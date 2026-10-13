@@ -31,9 +31,33 @@ authors: Kimleng
         <th mat-header-cell *matHeaderCellDef>Category</th>
         <td mat-cell *matCellDef="let product">{{ product.categoryName || '—' }}</td>
       </ng-container>
-      <ng-container matColumnDef="price">
-        <th mat-header-cell *matHeaderCellDef>Price</th>
-        <td mat-cell *matCellDef="let product">{{ product.price | currency }}</td>
+      <!-- Editable Low Stock Threshold Column -->
+      <ng-container matColumnDef="lowStock">
+        <th mat-header-cell *matHeaderCellDef>Low Stock Threshold</th>
+        <td mat-cell *matCellDef="let product">
+          @if (editingProductId() === product.id) {
+            <input
+              type="number"
+              min="0"
+              style="width: 80px; padding: 0.25rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"
+              [ngModel]="editingLowStock()"
+              (ngModelChange)="editingLowStock.set($event)" />
+          } @else {
+            {{ product.lowStock }}
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef style="text-align: right;">Actions</th>
+        <td mat-cell *matCellDef="let product" style="text-align: right;">
+          <app-inline-action-buttons
+            [isEditing]="editingProductId() === product.id"
+            [loading]="loading()"
+            (edit)="startEdit(product)"
+            (save)="saveLowStock(product)"
+            (cancel)="cancelEdit()" />
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

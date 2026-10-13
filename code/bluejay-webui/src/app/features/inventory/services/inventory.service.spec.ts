@@ -10,7 +10,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { InventoryService } from './inventory.service';
 import { ApiResponse } from '../../../shared/models/api-response.model';
-import { CreateStockEntry, StockEntry, InventoryItem, InventoryHealthItem } from '../models/inventory.model';
+import { CreateStockEntry, StockEntry, InventoryItem, InventoryStockItem } from '../models/inventory.model';
 
 describe('InventoryService', () => {
   let service: InventoryService;
@@ -38,7 +38,7 @@ describe('InventoryService', () => {
   });
 
   it('should send POST request to record stock entry', () => {
-    const request: CreateStockEntry = { barcode: '1001', quantity: 5, cost: 12.5 };
+    const request: CreateStockEntry = { barcode: '1001', quantity: 5, stockCost: 12.5, salePrice: 15.0 };
     const mockResponse: ApiResponse<StockEntry> = {
       success: true,
       message: 'Stock entry recorded',
@@ -49,7 +49,8 @@ describe('InventoryService', () => {
         productName: 'Coffee',
         quantityAdded: 5,
         newTotalStock: 55,
-        costPrice: 12.5,
+        stockCost: 12.5,
+        salePrice: 15.0,
         userId: 'user-1',
         createdAt: '2026-10-05T12:00:00Z',
         message: 'Stock entry recorded'
@@ -69,18 +70,18 @@ describe('InventoryService', () => {
     req.flush(mockResponse);
   });
 
-  it('should send GET request to fetch stock inventory', () => {
+  it('should send GET request to fetch inventory list', () => {
     const mockResponse: ApiResponse<InventoryItem[]> = {
       success: true,
       message: 'Inventory items retrieved successfully',
       data: [
-        { id: '1', barcode: '1001', productName: 'Coffee', cost: 10, quantity: 50 }
+        { id: '1', barcode: '1001', productName: 'Coffee', stockCost: 10, salePrice: 15, quantity: 50 }
       ],
       errorCode: null,
       timestamp: '2026-10-05T12:00:00Z'
     };
 
-    service.getStockInventory().subscribe((res) => {
+    service.getInventory().subscribe((res) => {
       expect(res.success).toBe(true);
       expect(res.data?.length).toBe(1);
       expect(res.data?.[0].productName).toBe('Coffee');
@@ -91,24 +92,44 @@ describe('InventoryService', () => {
     req.flush(mockResponse);
   });
 
-  it('should send GET request to fetch inventory health', () => {
-    const mockResponse: ApiResponse<InventoryHealthItem[]> = {
+  it('should send GET request to fetch inventory stock', () => {
+    const mockResponse: ApiResponse<InventoryStockItem[]> = {
       success: true,
-      message: 'Inventory health retrieved successfully',
+      message: 'Inventory stock retrieved successfully',
       data: [
-        { id: '1', productName: 'Coffee', percentage: 75, status: 'Healthy' }
+        { id: '1', productName: 'Coffee', currentStock: 50, lowStockThreshold: 10 }
       ],
       errorCode: null,
       timestamp: '2026-10-05T12:00:00Z'
     };
 
-    service.getInventoryHealth().subscribe((res) => {
+    service.getInventoryStock().subscribe((res) => {
       expect(res.success).toBe(true);
-      expect(res.data?.[0].status).toBe('Healthy');
+      expect(res.data?.[0].productName).toBe('Coffee');
     });
 
-    const req = httpMock.expectOne('/api/v1/inventory/health');
+    const req = httpMock.expectOne('/api/v1/inventory/stock');
     expect(req.request.method).toBe('GET');
+    req.flush(mockResponse);
+  });
+
+  it('should send PATCH request to update sale price', () => {
+    const mockResponse: ApiResponse<InventoryItem> = {
+      success: true,
+      message: 'Sale price updated successfully.',
+      data: { id: '1', barcode: '1001', productName: 'Coffee', stockCost: 10, salePrice: 18.5, quantity: 50 },
+      errorCode: null,
+      timestamp: '2026-10-05T12:00:00Z'
+    };
+
+    service.updateSalePrice('1', 18.5).subscribe((res) => {
+      expect(res.success).toBe(true);
+      expect(res.data?.salePrice).toBe(18.5);
+    });
+
+    const req = httpMock.expectOne('/api/v1/inventory/1/price');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ salePrice: 18.5 });
     req.flush(mockResponse);
   });
 });

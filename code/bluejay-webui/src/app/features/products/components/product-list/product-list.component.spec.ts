@@ -15,7 +15,14 @@ import { ProductService } from '../../services/product.service';
 import { ProductListComponent } from './product-list.component';
 
 const product = (n: number): Product => ({
-  id: String(n), name: `Product ${n}`, barcode: `000${n}`, categoryId: null, categoryName: n % 2 ? 'Dairy' : null, price: n, currentStock: 12,
+  id: String(n),
+  name: `Product ${n}`,
+  barcode: `000${n}`,
+  categoryId: null,
+  categoryName: n % 2 ? 'Dairy' : null,
+  price: n,
+  currentStock: 12,
+  lowStock: 5,
 });
 
 const page = (items: Product[], totalCount = items.length): ProductPage => ({
@@ -26,7 +33,10 @@ const page = (items: Product[], totalCount = items.length): ProductPage => ({
 });
 
 describe('ProductListComponent', { timeout: 15000 }, () => {
-  const serviceMock = { list: vi.fn() };
+  const serviceMock = {
+    list: vi.fn(),
+    updateLowStock: vi.fn(),
+  };
   let fixture: ComponentFixture<ProductListComponent>;
   let component: ProductListComponent;
 
@@ -40,6 +50,7 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
 
   beforeEach(() => {
     serviceMock.list.mockReset();
+    serviceMock.updateLowStock.mockReset();
     serviceMock.list.mockReturnValue(of(page([product(1), product(2)], 2)));
     TestBed.configureTestingModule({ providers: [{ provide: ProductService, useValue: serviceMock }] });
   });
@@ -136,5 +147,54 @@ describe('ProductListComponent', { timeout: 15000 }, () => {
     await create();
 
     expect(component.paginatorLength()).toBe(37);
+  });
+
+  it('starts inline edit and sets initial editing low stock value', async () => {
+    await create();
+    const p = product(1);
+
+    component.startEdit(p);
+
+    expect(component.editingProductId()).toBe('1');
+    expect(component.editingLowStock()).toBe(5);
+  });
+
+  it('cancels inline edit', async () => {
+    await create();
+    component.editingProductId.set('1');
+
+    component.cancelEdit();
+
+    expect(component.editingProductId()).toBeNull();
+  });
+
+  it('saves updated low stock threshold and updates local products signal', async () => {
+    await create();
+    const p = product(1);
+    component.editingProductId.set('1');
+    component.editingLowStock.set(20);
+
+    const updatedProduct = { ...p, lowStock: 20 };
+    serviceMock.updateLowStock.mockReturnValue(of(updatedProduct));
+
+    component.saveLowStock(p);
+
+    expect(serviceMock.updateLowStock).toHaveBeenCalledWith('1', 20);
+    expect(component.products()[0].lowStock).toBe(20);
+    expect(component.editingProductId()).toBeNull();
+  });
+
+  it('handles error when saving low stock threshold fails', async () => {
+    await create();
+    const p = product(1);
+    component.editingProductId.set('1');
+    component.editingLowStock.set(20);
+
+    serviceMock.updateLowStock.mockReturnValue(throwError(() => ({ error: { message: 'Update failed' } })));
+
+    component.saveLowStock(p);
+
+    expect(component.error()).toBe('Update failed');
+    expect(component.loading()).toBe(false);
   });
 });

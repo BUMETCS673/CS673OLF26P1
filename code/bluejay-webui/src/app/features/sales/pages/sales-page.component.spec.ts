@@ -56,6 +56,7 @@ describe('SalesPage', () => {
           categoryName: 'beverages',
           price: 2.5,
           currentStock: 5,
+          lowStock: 1
         } satisfies Product],
         totalCount: 1,
         pageNumber: 1,
@@ -98,6 +99,7 @@ describe('SalesPage', () => {
       categoryName: 'beverages',
       price: 2.5,
       currentStock: 5,
+      lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -119,6 +121,7 @@ describe('SalesPage', () => {
       categoryName: 'beverages',
       price: 2.5,
       currentStock: 5,
+      lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -143,6 +146,7 @@ describe('SalesPage', () => {
       categoryName: 'beverages',
       price: 2.5,
       currentStock: 5,
+      lowStock: 1
     };
     page.addToCart(product);
     fixture.detectChanges();
@@ -169,6 +173,7 @@ describe('SalesPage', () => {
       categoryName: 'beverages',
       price: 2.5,
       currentStock: 3,
+      lowStock: 1
     };
     page.quantity = 4;
     page.addToCart(product);
@@ -191,6 +196,7 @@ describe('SalesPage', () => {
       categoryName: 'beverages',
       price: 2.5,
       currentStock: 3,
+      lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -206,7 +212,7 @@ describe('SalesPage', () => {
     const page = fixture.componentInstance;
     const product: Product = {
       id: 'product-1', name: 'Spring Water', barcode: '12345', categoryId: 1,
-      categoryName: 'beverages', price: 2.5, currentStock: 5,
+      categoryName: 'beverages', price: 2.5, currentStock: 5, lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -228,7 +234,7 @@ describe('SalesPage', () => {
     const page = fixture.componentInstance;
     const product: Product = {
       id: 'product-1', name: 'Spring Water', barcode: '12345', categoryId: 1,
-      categoryName: 'beverages', price: 2.5, currentStock: 5,
+      categoryName: 'beverages', price: 2.5, currentStock: 5, lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -243,7 +249,7 @@ describe('SalesPage', () => {
     const page = fixture.componentInstance;
     const product: Product = {
       id: 'product-1', name: 'Spring Water', barcode: '12345', categoryId: 1,
-      categoryName: 'beverages', price: 2.5, currentStock: 5,
+      categoryName: 'beverages', price: 2.5, currentStock: 5, lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -270,7 +276,7 @@ describe('SalesPage', () => {
     const page = fixture.componentInstance;
     const product: Product = {
       id: 'product-1', name: 'Spring Water', barcode: '12345', categoryId: 1,
-      categoryName: 'beverages', price: 2.5, currentStock: 5,
+      categoryName: 'beverages', price: 2.5, currentStock: 5, lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -311,6 +317,7 @@ describe('SalesPage', () => {
       categoryName: 'beverages',
       price: 2.5,
       currentStock: 10,
+      lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);
@@ -377,6 +384,7 @@ describe('SalesPage', () => {
       categoryName: 'beverages',
       price: 2.5,
       currentStock: 10,
+      lowStock: 1
     };
     page.quantity = 2;
     page.addToCart(product);

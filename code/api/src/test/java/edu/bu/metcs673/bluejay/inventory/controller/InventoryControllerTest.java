@@ -13,10 +13,11 @@ import edu.bu.metcs673.bluejay.auth.security.JwtTokenProvider;
 import edu.bu.metcs673.bluejay.auth.security.SecurityConfig;
 import edu.bu.metcs673.bluejay.auth.security.TokenBlacklistService;
 import edu.bu.metcs673.bluejay.common.exception.GlobalExceptionHandler;
-import edu.bu.metcs673.bluejay.inventory.dto.InventoryHealthResponse;
 import edu.bu.metcs673.bluejay.inventory.dto.InventoryResponse;
+import edu.bu.metcs673.bluejay.inventory.dto.InventoryStockResponse;
 import edu.bu.metcs673.bluejay.inventory.dto.StockEntryRequest;
 import edu.bu.metcs673.bluejay.inventory.dto.StockEntryResponse;
+import edu.bu.metcs673.bluejay.inventory.dto.UpdateSalePriceRequest;
 import edu.bu.metcs673.bluejay.inventory.service.InventoryService;
 import edu.bu.metcs673.bluejay.inventory.service.StockEntryService;
 import org.junit.jupiter.api.DisplayName;
@@ -36,10 +37,12 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -71,7 +74,8 @@ class InventoryControllerTest {
     @Test
     @DisplayName("GET /inventory should return HTTP 200 OK with wrapped InventoryResponse list")
     void getInventory_Returns200AndInventoryList() throws Exception {
-        InventoryResponse item = new InventoryResponse("id-1", "1001", "Coffee", new BigDecimal("10.00"), 50);
+        InventoryResponse item = new InventoryResponse("id-1", "1001", "Coffee",
+            new BigDecimal("10.00"), new BigDecimal("15.00"), 50);
         when(inventoryService.getInventory()).thenReturn(List.of(item));
 
         mockMvc.perform(get("/api/v1/inventory")
@@ -81,28 +85,31 @@ class InventoryControllerTest {
             .andExpect(jsonPath("$.data[0].id").value("id-1"))
             .andExpect(jsonPath("$.data[0].barcode").value("1001"))
             .andExpect(jsonPath("$.data[0].productName").value("Coffee"))
+            .andExpect(jsonPath("$.data[0].stockCost").value(10.00))
+            .andExpect(jsonPath("$.data[0].salePrice").value(15.00))
             .andExpect(jsonPath("$.data[0].quantity").value(50));
     }
 
     @Test
-    @DisplayName("GET /inventory/health should return HTTP 200 OK with wrapped InventoryHealthResponse list")
-    void getInventoryHealth_Returns200AndHealthList() throws Exception {
-        InventoryHealthResponse health = new InventoryHealthResponse("id-1", "Coffee", 50, "Low");
-        when(inventoryService.getInventoryHealth()).thenReturn(List.of(health));
+    @DisplayName("GET /inventory/stock should return HTTP 200 OK with wrapped InventoryStockResponse list")
+    void getInventoryStock_Returns200AndStockList() throws Exception {
+        InventoryStockResponse stock = new InventoryStockResponse("id-1", "Coffee", 50, 10);
+        when(inventoryService.getInventoryStock()).thenReturn(List.of(stock));
 
-        mockMvc.perform(get("/api/v1/inventory/health")
+        mockMvc.perform(get("/api/v1/inventory/stock")
                 .with(user("manager").roles("MANAGER")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].id").value("id-1"))
             .andExpect(jsonPath("$.data[0].productName").value("Coffee"))
-            .andExpect(jsonPath("$.data[0].percentage").value(50))
-            .andExpect(jsonPath("$.data[0].status").value("Low"));
+            .andExpect(jsonPath("$.data[0].currentStock").value(50))
+            .andExpect(jsonPath("$.data[0].lowStockThreshold").value(10));
     }
 
     @Test
     @DisplayName("POST /inventory/stock-entry should return HTTP 201 Created on valid request")
     void createStockEntry_Returns201Created() throws Exception {
-        StockEntryRequest request = new StockEntryRequest("1001", new BigDecimal("12.00"), 10);
+        StockEntryRequest request = new StockEntryRequest("1001", new BigDecimal("12.00"), new BigDecimal("15.00"), 10);
         StockEntryResponse response = new StockEntryResponse(
             1L,
             UUID.randomUUID().toString(),
@@ -111,6 +118,7 @@ class InventoryControllerTest {
             10,
             60,
             new BigDecimal("12.00"),
+            new BigDecimal("15.00"),
             UUID.randomUUID().toString(),
             LocalDateTime.now(),
             "Coffee stock entry recorded."
@@ -128,7 +136,34 @@ class InventoryControllerTest {
             .andExpect(jsonPath("$.message").value("Coffee stock entry recorded."))
             .andExpect(jsonPath("$.data.movementId").value(1))
             .andExpect(jsonPath("$.data.barcode").value("1001"))
+            .andExpect(jsonPath("$.data.stockCost").value(12.00))
+            .andExpect(jsonPath("$.data.salePrice").value(15.00))
             .andExpect(jsonPath("$.data.quantityAdded").value(10))
             .andExpect(jsonPath("$.data.newTotalStock").value(60));
+    }
+
+    @Test
+    @DisplayName("PATCH /inventory/{id}/price should return HTTP 200 OK with updated InventoryResponse")
+    void updateSalePrice_Returns200AndUpdatedPrice() throws Exception {
+        String productId = UUID.randomUUID().toString();
+        BigDecimal newSalePrice = new BigDecimal("18.50");
+        UpdateSalePriceRequest request = new UpdateSalePriceRequest(newSalePrice);
+
+        InventoryResponse response = new InventoryResponse(
+            productId, "1001", "Coffee", new BigDecimal("10.00"), newSalePrice, 50
+        );
+
+        when(inventoryService.updateSalePrice(eq(productId), eq(newSalePrice))).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/inventory/" + productId + "/price")
+                .with(user("manager").roles("MANAGER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("Sale price updated successfully."))
+            .andExpect(jsonPath("$.data.id").value(productId))
+            .andExpect(jsonPath("$.data.salePrice").value(18.50));
     }
 }

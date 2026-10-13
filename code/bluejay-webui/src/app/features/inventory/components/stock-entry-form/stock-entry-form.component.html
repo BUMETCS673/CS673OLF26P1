@@ -29,14 +29,33 @@ authors: Sara Orion
       </div>
 
       <div class="form-group cost-group">
-        <label for="cost">Cost</label>
-        <input
-          id="cost"
-          type="number"
-          step="0.01"
-          formControlName="cost"
-          class="form-control"
-        />
+        <label for="cost">Stock Cost</label>
+        <div class="price-input-wrapper">
+          <span class="currency-symbol">$</span>
+          <input
+            id="cost"
+            type="number"
+            name="stockCost"
+            step="0.01"
+            formControlName="cost"
+            class="form-control price-input"
+          />
+        </div>
+      </div>
+
+      <div class="form-group price-group">
+        <label for="price">Sale Price</label>
+        <div class="price-input-wrapper">
+          <span class="currency-symbol">$</span>
+          <input
+            id="price"
+            type="number"
+            name="salePrice"
+            step="0.01"
+            formControlName="price"
+            class="form-control price-input"
+          />
+        </div>
       </div>
 
       <div class="form-group quantity-group">

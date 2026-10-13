@@ -8,8 +8,9 @@
 
 package edu.bu.metcs673.bluejay.inventory.service.impl;
 
-import edu.bu.metcs673.bluejay.inventory.dto.InventoryHealthResponse;
+import edu.bu.metcs673.bluejay.common.exception.ProductNotFoundException;
 import edu.bu.metcs673.bluejay.inventory.dto.InventoryResponse;
+import edu.bu.metcs673.bluejay.inventory.dto.InventoryStockResponse;
 import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,11 +22,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,89 +39,79 @@ class InventoryServiceImplTest {
     @InjectMocks
     private InventoryServiceImpl inventoryService;
 
-    private Product healthyProduct;
-    private Product lowProduct;
-    private Product criticalProduct;
+    private Product product;
+    private UUID productId;
 
     @BeforeEach
     void setUp() {
-        healthyProduct = new Product();
-        healthyProduct.setId(UUID.randomUUID());
-        healthyProduct.setBarcode("1001");
-        healthyProduct.setName("Healthy Item");
-        healthyProduct.setCostPrice(new BigDecimal("10.00"));
-        healthyProduct.setCurrentStock(75);
-
-        lowProduct = new Product();
-        lowProduct.setId(UUID.randomUUID());
-        lowProduct.setBarcode("1002");
-        lowProduct.setName("Low Item");
-        lowProduct.setCostPrice(new BigDecimal("15.00"));
-        lowProduct.setCurrentStock(30);
-
-        criticalProduct = new Product();
-        criticalProduct.setId(UUID.randomUUID());
-        criticalProduct.setBarcode("1003");
-        criticalProduct.setName("Critical Item");
-        criticalProduct.setCostPrice(new BigDecimal("5.00"));
-        criticalProduct.setCurrentStock(10);
+        productId = UUID.randomUUID();
+        product = new Product();
+        product.setId(productId);
+        product.setBarcode("1001");
+        product.setName("Coffee Beans");
+        product.setStockCost(new BigDecimal("10.00"));
+        product.setSalePrice(new BigDecimal("15.00"));
+        product.setCurrentStock(50);
+        product.setLowStock(10);
     }
 
     @Test
-    @DisplayName("getInventoryHealth should accurately compute percentages and health status thresholds")
-    void getInventoryHealth_ComputesCorrectStatusAndPercentages() {
-        when(productRepository.findAll()).thenReturn(List.of(healthyProduct, lowProduct, criticalProduct));
+    @DisplayName("getInventoryStock should map and return list of InventoryStockResponse")
+    void getInventoryStock_ReturnsMappedStockList() {
+        when(productRepository.findAll()).thenReturn(List.of(product));
 
-        List<InventoryHealthResponse> healthResponses = inventoryService.getInventoryHealth();
-
-        assertEquals(3, healthResponses.size());
-
-        InventoryHealthResponse healthyRes = healthResponses.get(0);
-        assertEquals("Healthy Item", healthyRes.productName());
-        assertEquals(75, healthyRes.percentage());
-        assertEquals("Healthy", healthyRes.status());
-
-        InventoryHealthResponse lowRes = healthResponses.get(1);
-        assertEquals("Low Item", lowRes.productName());
-        assertEquals(30, lowRes.percentage());
-        assertEquals("Low", lowRes.status());
-
-        InventoryHealthResponse criticalRes = healthResponses.get(2);
-        assertEquals("Critical Item", criticalRes.productName());
-        assertEquals(10, criticalRes.percentage());
-        assertEquals("Critical", criticalRes.status());
-
-        verify(productRepository, times(1)).findAll();
-    }
-
-    @Test
-    @DisplayName("getInventoryHealth should return an empty list when no products exist")
-    void getInventoryHealth_EmptyProductCatalog_ReturnsEmptyList() {
-        when(productRepository.findAll()).thenReturn(Collections.emptyList());
-
-        List<InventoryHealthResponse> result = inventoryService.getInventoryHealth();
+        List<InventoryStockResponse> result = inventoryService.getInventoryStock();
 
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(productRepository, times(1)).findAll();
+        assertEquals(1, result.size());
+        assertEquals(String.valueOf(productId), result.getFirst().id());
+        assertEquals("Coffee Beans", result.getFirst().productName());
+        assertEquals(50, result.getFirst().currentStock());
+        assertEquals(10, result.getFirst().lowStockThreshold());
     }
 
     @Test
-    @DisplayName("getInventory should correctly map all product fields to InventoryResponse DTOs")
-    void getInventory_MapsProductCatalogToResponses() {
-        when(productRepository.findAll()).thenReturn(List.of(healthyProduct));
+    @DisplayName("getInventory should map and return list of InventoryResponse")
+    void getInventory_ReturnsMappedInventoryList() {
+        when(productRepository.findAll()).thenReturn(List.of(product));
 
-        List<InventoryResponse> inventoryResponses = inventoryService.getInventory();
+        List<InventoryResponse> result = inventoryService.getInventory();
 
-        assertEquals(1, inventoryResponses.size());
-        InventoryResponse response = inventoryResponses.get(0);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(String.valueOf(productId), result.getFirst().id());
+        assertEquals("1001", result.getFirst().barcode());
+        assertEquals("Coffee Beans", result.getFirst().productName());
+        assertEquals(new BigDecimal("10.00"), result.getFirst().stockCost());
+        assertEquals(new BigDecimal("15.00"), result.getFirst().salePrice());
+        assertEquals(50, result.getFirst().quantity());
+    }
 
-        assertEquals(String.valueOf(healthyProduct.getId()), response.id());
-        assertEquals("1001", response.barcode());
-        assertEquals("Healthy Item", response.productName());
-        assertEquals(new BigDecimal("10.00"), response.cost());
-        assertEquals(75, response.quantity());
+    @Test
+    @DisplayName("updateSalePrice should update product sale price and return InventoryResponse")
+    void updateSalePrice_Success_ReturnsUpdatedResponse() {
+        BigDecimal newPrice = new BigDecimal("19.99");
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(productRepository, times(1)).findAll();
+        InventoryResponse response = inventoryService.updateSalePrice(String.valueOf(productId), newPrice);
+
+        assertNotNull(response);
+        assertEquals(String.valueOf(productId), response.id());
+        assertEquals(newPrice, response.salePrice());
+        assertEquals(newPrice, product.getSalePrice());
+        verify(productRepository).save(product);
+    }
+
+    @Test
+    @DisplayName("updateSalePrice should throw ProductNotFoundException when product ID is not found")
+    void updateSalePrice_ProductNotFound_ThrowsException() {
+        UUID randomId = UUID.randomUUID();
+        when(productRepository.findById(randomId)).thenReturn(Optional.empty());
+
+        assertThrows(ProductNotFoundException.class,
+            () -> inventoryService.updateSalePrice(String.valueOf(randomId), new BigDecimal("19.99")));
+
+        verify(productRepository, never()).save(any());
     }
 }

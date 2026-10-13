@@ -10,10 +10,10 @@
 -- Uses its own QA products: the V3-seeded products all have 0.00 prices.
 --
 -- Expected results:
---   2026-10-01 .. 2026-10-31 -> revenue 62.48, cost 40.48, net profit 22.00, 3 transactions, 7 units
+--   2026-10-01 .. 2026-10-31 -> revenue 62.48, stockCost 40.48, net profit 22.00, 3 transactions, 7 units
 --     (includes a sale at 23:59 on Oct 31, which checks that the end date is inclusive)
---   2026-10-05 .. 2026-10-05 -> revenue 29.98, cost 19.98, net profit 10.00, 1 transaction,  2 units
---   2026-09-01 .. 2026-09-30 -> revenue 14.99, cost  9.99, net profit  5.00, 1 transaction,  1 unit
+--   2026-10-05 .. 2026-10-05 -> revenue 29.98, stockCost 19.98, net profit 10.00, 1 transaction,  2 units
+--   2026-09-01 .. 2026-09-30 -> revenue 14.99, stockCost  9.99, net profit  5.00, 1 transaction,  1 unit
 --   2026-11-01 .. 2026-11-30 -> all zeros (empty range)
 
 INSERT IGNORE INTO products (id, barcode, name, cost_price, sale_price, current_stock) VALUES

@@ -2,7 +2,7 @@
 // Tools: Claude
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: Record for one product's raw sales aggregates
-// Human Contributions: Story #30 scope (quantity sold, total cost, profit per product)
+// Human Contributions: Story #30 scope (quantity sold, total stockCost, profit per product)
 // Notes: Raw query row; ProductSalesServiceImpl adds profit and sorting.
 // Authors: Krizma Nagi
 
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 
 // AI-ASSISTED: YES
 // Tool: Claude
-// Prompt Summary: "Record for per-product quantity, revenue and cost in a date range"
+// Prompt Summary: "Record for per-product quantity, revenue and stockCost in a date range"
 // AI Contribution: Initial draft (~85%)
 // Modifications:
 //   - Money kept as BigDecimal to match DECIMAL(12,2) in sale_items

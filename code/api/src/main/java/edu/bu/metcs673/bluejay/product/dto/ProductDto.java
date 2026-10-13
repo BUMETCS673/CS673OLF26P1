@@ -10,6 +10,7 @@ public record ProductDto(
     String categoryName,
     String categoryDescription,
     double price,
-    int currentStock
+    int currentStock,
+    int lowStock
 ) {
 }

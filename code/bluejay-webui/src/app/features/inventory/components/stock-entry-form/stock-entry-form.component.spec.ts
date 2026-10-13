@@ -8,19 +8,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl } from '@angular/forms';
-import { Observable, of, throwError} from 'rxjs';
+import { of, throwError } from 'rxjs';
 import {
   StockEntryFormComponent,
   positiveIntegerValidator
 } from './stock-entry-form.component';
-import {InventoryService} from '../../services/inventory.service';
-import {ApiResponse} from '../../../../shared/models/api-response.model';
-import {StockEntry} from '../../models/inventory.model';
+import { InventoryService } from '../../services/inventory.service';
+import { ApiResponse } from '../../../../shared/models/api-response.model';
+import { StockEntry } from '../../models/inventory.model';
 
 describe('StockEntryFormComponent', () => {
   let component: StockEntryFormComponent;
   let fixture: ComponentFixture<StockEntryFormComponent>;
-  let inventoryServiceMock: { recordStockEntry: { mockReturnValue: (arg0: Observable<ApiResponse<StockEntry>>) => void; } };
+  let inventoryServiceMock: { recordStockEntry: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     inventoryServiceMock = {
@@ -82,7 +82,7 @@ describe('StockEntryFormComponent', () => {
       const createdSpy = vi.fn();
       component.created.subscribe(createdSpy);
 
-      component.stockForm.patchValue({ barcode: '1001', cost: 12.50, quantity: 10 });
+      component.stockForm.patchValue({ barcode: '1001', cost: 12.50, price: 15.00, quantity: 10 });
 
       const mockData: StockEntry = {
         movementId: 1,
@@ -91,7 +91,8 @@ describe('StockEntryFormComponent', () => {
         productName: 'Coffee',
         quantityAdded: 10,
         newTotalStock: 60,
-        costPrice: 12.50,
+        stockCost: 12.50,
+        salePrice: 15.00,
         userId: 'user-1',
         createdAt: '2026-10-05T12:00:00Z',
         message: 'Coffee stock entry recorded.'
@@ -111,7 +112,8 @@ describe('StockEntryFormComponent', () => {
       expect(inventoryServiceMock.recordStockEntry).toHaveBeenCalledWith({
         barcode: '1001',
         quantity: 10,
-        cost: 12.50
+        stockCost: 12.50,
+        salePrice: 15.00
       });
       expect(component.isSubmitting()).toBe(false);
       expect(component.successMessage()).toBe('Coffee stock entry recorded.');

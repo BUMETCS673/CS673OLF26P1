@@ -14,10 +14,12 @@ import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface ProductService {
     Product createProduct(CreateProductWithCategoryDto productDto);
     List<CategoryDto> getProductCategories();
     ProductPageDto getProducts(ProductQueryDto productQueryDto);
     ProductDto getProductBy(String barcode);
+    ProductDto updateLowStock(UUID id, int lowStock);
 }

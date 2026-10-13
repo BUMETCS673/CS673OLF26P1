@@ -16,6 +16,8 @@ import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.sales.domain.SaleItem;
 import edu.bu.metcs673.bluejay.sales.domain.SaleTransaction;
 import edu.bu.metcs673.bluejay.sales.dto.ChangeDenominationResponse;
+import edu.bu.metcs673.bluejay.sales.dto.PrintReceiptRequest;
+import edu.bu.metcs673.bluejay.sales.dto.PrintReceiptResponse;
 import edu.bu.metcs673.bluejay.sales.dto.SaleLineRequest;
 import edu.bu.metcs673.bluejay.sales.dto.SaleLineResponse;
 import edu.bu.metcs673.bluejay.sales.dto.SaleRequest;
@@ -57,6 +59,28 @@ public class SaleServiceImpl implements SaleService {
     private final InventoryMovementRepository inventoryMovementRepository;
     private final MovementTypeRepository movementTypeRepository;
     private final SecurityUtils securityUtils;
+    
+    @Override
+    public PrintReceiptResponse printReceipt(PrintReceiptRequest request) {
+        final var transactionOptional = saleTransactionRepository.findById(request.getTransactionId());
+        if (!transactionOptional.isPresent()) {
+            return null;
+        }
+        final var transaction = transactionOptional.get();
+        final var saleItems = saleItemRepository.findByTransactionId(request.getTransactionId());
+        final var saleItemsLine = new ArrayList<String>();
+        saleItems.forEach(line -> {
+            saleItemsLine.add(String.format("%s - %s - %s", "product", line.getQuantity(), line.getSubtotal()));
+        });
+        return new PrintReceiptResponse(
+            request.getTransactionId(),
+            transaction.getReceiptNumber(),
+            transaction.getTransactionDate(),
+            transaction.getGrandTotal(),
+            transaction.getPaymentMethod(),
+            saleItemsLine
+        );
+    }
 
     @Override
     @Transactional

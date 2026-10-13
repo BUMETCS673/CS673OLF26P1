@@ -234,6 +234,36 @@ export class SalesPage {
     this.checkoutError.set(null);
   }
 
+  printReceipt(transactionId: string): void {
+    this.saleService.printReceipt(transactionId).subscribe({
+      next: (response) => {
+        const printWindow = window.open('', '_blank', 'width=800,height=600') || window;
+        let items = '';
+        response.items.forEach(item => {
+          items += item + '<br>';
+        });
+        printWindow.document.write(`
+            <html>
+                <body>
+                  Transaction ID: ${response.transactionId}<br>
+                  Receipt Number: ${response.receiptNumber}<br>
+                  Transaction Date: ${response.transactionDate}<br>
+                  Grand Total: ${response.grandTotal}<br>
+                  Payment Method: ${response.paymentMethod}<br>
+                  Items:<br> ${items}
+                  <script>
+                  window.onload = function() {
+                      window.print();
+                  };
+                  </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+      }
+    });
+  };
+
   private parseMoneyToCents(value: string): number | null {
     const match = /^(\d+)(?:\.(\d{0,2}))?$|^\.(\d{1,2})$/.exec(value.trim());
     if (!match) return null;

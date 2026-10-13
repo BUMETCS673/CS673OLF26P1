@@ -4,10 +4,10 @@ services:
     image: mysql:8.4
     container_name: bluejay_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: bluejay_db
-      MYSQL_USER: bluejay_user
-      MYSQL_PASSWORD: bluejay_password
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -27,10 +27,13 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Updated connection flags for MySQL 8.4 authentication & TLS rules
+      # Added env variable for Spring Profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bluejay_db?allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: INFO
     depends_on:
       db:
         condition: service_healthy

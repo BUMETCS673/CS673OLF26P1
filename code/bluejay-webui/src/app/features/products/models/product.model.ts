@@ -15,6 +15,8 @@ export interface Product {
   categoryName: string | null;
   categoryDescription?: string | null;
   price: number;
+  currentStock: number;
+  lowStock: number;
 }
 
 export interface CreateProduct {
@@ -23,6 +25,7 @@ export interface CreateProduct {
   categoryId?: number | null;
   categoryName?: string | null;
   categoryDescription?: string | null;
+  lowStock?: number | null;
 }
 
 export interface ProductCategory {
@@ -32,8 +35,16 @@ export interface ProductCategory {
 }
 
 export interface ProductQuery {
+  searchTerm?: string | null;
   productName?: string | null;
   categoryName?: string | null;
   pageNumber?: number;
   pageSize?: number;
+}
+
+export interface ProductPage {
+  items: Product[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
 }

@@ -17,16 +17,16 @@ import java.util.List;
 
 // AI-ASSISTED: YES
 // Tool: Claude
-// Prompt Summary: "Backend query joining product + latest cost + current stock quantity"
+// Prompt Summary: "Backend query joining product + latest stockCost + current stock quantity"
 // AI Contribution: Initial draft (~85%)
 // Modifications:
-//   - In the current schema the latest cost (cost_price) and on-hand stock
+//   - In the current schema the latest stockCost (cost_price) and on-hand stock
 //     (current_stock) are both kept on the products row, so no join is needed
 //   - Ordered by name so the report is stable for the UI and tests
 // Verification:
 //   - Checked column names against V1__initial_schema.sql
 // Confidence: Medium (not yet run against the MySQL container)
-// TODO(#57): Replace this JdbcTemplate query with a JPA repository once the
+// TODO(#57): Replace this Jdbc Template query with a JPA repository once the
 // Product entity from the add-new-product brach (#26) is merged into develop.
 @Repository
 public class JdbcInventoryReportRepository

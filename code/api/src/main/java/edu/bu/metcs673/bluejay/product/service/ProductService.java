@@ -10,13 +10,16 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface ProductService {
     Product createProduct(CreateProductWithCategoryDto productDto);
     List<CategoryDto> getProductCategories();
-    List<ProductDto> getProducts(ProductQueryDto productQueryDto);
+    ProductPageDto getProducts(ProductQueryDto productQueryDto);
     ProductDto getProductBy(String barcode);
+    ProductDto updateLowStock(UUID id, int lowStock);
 }

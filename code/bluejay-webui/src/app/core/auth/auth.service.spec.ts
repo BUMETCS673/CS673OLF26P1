@@ -233,11 +233,13 @@ describe('AuthService', () => {
     // Confidence: High
     it('should remove auth-data and call the logout endpoint with the Bearer token', () => {
       localStorage.setItem(AUTH_DATA_KEY, JSON.stringify({ token: 'jwt-token-xyz' }));
+      sessionStorage.setItem('bluejay-sales-cart', '[{"quantity":1}]');
       expect(service.isLoggedIn()).toBe(true);
 
       service.logout();
 
       expect(localStorage.getItem(AUTH_DATA_KEY)).toBeNull();
+      expect(sessionStorage.getItem('bluejay-sales-cart')).toBeNull();
       expect(service.isLoggedIn()).toBe(false);
 
       const req = httpMock.expectOne('/api/v1/auth/logout');

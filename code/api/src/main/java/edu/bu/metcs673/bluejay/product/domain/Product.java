@@ -51,13 +51,16 @@ public class Product {
     private Category category;
 
     @Column(name = "cost_price", nullable = false, precision = 12, scale = 2)
-    private BigDecimal costPrice;
+    private BigDecimal stockCost;
 
     @Column(name = "sale_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal salePrice;
 
     @Column(name = "current_stock", nullable = false)
     private int currentStock;
+
+    @Column(name = "low_stock", nullable = false)
+    private int lowStock;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -24,7 +24,7 @@ import java.util.List;
 public interface InventoryReportRepository {
 
     /**
-     * Returns one row per product with its latest cost and on-hand stock,
+     * Returns one row per product with its latest stockCost and on-hand stock,
      * ordered by product name. Returns an empty list for an empty catalog.
      */
     List<InventoryReportItem> findInventoryReport();

@@ -1,0 +1,168 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+' --- CONTROLLER ---
+
+class ProductController {
+  - productService: ProductService
+  + createProduct(CreateProductWithCategoryDto): ResponseEntity<ApiResponse<Product>>
+  + getProducts(ProductQueryDto): ResponseEntity<ApiResponse<ProductPageDto>>
+  + getProductCategories(): ResponseEntity<ApiResponse<List<CategoryDto>>>
+  + getProductBy(String): ResponseEntity<ApiResponse<ProductDto>>
+  + updateLowStock(UUID, UpdateLowStockRequest): ResponseEntity<ApiResponse<ProductDto>>
+}
+
+' --- SERVICE INTERFACE & IMPLEMENTATION ---
+
+interface ProductService << interface >> {
+  + createProduct(CreateProductWithCategoryDto): Product
+  + getProductCategories(): List<CategoryDto>
+  + getProducts(ProductQueryDto): ProductPageDto
+  + getProductBy(String): ProductDto
+  + updateLowStock(UUID, int): ProductDto
+}
+
+class ProductServiceImpl {
+  - _productRepository: ProductRepository
+  - _categoryRepository: CategoryRepository
+  + createProduct(CreateProductWithCategoryDto): Product
+  + getProductCategories(): List<CategoryDto>
+  + getProducts(ProductQueryDto): ProductPageDto
+  + getProductBy(String): ProductDto
+  + updateLowStock(UUID, int): ProductDto
+  - normalizeFilter(String): String
+}
+
+' --- REPOSITORIES ---
+
+interface ProductRepository << interface >> {
+  + findByBarcode(String): Optional<Product>
+  + findByIdForUpdate(UUID): Optional<Product>
+  + findProducts(String, String, String, Pageable): Page<Product>
+  + addProduct(Product): Product
+  + getProductBy(String): Optional<Product>
+  + getProducts(String, String, String, int, int): Page<Product>
+}
+
+interface CategoryRepository << interface >> {
+  + addCategory(Category): Category
+  + getCategoryBy(Long): Optional<Category>
+  + getCategories(): List<Category>
+}
+
+' --- DTOS & RECORDS ---
+
+record CategoryDto << record >> {
+  - id: Long
+  - name: String
+  - description: String
+}
+
+record CreateProductWithCategoryDto << record >> {
+  - name: String
+  - barcode: String
+  - categoryId: Long
+  - categoryName: String
+  - categoryDescription: String
+  - lowStock: int
+}
+
+record ProductDto << record >> {
+  - id: UUID
+  - name: String
+  - barcode: String
+  - categoryId: Long
+  - categoryName: String
+  - categoryDescription: String
+  - price: double
+  - currentStock: int
+  - lowStock: int
+}
+
+record ProductPageDto << record >> {
+  - items: List<ProductDto>
+  - totalCount: long
+  - pageNumber: int
+  - pageSize: int
+}
+
+record ProductQueryDto << record >> {
+  - searchTerm: String
+  - productName: String
+  - categoryName: String
+  - pageNumber: Integer
+  - pageSize: Integer
+}
+
+record UpdateLowStockRequest << record >> {
+  - lowStock: Integer
+}
+
+' --- DOMAIN ENTITIES WITH DB TABLE MAPPINGS ---
+
+entity Product << Table: products >> {
+  - id: UUID <<PK>>
+  - name: String <<Not Null>>
+  - barcode: String <<UQ>>
+  - categoryId: Long <<FK>>
+  - category: Category
+  - stockCost: BigDecimal <<Not Null>>
+  - salePrice: BigDecimal <<Not Null>>
+  - currentStock: int <<Not Null>>
+  - lowStock: int <<Not Null>>
+  - createdAt: LocalDateTime <<Not Null>>
+  - updatedAt: LocalDateTime <<Not Null>>
+}
+
+entity Category << Table: categories >> {
+  - id: Long <<PK, AutoIncrement>>
+  - name: String <<UQ, Not Null>>
+  - description: String
+}
+
+' --- EXTERNAL INTERFACES ---
+
+interface JpaRepository << interface >> {
+}
+
+' --- RELATIONSHIPS & ASSOCIATIONS ---
+
+' Structural Associations (Field Injections / References)
+ProductController "1" --> "1" ProductService    : productService
+ProductServiceImpl "1" --> "1" ProductRepository : _productRepository
+ProductServiceImpl "1" --> "1" CategoryRepository : _categoryRepository
+
+' Domain Associations
+Product "0..*" --> "0..1" Category : category
+
+' Interface Realizations
+ProductServiceImpl ..|> ProductService
+ProductRepository  --|> JpaRepository
+CategoryRepository --|> JpaRepository
+
+' Behavioral Dependencies (Method Inputs / Outputs)
+ProductController ..> CreateProductWithCategoryDto : accepts
+ProductController ..> ProductQueryDto               : accepts
+ProductController ..> UpdateLowStockRequest        : accepts
+ProductController ..> Product                      : returns
+ProductController ..> ProductPageDto               : returns
+ProductController ..> ProductDto                   : returns
+ProductController ..> CategoryDto                  : returns
+
+ProductService    ..> CreateProductWithCategoryDto : accepts
+ProductService    ..> ProductQueryDto               : accepts
+ProductService    ..> Product                      : returns
+ProductService    ..> ProductPageDto               : returns
+ProductService    ..> ProductDto                   : returns
+ProductService    ..> CategoryDto                  : returns
+
+ProductServiceImpl ..> Product                     : creates/updates
+ProductServiceImpl ..> Category                    : creates/queries
+
+ProductRepository  ..> Product                      : manages
+CategoryRepository ..> Category                     : manages
+
+@enduml

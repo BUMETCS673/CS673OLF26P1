@@ -10,19 +10,21 @@
 // returns no total count.
 // authors: Kimleng
 
-import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Product, ProductQuery } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
+import { InlineActionButtonsComponent } from '../../../../shared/components/inline-action-buttons.component';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CurrencyPipe, MatPaginatorModule, MatProgressBarModule, MatTableModule],
+  imports: [MatPaginatorModule, MatProgressBarModule, MatTableModule,
+    FormsModule, InlineActionButtonsComponent],
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss',
 })
@@ -34,17 +36,13 @@ export class ProductListComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly filters = signal<ProductQuery>({});
-  readonly displayedColumns = ['name', 'barcode', 'category', 'price'];
+  readonly totalCount = signal(0);
+  readonly displayedColumns = ['name', 'barcode', 'category', 'lowStock', 'actions'];
+  readonly paginatorLength = computed(() => this.totalCount());
 
-  // The API returns a page without a total count; one extra row keeps Next available
-  // when the current page is full. The next response determines whether it exists.
-  readonly paginatorLength = computed(() => {
-    const size = this.pageSize();
-    const count = this.products().length;
-    const endOfCurrentPage = (this.page() - 1) * size + count;
-    if (count === size) return endOfCurrentPage + 1;
-    return Math.max(endOfCurrentPage, this.page() * size);
-  });
+  // Inline editing state signals
+  readonly editingProductId = signal<string | null>(null);
+  readonly editingLowStock = signal<number>(0);
 
   ngOnInit(): void {
     this.loadPage(1);
@@ -74,11 +72,54 @@ export class ProductListComponent implements OnInit {
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: (products) => this.products.set(products),
+        next: (result) => {
+          this.products.set(result.items);
+          this.totalCount.set(result.totalCount);
+        },
         error: (error) => {
           this.products.set([]);
+          this.totalCount.set(0);
           this.error.set(error?.error?.message || 'Could not load the product catalog.');
         },
+      });
+  }
+
+  // AI-ASSISTED: YES
+  // Tool: Gemini
+  // Prompt Summary: "Add methods startEdit, cancelEdit, and saveLowStock for inline editing of product low stock."
+  // AI Contribution: Initial draft (~85%)
+  // Modifications: Connected updateLowStock HTTP call with local product signal array patch.
+  // Verification: Angular UI interaction test.
+  // Confidence: High
+  startEdit(product: Product): void {
+    this.editingProductId.set(product.id);
+    this.editingLowStock.set(product.lowStock);
+  }
+
+  cancelEdit(): void {
+    this.editingProductId.set(null);
+  }
+
+  saveLowStock(product: Product): void {
+    const updatedValue = this.editingLowStock();
+    if (updatedValue === product.lowStock) {
+      this.cancelEdit();
+      return;
+    }
+
+    this.loading.set(true);
+    this.productService.updateLowStock(product.id, updatedValue)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (updatedProduct) => {
+          this.products.update((items) =>
+            items.map((item) => (item.id === product.id ? { ...item, lowStock: updatedProduct.lowStock } : item))
+          );
+          this.cancelEdit();
+        },
+        error: (err) => {
+          this.error.set(err?.error?.message || 'Failed to update low stock threshold.');
+        }
       });
   }
 }

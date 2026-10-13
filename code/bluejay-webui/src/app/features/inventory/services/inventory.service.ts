@@ -10,7 +10,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {ApiResponse} from '../../../shared/models/api-response.model';
-import {CreateStockEntry, StockEntry, InventoryItem, InventoryHealthItem} from '../models/inventory.model';
+import {CreateStockEntry, StockEntry, InventoryItem, InventoryStockItem} from '../models/inventory.model';
 
 
 // AI-ASSISTED: YES
@@ -31,11 +31,15 @@ export class InventoryService {
     return this.http.post<ApiResponse<StockEntry>>(`${this.apiUrl}/stock-entry`, request);
   }
 
-  getStockInventory(): Observable<ApiResponse<InventoryItem[]>> {
+  getInventory(): Observable<ApiResponse<InventoryItem[]>> {
     return this.http.get<ApiResponse<InventoryItem[]>>(`${this.apiUrl}`);
   }
 
-  getInventoryHealth(): Observable<ApiResponse<InventoryHealthItem[]>> {
-    return this.http.get<ApiResponse<InventoryHealthItem[]>>(`${this.apiUrl}/health`);
+  getInventoryStock(): Observable<ApiResponse<InventoryStockItem[]>> {
+    return this.http.get<ApiResponse<InventoryStockItem[]>>(`${this.apiUrl}/stock`);
+  }
+
+  updateSalePrice(productId: string, salePrice: number): Observable<ApiResponse<InventoryItem>> {
+    return this.http.patch<ApiResponse<InventoryItem>>(`${this.apiUrl}/${productId}/price`, { salePrice });
   }
 }

@@ -43,8 +43,8 @@ describe('ProductService', () => {
     expect(request.request.method).toBe('GET');
     expect(request.request.params.get('pageNumber')).toBe('1');
     expect(request.request.params.get('pageSize')).toBe('10');
-    request.flush({ data: [{ id: '1' }] });
-    expect(result).toEqual([{ id: '1' }]);
+    request.flush({ data: { items: [{ id: '1' }], totalCount: 1, pageNumber: 1, pageSize: 10 } });
+    expect(result).toEqual({ items: [{ id: '1' }], totalCount: 1, pageNumber: 1, pageSize: 10 });
   });
 
   it('lists products with the requested page and size', () => {
@@ -53,7 +53,7 @@ describe('ProductService', () => {
     const request = controller.expectOne((r) => r.url === '/api/v1/product');
     expect(request.request.params.get('pageNumber')).toBe('3');
     expect(request.request.params.get('pageSize')).toBe('25');
-    request.flush({ data: [] });
+    request.flush({ data: { items: [], totalCount: 0, pageNumber: 3, pageSize: 25 } });
   });
 
   it('lists products with product-name and category filters', () => {
@@ -62,6 +62,14 @@ describe('ProductService', () => {
     const request = controller.expectOne((r) => r.url === '/api/v1/product');
     expect(request.request.params.get('productName')).toBe('Water');
     expect(request.request.params.get('categoryName')).toBe('beverage');
+    request.flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 10 } });
+  });
+
+  it('lists products with a combined text and barcode search term', () => {
+    service.list({ searchTerm: '123456' }).subscribe();
+
+    const request = controller.expectOne((r) => r.url === '/api/v1/product');
+    expect(request.request.params.get('searchTerm')).toBe('123456');
     request.flush({ data: [] });
   });
 
@@ -89,6 +97,17 @@ describe('ProductService', () => {
     service.findByBarcode('a/b c').subscribe();
 
     controller.expectOne('/api/v1/product/a%2Fb%20c').flush({ data: {} });
+  });
+
+  it('updates low stock threshold and unwraps response', () => {
+    let result: unknown;
+    service.updateLowStock('1', 15).subscribe((p) => (result = p));
+
+    const request = controller.expectOne('/api/v1/product/1/low-stock');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ lowStock: 15 });
+    request.flush({ data: { id: '1', name: 'Milk', lowStock: 15 } });
+    expect(result).toEqual({ id: '1', name: 'Milk', lowStock: 15 });
   });
 
   it('propagates API errors such as 422 PRODUCT_PRICE_MISSING', () => {

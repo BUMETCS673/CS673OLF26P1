@@ -6,20 +6,20 @@
 // authors: Sara Orion
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Observable, of, throwError} from 'rxjs';
-import {InventoryHealthComponent} from './inventory-health.component';
-import {InventoryService} from '../../services/inventory.service';
-import {ApiResponse} from '../../../../shared/models/api-response.model';
-import {InventoryHealthItem} from '../../models/inventory.model';
+import { of, throwError } from 'rxjs';
+import { InventoryHealthComponent } from './inventory-health.component';
+import { InventoryService } from '../../services/inventory.service';
+import { ApiResponse } from '../../../../shared/models/api-response.model';
+import { InventoryStockItem } from '../../models/inventory.model';
 
 describe('InventoryHealthComponent', () => {
   let component: InventoryHealthComponent;
   let fixture: ComponentFixture<InventoryHealthComponent>;
-  let inventoryServiceMock: { getInventoryHealth: { mockReturnValue: (arg0: Observable<ApiResponse<InventoryHealthItem[]>>) => void; } };
+  let inventoryServiceMock: { getInventoryStock: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     inventoryServiceMock = {
-      getInventoryHealth: vi.fn()
+      getInventoryStock: vi.fn()
     };
 
     await TestBed.configureTestingModule({
@@ -35,33 +35,45 @@ describe('InventoryHealthComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create component and load health data on init', () => {
-    const mockItems: InventoryHealthItem[] = [
-      { id: '1', productName: 'Coffee', percentage: 10, status: 'Critical' }
+  it('should create component and load stock data on init', () => {
+    const mockItems: InventoryStockItem[] = [
+      { id: '1', productName: 'Coffee', currentStock: 5, lowStockThreshold: 10 }
     ];
-    const mockResponse: ApiResponse<InventoryHealthItem[]> = {
+    const mockResponse: ApiResponse<InventoryStockItem[]> = {
       success: true,
-      message: 'Health metrics retrieved',
+      message: 'Stock metrics retrieved',
       data: mockItems,
       errorCode: null,
       timestamp: '2026-10-05T12:00:00Z'
     };
-    inventoryServiceMock.getInventoryHealth.mockReturnValue(of(mockResponse));
+    inventoryServiceMock.getInventoryStock.mockReturnValue(of(mockResponse));
 
     fixture.detectChanges(); // triggers ngOnInit
 
-    expect(inventoryServiceMock.getInventoryHealth).toHaveBeenCalled();
-    expect(component.healthItems()).toEqual(mockItems);
+    expect(inventoryServiceMock.getInventoryStock).toHaveBeenCalled();
+    expect(component.stockItems()).toEqual(mockItems);
     expect(component.isLoading()).toBe(false);
   });
 
   it('should handle service error gracefully during loadData', () => {
-    inventoryServiceMock.getInventoryHealth.mockReturnValue(throwError(() => new Error('Service failure')));
+    inventoryServiceMock.getInventoryStock.mockReturnValue(throwError(() => new Error('Service failure')));
 
     component.loadData();
 
     expect(component.isLoading()).toBe(false);
-    expect(component.healthItems()).toEqual([]);
+    expect(component.stockItems()).toEqual([]);
+  });
+
+  it('should calculate stock health status correctly', () => {
+    // Critical (<= 0 or <= 0.5 * lowThreshold)
+    expect(component.calculateStockHealth(0, 10).status).toBe('Critical');
+    expect(component.calculateStockHealth(4, 10).status).toBe('Critical');
+
+    // Low (> 0.5 * lowThreshold and <= lowThreshold)
+    expect(component.calculateStockHealth(8, 10).status).toBe('Low');
+
+    // Healthy (> lowThreshold)
+    expect(component.calculateStockHealth(25, 10).status).toBe('Healthy');
   });
 
   it('should format status string to lowercase for CSS class mapping', () => {

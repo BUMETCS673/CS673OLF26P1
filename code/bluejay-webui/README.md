@@ -1,131 +1,137 @@
 # Bluejay Web UI
 
-Bluejay is an Angular 21 web application for grocery operations. It provides the application shell and feature areas for dashboard, products, inventory, sales, reports, users, and authentication.
+Bluejay is a modern Angular 21 web application for retail point-of-sale and grocery operations. 
+It provides an application shell and complete feature modules for dashboard metrics, product catalog management, 
+inventory stock tracking, checkout processing, reporting analytics, user administration, and session security.
 
 ---
 
-## 🚀 Iteration 2 Features & Highlights
+## 🚀 Final Release Features & Highlights
 
-During **Iteration 2**, the frontend moved beyond placeholder routes to deliver active feature modules and route security:
+The final release expands the frontend beyond initial scaffolds into a fully connected, reactive single-page application (SPA) 
+integrated with the backend API endpoints:
 
-* **Route Security & Access Control (`app.routes.ts`):** Integrated functional `canActivate` route guards (`authGuard`, `adminGuard`, `adminAndManagerGuard`).
-  * `/products`, `/inventory`, `/reports`: Protected for **Admin** and **Manager** roles.
-  * `/users`: Strictly protected for **Admin** users.
-* **User Management Feature (`features/users`):**
-  * Active directory page featuring live search filtering, column sorting (username, ID, creation date, enabled status), and 403/401 error messaging.
-  * User creation form component supporting role selection (`ROLE_CASHIER`, `ROLE_MANAGER`, `ROLE_ADMIN`) and reactive validation.
-* **Inventory Reporting Feature (`features/reports`):**
-  * Replaced placeholders with a functional inventory report page using modern Angular Signals (`items`, `state`, `totalUnits`).
-  * Features loading, forbidden (403), and error states, with formatted tables for product stock counts and unit costs.
-* **Inventory & Product Management Pages:**
-  * `InventoryPage`: Assembled standalone layout composing inventory health, stock list, and stock entry components.
-  * `ProductListPage`: Built composed view containing product search, listing, and product entry forms.
+### 1. Role-Based Access Control & Route Security
+* **Functional Route Guards (`app.routes.ts`):** Enforces client-side security via `authGuard`, `adminGuard`, and `adminAndManagerGuard`.
+  * `/products`, `/inventory`: Accessible to **Admin** and **Manager** roles.
+  * `/sales`: Accessible to **Admin**, **Manager**, and **Cashier** roles for checkout operations.
+  * `/reports`: Accessible to **Admin** (sales & product profitability reports) and **Manager** (inventory reports).
+  * `/users`: Strictly restricted to **Admin** users.
+
+### 2. Feature Module Breakdown
+
+* **Authentication & Session Security (`features/auth`, `core/auth`):**
+  * Login page with reactive forms and JWT bearer token acquisition.
+  * In-memory token storage with automatic request interception via HTTP interceptors.
+  * Idle-session monitoring and safe logout handling (revoking active JWTs via `/api/v1/auth/logout`).
+
+* **User Management (`features/users`):**
+  * Live searchable directory with column sorting (username, ID, creation date, status) and 401/403 error states.
+  * Interactive user creation and patch modals supporting role assignment (`ROLE_CASHIER`, `ROLE_MANAGER`, `ROLE_ADMIN`).
+
+* **Product Catalog (`features/products`):**
+  * Filtered product listing with pagination, search terms, and category selection.
+  * Product barcode lookup interface and quick creation modal with category assignment.
+  * Inline low-stock threshold configuration.
+
+* **Inventory & Restock Operations (`features/inventory`):**
+  * Real-time stock health metrics, low-stock alerts, and stock quantity overview.
+  * Restock entry form supporting cost/price updates and audit movement tracking.
+  * Inline product sale price modification.
+
+* **Point-of-Sale & Checkout (`features/sales`):**
+  * Fast barcode scanning and cart aggregation with line-item totals.
+  * Cash payment processing with real-time cash received validation and change calculation.
+  * Itemized change breakdown by denomination ($100, $50, $20, $10, $5, $1, quarters, dimes, nickels, pennies).
+  * Transaction completion modal and receipt printing view.
+
+* **Reports & Analytics (`features/reports`):**
+  * **Inventory Report:** Stock levels, unit costs, and total valuation using Angular Signals (`items`, `state`, `totalUnits`).
+  * **Sales Performance Report:** Revenue, total cost, net profit, transaction count, and units sold over configurable date ranges.
+  * **Product Profitability Report:** Per-product breakdown of units sold, total revenue, stock cost, and profit margin sorted by performance.
 
 ---
 
-## Get Started
+## 🛠️ Get Started
 
-Requirements: Node.js and npm. The app expects the Bluejay backend to be available at `http://localhost:8080` for API requests.
+### Requirements
+* **Node.js** (v20+ recommended) and **npm**.
+* **Bluejay Backend API** running at `http://localhost:8080`.
 
+### Local Installation & Startup
+
+1. Install dependencies:
 ```sh
 npm install
+```
+
+2. Start the development server:
+```sh
 npm start
 ```
 
-Open `http://localhost:4200`. The development server forwards `/api` requests to `http://localhost:8080` using `proxy.conf.json`. Start the backend separately. For local sign-in, the backend should provide the `admin` / `admin123` account. Authentication requests use `/api/v1/auth`.
+3. Open `http://localhost:4200` in your browser.
 
-## Next Steps
+> **Proxy Note:** The development server forwards all `/api` requests to `http://localhost:8080` using `proxy.conf.json`. Ensure the backend API is running. Default seed login credentials: `admin` / `Password123!`.
 
-1. Start the backend, then run the frontend with `npm start`.
-2. Choose the feature area for your work and keep feature-specific pages, components, services, models, and routes together.
-3. Put code in `shared` only when it is genuinely reused across features. Coordinate changes to the app shell, global navigation, or root routes with the infrastructure owner.
-4. Run the relevant tests and build before submitting your changes.
-
-Useful commands:
+### Useful Commands
 
 ```sh
+# Run unit tests
 npm test -- --watch=false
+
+# Production build
 npm run build
 ```
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```text
 src/app/
 ├── core/
-│   ├── auth/           # Authentication and idle-session services
-│   ├── guards/         # Route guards (authGuard, adminGuard, adminAndManagerGuard)
-│   ├── layout/         # App shell, sidebar, and global navigation
-│   └── services/       # Application-wide infrastructure services
+│   ├── auth/           # Authentication, JWT handling, and idle-session services
+│   ├── guards/         # Functional route guards (authGuard, adminGuard, adminAndManagerGuard)
+│   ├── layout/         # Application shell, sidebar, and global header navigation
+│   └── services/       # Global infrastructure services
 ├── features/
 │   ├── auth/           # Login page and auth routes
-│   ├── dashboard/      # Dashboard metrics & summary routes
-│   ├── inventory/      # Inventory health, stock lists, & stock entry forms
+│   ├── dashboard/      # Dashboard metrics & summary widgets
+│   ├── inventory/      # Stock tracking, health metrics, & restock entry forms
 │   ├── products/       # Product search, catalog lists, & creation forms
-│   ├── reports/        # Inventory reports with signals & error state handling
-│   ├── sales/          # Point-of-sale checkout feature
-│   └── users/          # User directory (search/sort) & user creation form
+│   ├── reports/        # Inventory, sales, and product profitability reports
+│   ├── sales/          # Point-of-sale cart, cash checkout, change breakdown, & receipts
+│   └── users/          # User directory (search/sort/edit) & user creation forms
 └── shared/
-  	├── components/     # Reusable UI
-  	├── directives/     # Reusable directives
-  	├── models/         # Reusable types (e.g. ApiResponse)
-  	└── pipes/          # Reusable pipes
+    ├── components/     # Reusable UI components (modals, alert banners, tables)
+    ├── directives/     # Shared Angular directives
+    ├── models/         # Global API contracts (ApiResponse<T>, Page<T>)
+    └── pipes/          # Currency and date formatting pipes
 ```
 
-Each business feature owns its route file and `pages/`, `components/`, `models/`, and `services/` folders. Some folders are currently empty and are kept in the repository with `.gitkeep` files. Feature routes are lazy-loaded by `src/app/app.routes.ts`; the login feature keeps the `/login` path. Application-wide authentication and idle-session behavior is implemented under `src/app/core/auth/`.
+---
 
-## Development Guidelines
+## 📐 Architecture & Development Guidelines
 
-### Application Shell
+### Feature-Based Module Design
 
-The application/infrastructure owner maintains `core/layout/app-shell`, the sidebar, global navigation, and global layout. Feature developers should normally not edit these files. The shell contains no business-specific behavior.
+Each domain feature owns its own `pages/`, `components/`, `services/`, `models/`, and local `<feature-name>.routes.ts` file. All feature routes are lazily loaded by the root router (`app.routes.ts`).
 
-### Feature Ownership
+### Shared Code Constraints
 
-Each developer should work primarily within one feature:
+Only genuinely reusable components, directives, pipes, and data types reside in `shared/`. If logic or types are specific to a single domain (e.g., checkout cart items in `sales`), keep them inside that feature package.
 
-| Developer | Area |
-| --- | --- |
-| 1 | Dashboard |
-| 2 | Products |
-| 3 | Inventory |
-| 4 | Sales |
-| 5 | Users |
-| 6 | Shared infrastructure, API integration, or coordination |
-
-A feature owns its pages, feature-specific components, services, models, and route configuration. Keep feature routes in that feature's `<feature-name>.routes.ts` file.
-
-### Shared Code
-
-Put only genuinely reusable components, directives, pipes, and models in `shared`. If code is used by one feature, keep it inside that feature. Avoid generic abstractions without a concrete reuse need.
-
-### Feature Development
-
-Use this structure for new features:
-
-```text
-features/<feature-name>/
-├── components/       # Reusable UI used only by this feature
-├── pages/            # Routed, page-level standalone components
-├── services/         # Feature API and orchestration services
-├── models/           # Feature-specific types and interfaces
-└── <feature-name>.routes.ts
-```
-
-Use the feature's route file to map local paths to page components. The root router lazy-loads that route configuration. Put API calls in feature services, feature data types in `models`, and route definitions in `<feature-name>.routes.ts`.
-
-There is no custom feature schematic. Create the standard folders and route file as needed. Angular CLI commands for common files:
+### Standard CLI Generation Commands
 
 ```sh
+# Standalone Page Component
 ng generate component features/<feature-name>/pages/<page-name> --standalone --style=scss
+
+# Feature UI Component
 ng generate component features/<feature-name>/components/<component-name> --standalone --style=scss
+
+# Feature Service
 ng generate service features/<feature-name>/services/<service-name>
 ```
 
-### Git Workflow
-
-Use one feature branch per work item and submit changes through pull requests. Keep changes within the owned feature, avoid unrelated edits to another developer's feature, and coordinate changes to the shell or root routes with the infrastructure owner. This keeps most parallel work in separate directories and reduces merge conflicts.
-
-### Current Scope
-
-This scaffold does not add new authentication or authorization rules, route guards, backend API integrations for the placeholder features, business functionality, or deployment configuration. Existing login, logout, and idle-session behavior is retained. Route guards must not be considered a substitute for backend authorization.

@@ -1,0 +1,177 @@
+// AI-USAGE SUMMARY
+// Tools: Claude
+// Overall AI Contribution: ~85%
+// AI-Assisted Areas: Component test setup with a stubbed service
+// Human Contributions: Story #29 scenarios (totals, empty range, invalid range, 403)
+// Notes: Rendering and validation tests for the sales report component.
+// authors: Krizma Nagi
+
+import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
+import { Observable, of, throwError } from 'rxjs';
+import { SalesReportComponent, toIsoDate } from './sales-report.component';
+import { ProductSalesReport } from '../../models/product-sales.model';
+import { SalesReportService } from '../../services/sales-report.service';
+import { ProductSalesService } from '../../services/product-sales.service';
+import { SalesReport } from '../../models/sales-report.model';
+
+describe('SalesReportComponent', () => {
+  let response: Observable<SalesReport>;
+  let calls: Array<[string, string]>;
+  let productResponse: Observable<ProductSalesReport>;
+  let productCalls: Array<[string, string]>;
+
+  beforeEach(() => {
+    productResponse = of({ startDate: '2026-10-01', endDate: '2026-10-31', products: [] });
+  });
+
+  const report = (overrides: Partial<SalesReport> = {}): SalesReport => ({
+    startDate: '2026-10-01',
+    endDate: '2026-10-31',
+    totalRevenue: 62.48,
+    totalCost: 40.48,
+    netProfit: 22,
+    transactionCount: 3,
+    unitsSold: 7,
+    ...overrides,
+  });
+
+  function setup() {
+    calls = [];
+    productCalls = [];
+    TestBed.configureTestingModule({
+      imports: [SalesReportComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: SalesReportService,
+          useValue: {
+            getSalesReport: (start: string, end: string) => {
+              calls.push([start, end]);
+              return response;
+            },
+          },
+        },
+        {
+          provide: ProductSalesService,
+          useValue: {
+            getProductSales: (start: string, end: string) => {
+              productCalls.push([start, end]);
+              return productResponse;
+            },
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(SalesReportComponent);
+    fixture.detectChanges();
+    return { fixture, el: fixture.nativeElement as HTMLElement };
+  }
+
+  it('loads the current month on first render', () => {
+    response = of(report());
+    setup();
+
+    const today = new Date();
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    expect(calls).toEqual([[toIsoDate(first), toIsoDate(today)]]);
+  });
+
+  it('shows total revenue, total cost and net profit', () => {
+    response = of(report());
+    const { el } = setup();
+
+    expect(el.querySelector('[data-testid="revenue"]')?.textContent).toContain('$62.48');
+    expect(el.querySelector('[data-testid="cost"]')?.textContent).toContain('$40.48');
+    expect(el.querySelector('[data-testid="profit"]')?.textContent).toContain('$22.00');
+    expect(el.textContent).toContain('3 transactions');
+  });
+
+  it('marks a loss in red', () => {
+    response = of(report({ totalRevenue: 100, totalCost: 130, netProfit: -30 }));
+    const { el } = setup();
+
+    expect(el.querySelector('.stat--loss')).not.toBeNull();
+  });
+
+  it('shows a message for an empty range with no sales', () => {
+    response = of(report({ totalRevenue: 0, totalCost: 0, netProfit: 0, transactionCount: 0, unitsSold: 0 }));
+    const { el } = setup();
+
+    expect(el.textContent).toContain('No sales in this period.');
+  });
+
+  it('rejects a start date after the end date without calling the API', () => {
+    response = of(report());
+    const { fixture, el } = setup();
+    calls = [];
+
+    fixture.componentInstance.startDate.set('2026-10-31');
+    fixture.componentInstance.endDate.set('2026-10-01');
+    fixture.componentInstance.load();
+    fixture.detectChanges();
+
+    expect(calls).toEqual([]);
+    expect(el.textContent).toContain('Start date must be on or before the end date.');
+  });
+
+  it('shows a permission message when the API returns 403', () => {
+    response = throwError(() => new HttpErrorResponse({ status: 403 }));
+    const { el } = setup();
+
+    expect(el.querySelector('.stat-grid')).toBeNull();
+    expect(el.textContent).toContain("You don't have permission to view this report");
+  });
+
+  it('shows the API message for a 400 error', () => {
+    response = throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 400,
+          error: { message: 'Start date 2026-10-31 must be on or before end date 2026-10-01.' },
+        }),
+    );
+    const { el } = setup();
+
+    expect(el.textContent).toContain('must be on or before end date');
+  });
+
+  it('formats dates as YYYY-MM-DD in local time', () => {
+    expect(toIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+
+  it('loads product sales for the same date range', () => {
+    response = of(report());
+    productResponse = of({
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+      products: [{ productId: 'p1', barcode: '111', name: 'Cooking Oil 2L', quantitySold: 5, totalRevenue: 32.5, totalCost: 20.5, profit: 12 }],
+    });
+    const { el } = setup();
+
+    expect(productCalls).toEqual(calls);
+    expect(el.textContent).toContain('Sales by Product');
+    expect(el.querySelectorAll('app-product-sales-table tbody tr').length).toBe(1);
+  });
+
+  it('does not load product sales when the date range is invalid', () => {
+    response = of(report());
+    const { fixture } = setup();
+    productCalls = [];
+
+    fixture.componentInstance.startDate.set('2026-10-31');
+    fixture.componentInstance.endDate.set('2026-10-01');
+    fixture.componentInstance.load();
+
+    expect(productCalls).toEqual([]);
+  });
+
+  it('shows an error in the product card when product sales fail', () => {
+    response = of(report());
+    productResponse = throwError(() => new HttpErrorResponse({ status: 500 }));
+    const { el } = setup();
+
+    expect(el.textContent).toContain('Product sales could not be loaded');
+  });
+});

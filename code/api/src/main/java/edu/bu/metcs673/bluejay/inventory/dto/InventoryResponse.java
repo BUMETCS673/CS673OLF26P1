@@ -14,6 +14,7 @@ public record InventoryResponse(
     String id,
     String barcode,
     String productName,
-    BigDecimal cost,
+    BigDecimal stockCost,
+    BigDecimal salePrice,
     int quantity
 ) {}

@@ -248,3 +248,46 @@ $status-critical-fill: #dc2626;
     border: 1px solid color.adjust($status-critical-fill, $lightness: 30%);
   }
 }
+
+/* AI-USAGE SUMMARY
+// Tools: Gemini
+// Overall AI Contribution: 100%
+// AI-Assisted Areas: SCSS refactoring separating base currency wrapper styles from table-cell width constraints
+// authors: Sara Orion
+*/
+
+/* 1. BASE CURRENCY WRAPPER (Applies to Stock Entry Form + Table Inputs) */
+.price-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  .currency-symbol {
+    position: absolute;
+    left: 8px;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .price-input {
+    width: 100%;
+    padding-left: 1.35rem !important; /* Ensures text starts after the $ symbol */
+  }
+}
+
+/* 2. TABLE CELL OVERRIDE (Only narrows the table cell input) */
+td .price-input-wrapper {
+  width: 75px; /* Restricts width only inside table cells */
+
+  .price-input {
+    box-sizing: border-box;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+    font-size: 0.85rem;
+
+  }
+}

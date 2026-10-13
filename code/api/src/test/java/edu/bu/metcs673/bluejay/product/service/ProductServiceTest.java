@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.common.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.common.exception.ProductAlreadyExistedException;
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,6 +35,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,12 +66,13 @@ public class ProductServiceTest {
             "barcode-test-12345",
             1L,
             null,
-            null
+            null,
+            1
         );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
-        when(productRepository.addProduct(org.mockito.ArgumentMatchers.any(Product.class)))
+        when(productRepository.addProduct(any(Product.class)))
                 .thenAnswer(invocation -> {
                     Product product = invocation.getArgument(0);
                     product.setId(UUID.randomUUID());
@@ -79,7 +86,7 @@ public class ProductServiceTest {
         assertEquals("barcode-test-12345", product.getBarcode());
         assertEquals("Milk", product.getName());
         assertEquals(1L, product.getCategoryId());
-        assertEquals(BigDecimal.ZERO, product.getCostPrice());
+        assertEquals(BigDecimal.ZERO, product.getStockCost());
         assertEquals(BigDecimal.ZERO, product.getSalePrice());
     }
 
@@ -91,7 +98,8 @@ public class ProductServiceTest {
             "barcode-existed-12345",
             1L,
             null,
-            null
+            null,
+            1
         );
 
         when(productRepository.getProductBy("barcode-existed-12345"))
@@ -108,17 +116,18 @@ public class ProductServiceTest {
             "barcode-test-12345",
             null,
             "test-new-category",
-            null
+            null,
+            1
         );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
-        when(categoryRepository.addCategory(org.mockito.ArgumentMatchers.any(Category.class)))
+        when(categoryRepository.addCategory(any(Category.class)))
                 .thenAnswer(invocation -> {
                     Category category = invocation.getArgument(0);
                     category.setId(9999L);
                     return category;
                 });
-        when(productRepository.addProduct(org.mockito.ArgumentMatchers.any(Product.class)))
+        when(productRepository.addProduct(any(Product.class)))
                 .thenAnswer(invocation -> {
                     Product product = invocation.getArgument(0);
                     product.setId(UUID.randomUUID());
@@ -130,7 +139,7 @@ public class ProductServiceTest {
         assertNotNull(product.getId());
         assertEquals("barcode-test-12345", product.getBarcode());
         assertEquals("Soy Milk", product.getName());
-        assertEquals(BigDecimal.ZERO, product.getCostPrice());
+        assertEquals(BigDecimal.ZERO, product.getStockCost());
         assertEquals(BigDecimal.ZERO, product.getSalePrice());
         Category category = product.getCategory();
         assertNotNull(category);
@@ -145,17 +154,18 @@ public class ProductServiceTest {
             "barcode-test-12345",
             null,
             "test-new-category",
-            "test-description-category"
+            "test-description-category",
+            1
         );
 
         when(productRepository.getProductBy("barcode-test-12345")).thenReturn(Optional.empty());
-        when(categoryRepository.addCategory(org.mockito.ArgumentMatchers.any(Category.class)))
+        when(categoryRepository.addCategory(any(Category.class)))
                 .thenAnswer(invocation -> {
                     Category category = invocation.getArgument(0);
                     category.setId(9999L);
                     return category;
                 });
-        when(productRepository.addProduct(org.mockito.ArgumentMatchers.any(Product.class)))
+        when(productRepository.addProduct(any(Product.class)))
                 .thenAnswer(invocation -> {
                     Product product = invocation.getArgument(0);
                     product.setId(UUID.randomUUID());
@@ -167,7 +177,7 @@ public class ProductServiceTest {
         assertNotNull(product.getId());
         assertEquals("barcode-test-12345", product.getBarcode());
         assertEquals("Oat Milk", product.getName());
-        assertEquals(BigDecimal.ZERO, product.getCostPrice());
+        assertEquals(BigDecimal.ZERO, product.getStockCost());
         assertEquals(BigDecimal.ZERO, product.getSalePrice());
         Category category = product.getCategory();
         assertNotNull(category);
@@ -202,33 +212,43 @@ public class ProductServiceTest {
     public void shouldReturnProductsWithCategoryWhenRequestedPageHasRecords() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 2, 1);
 
-        when(productRepository.getProducts(null, null, 2, 1))
-                .thenReturn(List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(productRepository.getProducts(null, null, null, 2, 1))
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-existed-12345", "product-existed", SECOND_PRODUCT_ID, 1L, 2.5)),
+                    PageRequest.of(1, 1),
+                    2
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(queryDto);
+        ProductPageDto products = productService.getProducts(queryDto);
 
         assertNotNull(products);
-        assertFalse(products.isEmpty());
-        assertEquals(1, products.size());
+        assertFalse(products.items().isEmpty());
+        assertEquals(1, products.items().size());
+        assertEquals(2, products.totalCount());
 
-        ProductDto firstProduct = products.getFirst();
+        ProductDto firstProduct = products.items().getFirst();
         assertNotNull(firstProduct);
         assertNotNull(firstProduct.id());
         assertEquals("product-existed", firstProduct.name());
         assertTrue(firstProduct.categoryId() > 0);
         assertEquals("test-category", firstProduct.categoryName());
+        assertEquals(12, firstProduct.currentStock());
     }
 
     @Test
-    @DisplayName("Should throw product not found exception when requested page has no records")
-    public void shouldThrowProductNotFoundExceptionWhenRequestedPageHasNoRecords() {
+    @DisplayName("Should return an empty page when requested page has no records")
+    public void shouldReturnEmptyPageWhenRequestedPageHasNoRecords() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
-        when(productRepository.getProducts(null, null, 1, 1)).thenReturn(List.of());
+        when(productRepository.getProducts(null, null, null, 1, 1))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
-        assertThrows(ProductNotFoundException.class,
-                () -> productService.getProducts(queryDto));
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertTrue(products.items().isEmpty());
+        assertEquals(0, products.totalCount());
     }
 
     @Test
@@ -236,8 +256,12 @@ public class ProductServiceTest {
     public void shouldThrowUnknownProductCategoryExceptionWhenProductCategoryDoesNotExist() {
         ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
 
-        when(productRepository.getProducts(null, null, 1, 1))
-                .thenReturn(List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)));
+        when(productRepository.getProducts(null, null, null, 1, 1))
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)),
+                    PageRequest.of(0, 1),
+                    1
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.empty());
 
         assertThrows(UnknownProductCategoryException.class,
@@ -249,15 +273,20 @@ public class ProductServiceTest {
     public void shouldFilterProductsByProductNameAndCategoryName() {
         ProductQueryDto queryDto = createProductQueryDto("Water", "beverage", 1, 10);
 
-        when(productRepository.getProducts("Water", "beverage", 1, 10))
-                .thenReturn(List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(productRepository.getProducts(null, "Water", "beverage", 1, 10))
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-water-12345", "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)),
+                    PageRequest.of(0, 10),
+                    1
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(queryDto);
+        ProductPageDto products = productService.getProducts(queryDto);
 
         assertNotNull(products);
-        assertEquals(1, products.size());
-        assertEquals("Spring Water", products.getFirst().name());
+        assertEquals(1, products.items().size());
+        assertEquals("Spring Water", products.items().getFirst().name());
+        assertEquals(2.5, products.items().getFirst().price());
     }
 
     @Test
@@ -265,18 +294,58 @@ public class ProductServiceTest {
     public void shouldDefaultProductQueryPagination() {
         ProductQueryDto queryDto = createProductQueryDto("Milk", "dairy", null, null);
 
-        when(productRepository.getProducts("Milk", "dairy", 1, 10))
-                .thenReturn(List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)));
+        when(productRepository.getProducts(null, "Milk", "dairy", 1, 10))
+                .thenReturn(new PageImpl<>(
+                    List.of(createExistingProduct("barcode-milk-12345", "Milk", SECOND_PRODUCT_ID, 1L, 2.5)),
+                    PageRequest.of(0, 10),
+                    1
+                ));
         when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
 
-        List<ProductDto> products = productService.getProducts(queryDto);
+        ProductPageDto products = productService.getProducts(queryDto);
 
         assertNotNull(products);
-        assertEquals(1, products.size());
+        assertEquals(1, products.items().size());
     }
 
     @Test
-    @DisplayName("Should return product with details and sale price")
+    @DisplayName("Should search products using a combined name or barcode term")
+    public void shouldSearchProductsUsingCombinedSearchTerm() {
+        String searchTerm = "barcode-water-12345";
+        ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
+
+        when(productRepository.getProducts(searchTerm, null, null, 1, 10))
+            .thenReturn(new PageImpl<>(
+                List.of(createExistingProduct(searchTerm, "Spring Water", SECOND_PRODUCT_ID, 1L, 2.5)),
+                PageRequest.of(0, 10),
+                1
+            ));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertEquals(1, products.items().size());
+        assertEquals(searchTerm, products.items().getFirst().barcode());
+        assertEquals("Spring Water", products.items().getFirst().name());
+    }
+
+    @Test
+    @DisplayName("Should return an empty page when combined search term has no match")
+    public void shouldReturnNoProductsForUnmatchedSearchTerm() {
+        String searchTerm = "missing-product-12345";
+        ProductQueryDto queryDto = createProductQueryDto(searchTerm, null, null, 1, 10);
+
+        when(productRepository.getProducts(searchTerm, null, null, 1, 10))
+            .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertTrue(products.items().isEmpty());
+        assertEquals(0, products.totalCount());
+    }
+
+    @Test
+    @DisplayName("Should return product with details and sale salePrice")
     public void shouldReturnProductWithSalePrice() {
         when(productRepository.getProductBy("barcode-mock-12345"))
                 .thenReturn(Optional.of(createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 3.75)));
@@ -314,7 +383,7 @@ public class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw missing product price exception when find product by barcode and sale price is zero")
+    @DisplayName("Should throw missing product salePrice exception when find product by barcode and sale salePrice is zero")
     public void shouldThrowMissingProductPriceExceptionWhenFindProductByBarcodeAndSalePriceIsZero() {
         Product product = createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 0);
         when(productRepository.getProductBy("barcode-mock-12345")).thenReturn(Optional.of(product));
@@ -324,6 +393,100 @@ public class ProductServiceTest {
                 () -> productService.getProductBy("barcode-mock-12345"));
     }
 
+    @Test
+    @DisplayName("Should update low stock threshold and return ProductDto")
+    public void shouldUpdateLowStockSuccessfully() {
+        Product existing = createExistingProduct("barcode-mock-12345", "product-mock", FIRST_PRODUCT_ID, 1L, 5.00);
+        existing.setLowStock(5);
+
+        when(productRepository.findById(FIRST_PRODUCT_ID)).thenReturn(Optional.of(existing));
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(categoryRepository.getCategoryBy(1L)).thenReturn(Optional.of(createCategory(1L)));
+
+        ProductDto result = productService.updateLowStock(FIRST_PRODUCT_ID, 20);
+
+        assertNotNull(result);
+        assertEquals(FIRST_PRODUCT_ID, result.id());
+        assertEquals(20, result.lowStock());
+        assertEquals("test-category", result.categoryName());
+        verify(productRepository).save(existing);
+    }
+
+    @Test
+    @DisplayName("Should throw ProductNotFoundException when updating low stock for nonexistent product")
+    public void shouldThrowProductNotFoundExceptionWhenUpdatingLowStockForMissingProduct() {
+        UUID unknownId = UUID.randomUUID();
+        when(productRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+        assertThrows(ProductNotFoundException.class, () -> productService.updateLowStock(unknownId, 20));
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should return products with null category when categoryId is null")
+    public void shouldReturnProductsWithNullCategoryWhenCategoryIdIsNull() {
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
+
+        when(productRepository.getProducts(null, null, null, 1, 1))
+            .thenReturn(new PageImpl<>(
+                List.of(createExistingProduct(
+                    "barcode-no-cat", "product-no-cat",
+                    SECOND_PRODUCT_ID, null, 2.5)),
+                PageRequest.of(0, 1),
+                1
+            ));
+
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertEquals(1, products.items().size());
+        ProductDto dto = products.items().getFirst();
+        assertNull(dto.categoryId());
+        assertNull(dto.categoryName());
+        assertNull(dto.categoryDescription());
+    }
+
+    @Test
+    @DisplayName("Should return product with null category by barcode")
+    public void shouldReturnProductWithNullCategoryByBarcode() {
+        when(productRepository.getProductBy("barcode-no-cat"))
+            .thenReturn(Optional.of(createExistingProduct(
+                "barcode-no-cat", "product-no-cat",
+                FIRST_PRODUCT_ID, null, 3.75)));
+
+        ProductDto product = productService.getProductBy("barcode-no-cat");
+
+        assertNotNull(product);
+        assertEquals("product-no-cat", product.name());
+        assertNull(product.categoryId());
+        assertNull(product.categoryName());
+        assertNull(product.categoryDescription());
+        assertEquals(3.75, product.price());
+    }
+
+    @Test
+    @DisplayName("Should update low stock when product has null category")
+    public void shouldUpdateLowStockWhenProductHasNullCategory() {
+        Product existing = createExistingProduct(
+            "barcode-no-cat", "product-no-cat",
+            FIRST_PRODUCT_ID, null, 5.00);
+        existing.setLowStock(5);
+
+        when(productRepository.findById(FIRST_PRODUCT_ID))
+            .thenReturn(Optional.of(existing));
+        when(productRepository.save(any(Product.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductDto result = productService
+            .updateLowStock(FIRST_PRODUCT_ID, 20);
+
+        assertNotNull(result);
+        assertEquals(FIRST_PRODUCT_ID, result.id());
+        assertEquals(20, result.lowStock());
+        assertNull(result.categoryName());
+        verify(productRepository).save(existing);
+    }
+
     private Product createExistingProduct(String barcode, String name, UUID id, Long categoryId, double salePrice) {
         Product product = new Product();
         product.setId(id);
@@ -331,6 +494,7 @@ public class ProductServiceTest {
         product.setName(name);
         product.setCategoryId(categoryId);
         product.setSalePrice(BigDecimal.valueOf(salePrice));
+        product.setCurrentStock(12);
         return product;
     }
 
@@ -348,6 +512,16 @@ public class ProductServiceTest {
         Integer pageNumber,
         Integer pageSize
     ) {
-        return new ProductQueryDto(productName, categoryName, pageNumber, pageSize);
+        return new ProductQueryDto(null, productName, categoryName, pageNumber, pageSize);
+    }
+
+    private ProductQueryDto createProductQueryDto(
+        String searchTerm,
+        String productName,
+        String categoryName,
+        Integer pageNumber,
+        Integer pageSize
+    ) {
+        return new ProductQueryDto(searchTerm, productName, categoryName, pageNumber, pageSize);
     }
 }

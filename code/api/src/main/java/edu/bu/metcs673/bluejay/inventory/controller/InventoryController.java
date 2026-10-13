@@ -11,10 +11,11 @@
 package edu.bu.metcs673.bluejay.inventory.controller;
 
 import edu.bu.metcs673.bluejay.common.dto.ApiResponse;
-import edu.bu.metcs673.bluejay.inventory.dto.InventoryHealthResponse;
+import edu.bu.metcs673.bluejay.inventory.dto.InventoryStockResponse;
 import edu.bu.metcs673.bluejay.inventory.dto.StockEntryRequest;
 import edu.bu.metcs673.bluejay.inventory.dto.StockEntryResponse;
 import edu.bu.metcs673.bluejay.inventory.dto.InventoryResponse;
+import edu.bu.metcs673.bluejay.inventory.dto.UpdateSalePriceRequest;
 import edu.bu.metcs673.bluejay.inventory.service.InventoryService;
 import edu.bu.metcs673.bluejay.inventory.service.StockEntryService;
 import jakarta.validation.Valid;
@@ -23,6 +24,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,8 +36,9 @@ import java.util.List;
 // AI-ASSISTED: YES
 // Tool: Gemini
 // Prompt Summary: "Refactor InventoryController to wrap endpoint response
-// in ApiResponse entity."
-// AI Contribution: Initial draft (~95%)
+// in ApiResponse entity. Add a PATCH endpoint to InventoryController for inline sale price updates.
+// Secure with RBAC annotations and wrap response in ApiResponse."
+// AI Contribution: Initial draft (~90%)
 // Modifications: Wrapped StockEntryResponse inside ApiResponse.success
 // static factory method.
 // Verification: Postman integration test for API payload structure.
@@ -53,10 +57,10 @@ public class InventoryController {
         return ResponseEntity.ok(ApiResponse.success(inventoryService.getInventory()));
     }
 
-    @GetMapping("/health")
+    @GetMapping("/stock")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<ApiResponse<List<InventoryHealthResponse>>> getInventoryHealth() {
-        return ResponseEntity.ok(ApiResponse.success(inventoryService.getInventoryHealth()));
+    public ResponseEntity<ApiResponse<List<InventoryStockResponse>>> getInventoryStock() {
+        return ResponseEntity.ok(ApiResponse.success(inventoryService.getInventoryStock()));
     }
 
     @PostMapping("/stock-entry")
@@ -71,4 +75,12 @@ public class InventoryController {
         );
     }
 
+    @PatchMapping("/{id}/price")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ApiResponse<InventoryResponse>> updateSalePrice(
+        @PathVariable("id") String productId,
+        @Valid @RequestBody UpdateSalePriceRequest request) {
+        InventoryResponse response = inventoryService.updateSalePrice(productId, request.salePrice());
+        return ResponseEntity.ok(ApiResponse.success(response, "Sale price updated successfully."));
+    }
 }

@@ -29,9 +29,13 @@ public record StockEntryRequest(
     @NotBlank(message = "Barcode is required")
     String barcode,
 
-    @NotNull(message = "Cost is required")
+    @NotNull(message = "Stock Cost is required")
     @DecimalMin(value = "0.00", message = "Cost cannot be negative")
-    BigDecimal cost,
+    BigDecimal stockCost,
+
+    @NotNull(message = "Sale Price is required")
+    @DecimalMin(value = "0.00", message = "Price cannot be negative")
+    BigDecimal salePrice,
 
     @NotNull(message = "Invalid quantity")
     @Positive(message = "Invalid quantity")

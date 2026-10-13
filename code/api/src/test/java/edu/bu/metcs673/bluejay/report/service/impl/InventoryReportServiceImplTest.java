@@ -43,7 +43,7 @@ class InventoryReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("Returns name, latest cost and on-hand quantity for each product")
+    @DisplayName("Returns name, latest stockCost and on-hand quantity for each product")
     void getInventoryReport_WithProducts_ReturnsEachProduct() {
         // Given
         List<InventoryReportItem> rows = List.of(

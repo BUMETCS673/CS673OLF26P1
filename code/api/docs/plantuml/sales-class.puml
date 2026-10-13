@@ -1,0 +1,202 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+' --- CONTROLLER ---
+
+class SaleController {
+  - saleService: SaleService
+  + checkout(SaleRequest): ResponseEntity<ApiResponse<SaleResponse>>
+  + printReceipt(PrintReceiptRequest): ResponseEntity<ApiResponse<PrintReceiptResponse>>
+}
+
+' --- SERVICE INTERFACE & IMPLEMENTATION ---
+
+interface SaleService << interface >> {
+  + checkout(SaleRequest): SaleResponse
+  + printReceipt(PrintReceiptRequest): PrintReceiptResponse
+}
+
+class SaleServiceImpl {
+  - CHANGE_DENOMINATIONS: List<Denomination>
+  - productRepository: ProductRepository
+  - saleTransactionRepository: SaleTransactionRepository
+  - saleItemRepository: SaleItemRepository
+  - inventoryMovementRepository: InventoryMovementRepository
+  - movementTypeRepository: MovementTypeRepository
+  - securityUtils: SecurityUtils
+  + checkout(SaleRequest): SaleResponse
+  + printReceipt(PrintReceiptRequest): PrintReceiptResponse
+  - aggregateItems(List<SaleLineRequest>): Map<UUID, Integer>
+  - calculateChangeBreakdown(BigDecimal): List<ChangeDenominationResponse>
+}
+
+' --- REPOSITORIES ---
+
+interface SaleTransactionRepository << interface >> {
+}
+
+interface SaleItemRepository << interface >> {
+  + findByTransactionId(UUID): List<SaleItem>
+}
+
+' --- REQUEST / RESPONSE DTOS & RECORDS ---
+
+class PrintReceiptRequest {
+  - transactionId: UUID
+  + getTransactionId(): UUID
+  + setTransactionId(UUID): void
+  + setTransactionId(String): void
+}
+
+record PrintReceiptResponse << record >> {
+  - transactionId: UUID
+  - receiptNumber: String
+  - transactionDate: LocalDateTime
+  - grandTotal: BigDecimal
+  - paymentMethod: String
+  - items: List<String>
+}
+
+record SaleRequest << record >> {
+  - items: List<SaleLineRequest>
+  - cashReceived: BigDecimal
+}
+
+record SaleResponse << record >> {
+  - transactionId: UUID
+  - receiptNumber: String
+  - transactionDate: LocalDateTime
+  - grandTotal: BigDecimal
+  - cashReceived: BigDecimal
+  - changeDue: BigDecimal
+  - paymentMethod: String
+  - items: List<SaleLineResponse>
+  - changeBreakdown: List<ChangeDenominationResponse>
+}
+
+record SaleLineRequest << record >> {
+  - productId: UUID
+  - quantity: Integer
+}
+
+record SaleLineResponse << record >> {
+  - productId: UUID
+  - name: String
+  - quantity: int
+  - unitPrice: BigDecimal
+  - subtotal: BigDecimal
+}
+
+record ChangeDenominationResponse << record >> {
+  - valueCents: long
+  - denomination: String
+  - quantity: long
+}
+
+' --- INTERNAL PRIVATE RECORDS ---
+
+record PreparedSaleLine << record >> {
+  - product: Product
+  - quantity: int
+  - unitCost: BigDecimal
+  - unitPrice: BigDecimal
+  - subtotal: BigDecimal
+}
+
+record Denomination << record >> {
+  - valueCents: long
+  - label: String
+}
+
+' --- DOMAIN ENTITIES WITH JPA / DB TABLE MAPPINGS ---
+
+entity SaleTransaction << Table: sale_transactions >> {
+  - id: UUID <<PK>>
+  - receiptNumber: String <<UQ, Not Null>>
+  - cashierId: UUID <<FK>>
+  - grandTotal: BigDecimal <<Not Null>>
+  - paymentMethod: String <<Not Null>>
+  - transactionDate: LocalDateTime <<Not Null>>
+}
+
+entity SaleItem << Table: sale_items >> {
+  - id: Long <<PK, AutoIncrement>>
+  - transactionId: UUID <<FK, Not Null>>
+  - productId: UUID <<FK, Not Null>>
+  - quantity: int <<Not Null>>
+  - unitCost: BigDecimal <<Not Null>>
+  - unitPrice: BigDecimal <<Not Null>>
+  - subtotal: BigDecimal <<Not Null>>
+}
+
+' --- EXTERNAL / CROSS-PACKAGE DEPENDENCIES ---
+
+interface JpaRepository << interface >> {
+}
+
+class SecurityUtils {
+  + getCurrentUserId(): UUID
+}
+
+package "product" {
+  interface ProductRepository << interface >> {
+    + findByIdForUpdate(UUID): Optional<Product>
+    + findById(UUID): Optional<Product>
+  }
+  entity Product << Table: products >> {
+  }
+}
+
+package "inventory" {
+  interface InventoryMovementRepository << interface >> {
+  }
+  interface MovementTypeRepository << interface >> {
+  }
+}
+
+' --- RELATIONSHIPS & ASSOCIATIONS ---
+
+' Controller Injections
+SaleController "1" --> "1" SaleService : saleService
+
+' Service Injections
+SaleServiceImpl "1" --> "1" ProductRepository           : productRepository
+SaleServiceImpl "1" --> "1" SaleTransactionRepository   : saleTransactionRepository
+SaleServiceImpl "1" --> "1" SaleItemRepository          : saleItemRepository
+SaleServiceImpl "1" --> "1" InventoryMovementRepository  : inventoryMovementRepository
+SaleServiceImpl "1" --> "1" MovementTypeRepository       : movementTypeRepository
+SaleServiceImpl "1" --> "1" SecurityUtils                : securityUtils
+SaleServiceImpl "1" *-- "*" Denomination                 : CHANGE_DENOMINATIONS
+
+' Domain Associations
+SaleItem "*" --> "1" SaleTransaction : transactionId
+
+' Interface Realizations
+SaleServiceImpl           ..|> SaleService
+SaleTransactionRepository --|> JpaRepository
+SaleItemRepository        --|> JpaRepository
+
+' Behavioral Dependencies (Method Inputs / Outputs)
+SaleController    ..> SaleRequest               : accepts
+SaleController    ..> PrintReceiptRequest       : accepts
+SaleController    ..> SaleResponse              : returns
+SaleController    ..> PrintReceiptResponse      : returns
+
+SaleService       ..> SaleRequest               : accepts
+SaleService       ..> PrintReceiptRequest       : accepts
+SaleService       ..> SaleResponse              : returns
+SaleService       ..> PrintReceiptResponse      : returns
+
+SaleRequest       "1" *-- "*" SaleLineRequest   : contains
+SaleResponse      "1" *-- "*" SaleLineResponse  : contains
+SaleResponse      "1" *-- "*" ChangeDenominationResponse : contains
+
+SaleServiceImpl   ..> SaleTransaction           : creates/queries
+SaleServiceImpl   ..> SaleItem                  : creates/queries
+SaleServiceImpl   ..> PreparedSaleLine          : constructs
+SaleServiceImpl   ..> Product                   : queries/updates
+
+@enduml

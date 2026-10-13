@@ -11,6 +11,7 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
 import edu.bu.metcs673.bluejay.common.exception.MissingProductPriceException;
 import edu.bu.metcs673.bluejay.common.exception.ProductAlreadyExistedException;
@@ -20,11 +21,13 @@ import edu.bu.metcs673.bluejay.product.repository.CategoryRepository;
 import edu.bu.metcs673.bluejay.product.repository.ProductRepository;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -43,10 +46,11 @@ public class ProductServiceImpl implements ProductService {
         product.setBarcode(productDto.barcode());
         product.setName(productDto.name());
         product.setCategoryId(productDto.categoryId());
-        product.setCostPrice(BigDecimal.ZERO);
+        product.setLowStock(productDto.lowStock());
+        product.setStockCost(BigDecimal.ZERO);
         product.setSalePrice(BigDecimal.ZERO);
 
-        var p = _productRepository.getProductBy(productDto.barcode());
+        Optional<Product> p = _productRepository.getProductBy(productDto.barcode());
 
         if (p.isPresent()) {
             throw new ProductAlreadyExistedException(productDto.barcode());
@@ -86,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getProducts(ProductQueryDto productQueryDto) {
+    public ProductPageDto getProducts(ProductQueryDto productQueryDto) {
         int pageNumber = productQueryDto.pageNumber() == null
             ? 1
             : productQueryDto.pageNumber();
@@ -102,24 +106,24 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("pageSize must be greater than 0");
         }
 
+        String searchTerm = normalizeFilter(productQueryDto.searchTerm());
         String productName = normalizeFilter(productQueryDto.productName());
         String categoryName = normalizeFilter(productQueryDto.categoryName());
 
-        List<Product> products = _productRepository.getProducts(
+        var productsPage = _productRepository.getProducts(
+            searchTerm,
             productName,
             categoryName,
             pageNumber,
             pageSize
         );
 
-        if (products.isEmpty()) {
-            throw new ProductNotFoundException();
-        }
-
         List<ProductDto> result = new ArrayList<>();
-        for (Product p : products) {
-            Optional<Category> c = _categoryRepository.getCategoryBy(p.getCategoryId());
-            if (c.isEmpty()) {
+        for (Product p : productsPage.getContent()) {
+            Optional<Category> c = p.getCategoryId() == null
+                ? Optional.empty()
+                : _categoryRepository.getCategoryBy(p.getCategoryId());
+            if (p.getCategoryId() != null && c.isEmpty()) {
                 throw new UnknownProductCategoryException(p.getCategoryId());
             }
 
@@ -128,13 +132,20 @@ public class ProductServiceImpl implements ProductService {
                 p.getName(),
                 p.getBarcode(),
                 p.getCategoryId(),
-                c.get().getName(),
-                c.get().getDescription(),
-                0
+                c.map(Category::getName).orElse(null),
+                c.map(Category::getDescription).orElse(null),
+                p.getSalePrice() == null ? 0 : p.getSalePrice().doubleValue(),
+                p.getCurrentStock(),
+                p.getLowStock()
             ));
         }
 
-        return result;
+        return new ProductPageDto(
+            result,
+            productsPage.getTotalElements(),
+            pageNumber,
+            pageSize
+        );
     }
 
     private String normalizeFilter(String value) {
@@ -154,8 +165,10 @@ public class ProductServiceImpl implements ProductService {
         }
 
         var product = p.get();
-        Optional<Category> category = _categoryRepository.getCategoryBy(product.getCategoryId());
-        if (category.isEmpty()) {
+        Optional<Category> category = product.getCategoryId() == null
+            ? Optional.empty()
+            : _categoryRepository.getCategoryBy(product.getCategoryId());
+        if (product.getCategoryId() != null && category.isEmpty()) {
             throw new UnknownProductCategoryException(product.getCategoryId());
         }
 
@@ -169,9 +182,39 @@ public class ProductServiceImpl implements ProductService {
             product.getName(),
             product.getBarcode(),
             product.getCategoryId(),
-            category.get().getName(),
-            category.get().getDescription(),
-            product.getSalePrice().doubleValue()
+            category.map(Category::getName).orElse(null),
+            category.map(Category::getDescription).orElse(null),
+            product.getSalePrice().doubleValue(),
+            product.getCurrentStock(),
+            product.getLowStock()
+        );
+    }
+
+    @Override
+    @Transactional
+    public ProductDto updateLowStock(UUID id, int lowStock) {
+        Product product = _productRepository.findById(id)
+            .orElseThrow(() -> new ProductNotFoundException(id.toString()));
+
+        product.setLowStock(lowStock);
+        Product savedProduct = _productRepository.save(product);
+
+        Optional<Category> category = savedProduct.getCategoryId() == null
+            ? Optional.empty()
+            : _categoryRepository.getCategoryBy(savedProduct.getCategoryId());
+        String categoryName = category.map(Category::getName).orElse(null);
+        String categoryDesc = category.map(Category::getDescription).orElse(null);
+
+        return new ProductDto(
+            savedProduct.getId(),
+            savedProduct.getName(),
+            savedProduct.getBarcode(),
+            savedProduct.getCategoryId(),
+            categoryName,
+            categoryDesc,
+            savedProduct.getSalePrice() != null ? savedProduct.getSalePrice().doubleValue() : 0.0,
+            savedProduct.getCurrentStock(),
+            savedProduct.getLowStock()
         );
     }
 }

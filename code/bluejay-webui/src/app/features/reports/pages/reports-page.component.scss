@@ -1,0 +1,63 @@
+$bg-main: #f8fafc;
+$text-primary: #0f172a;
+$text-secondary: #64748b;
+$primary-blue: #2563eb;
+$primary-blue-hover: #1d4ed8;
+
+.reports {
+  padding: 2rem;
+  background-color: $bg-main;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: $text-primary;
+
+  .page-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    &__copy {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: $text-secondary;
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem 0;
+      color: $text-primary;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: $text-secondary;
+    }
+  }
+
+  .report-type-field {
+    width: min(240px, 100%);
+    margin-bottom: -0.25rem;
+
+    @media (max-width: 900px) {
+      width: 100%;
+      margin-bottom: 0;
+    }
+  }
+}

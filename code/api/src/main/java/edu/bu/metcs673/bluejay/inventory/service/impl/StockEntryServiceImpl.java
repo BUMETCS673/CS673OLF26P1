@@ -35,7 +35,7 @@ import java.util.UUID;
 // AI-ASSISTED: YES
 // Tool: Gemini
 // Prompt Summary: "Implement service logic for stock entry flow satisfying
-// AC 1, AC 2, and AC 3. Atomically update current stock, update cost price,
+// AC 1, AC 2, and AC 3. Atomically update current stock, update stockCost salePrice,
 // and record movement audit."
 // AI Contribution: Initial draft (~100%)
 // Modifications: Ensured transactional boundary and explicit exceptions
@@ -67,10 +67,16 @@ public class StockEntryServiceImpl implements StockEntryService {
         int updatedStock = product.getCurrentStock() + request.quantity();
         product.setCurrentStock(updatedStock);
 
-        // Update product cost price if provided
-        if (request.cost() != null &&
-            request.cost().compareTo(BigDecimal.ZERO) >= 0) {
-            product.setCostPrice(request.cost());
+        // Update product stockCost if provided
+        if (request.stockCost() != null &&
+            request.stockCost().compareTo(BigDecimal.ZERO) >= 0) {
+            product.setStockCost(request.stockCost());
+        }
+
+        // Update product salePrice if provided
+        if (request.salePrice() != null &&
+            request.salePrice().compareTo(BigDecimal.ZERO) >= 0) {
+            product.setSalePrice(request.salePrice());
         }
 
         productRepository.save(product);
@@ -98,7 +104,8 @@ public class StockEntryServiceImpl implements StockEntryService {
             product.getName(),
             request.quantity(),
             product.getCurrentStock(),
-            product.getCostPrice(),
+            product.getStockCost(),
+            product.getSalePrice(),
             String.valueOf(userId),
             LocalDateTime.now(),
             product.getName() + " stock entry recorded."

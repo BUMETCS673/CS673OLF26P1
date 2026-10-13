@@ -13,10 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.stream.Collectors;
 
@@ -52,6 +55,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDisabledAccount(
+        DisabledException ex) {
+        ApiResponse<Void> response = ApiResponse.error(
+            "Your account has been disabled.",
+            "ACCOUNT_DISABLED"
+        );
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
     // AI-ASSISTED: YES
     // Tool: Claude
     // Prompt Summary: "Return 403 instead of 500 when @PreAuthorize denies access"
@@ -71,6 +84,33 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
+    // AI-ASSISTED: YES
+    // Tool: Claude
+    // Prompt Summary: "Return 400 instead of 500 for missing or malformed request parameters"
+    // AI Contribution: Handler method (~90%)
+    // Modifications:
+    //   - Needed for Story #29: a missing startDate/endDate or a date like
+    //     "2026-13-45" fell through to the generic handler and returned 500
+    // Verification:
+    //   - SalesReportControllerTest missing-parameter and bad-format cases
+    // Confidence: High
+    @ExceptionHandler({
+        MissingServletRequestParameterException.class,
+        MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleBadRequestParameter(
+        Exception ex) {
+        String message = ex instanceof MissingServletRequestParameterException m
+            ? "Missing required parameter: " + m.getParameterName()
+            : "Invalid value for parameter: "
+                + ((MethodArgumentTypeMismatchException) ex).getName();
+        ApiResponse<Void> response = ApiResponse.error(
+            message,
+            "INVALID_REQUEST_PARAMETER"
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(

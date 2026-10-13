@@ -10,32 +10,47 @@ A production-ready Spring Boot 4.1 backend built with Java 21, Spring Security, 
 * **Framework:** Spring Boot 4.1 (`web`, `data-jpa`, `actuator`, `security`)
 * **Database:** MySQL 8.4
 * **Database Migrations:** Flyway
-* **Security:** JWT (Stateless)
+* **Security:** JWT with Stateless Blacklisting
 * **Build Tool:** Maven
 
 ---
 
-## 🚀 Iteration 2 API & Security Updates
+## 🚀 Final Release API & Feature Summary
 
-During **Iteration 2**, backend endpoints were expanded across vertical slices to support core point-of-sale features, reporting, and role-based access control:
+The final release expands the API across vertical feature slices to deliver a complete Point-of-Sale (POS) system with integrated inventory tracking, checkout processing, reporting analytics, and role-based access control (RBAC):
 
 ### 1. Endpoint & Controller Summary
 
-* **Authentication & User Management (`/users`)**
+* **Authentication & User Management (`/auth`, `/users`)**
+    * `POST /auth/login` — Authenticates credentials and returns a signed JWT.
+    * `POST /auth/logout` — Revokes the active caller's JWT using the token blacklist.
     * `GET /users` — Retrieves system users (Restricted to `ADMIN`).
     * `POST /users` — Creates new user accounts with role assignments (Restricted to `ADMIN`).
-* **Inventory Management (`/inventory`)**
-    * `GET /inventory` — Returns active inventory stock levels (`ADMIN`, `MANAGER`).
-    * `GET /inventory/health` — Retrieves inventory health and stock status metrics (`ADMIN`, `MANAGER`).
-    * `POST /inventory/stock-entry` — Submits new stock inventory entries (`ADMIN`, `MANAGER`).
+    * `PATCH /users/{userId}` — Updates user status and role assignments (Restricted to `ADMIN`).
+
 * **Product Catalog (`/product`)**
-    * `POST /product` — Creates products with assigned categories.
-    * `GET /product` — Filtered product lookup via `ProductQueryDto`.
-    * `GET /product/categories` — Retrieves available product categories.
-    * `GET /product/{barcode}` — Barcode lookup for catalog items.
-    * *(All product endpoints enforced via class-level `ADMIN`, `MANAGER`)*.
-* **Reports (`/reports`)**
-    * `GET /reports/inventory` — Generates total catalog report with stock counts and unit costs (`ADMIN`, `MANAGER`).
+    * `POST /product` — Creates products with assigned categories (`ADMIN`, `MANAGER`).
+    * `GET /product` — Filtered product lookup with pagination via `ProductQueryDto` (`ADMIN`, `MANAGER`, `CASHIER`).
+    * `GET /product/categories` — Retrieves available product categories (`ADMIN`, `MANAGER`).
+    * `GET /product/{barcode}` — Barcode lookup for catalog items (`ADMIN`, `MANAGER`, `CASHIER`).
+    * `PATCH /product/{id}/low-stock` — Updates product low-stock threshold triggers.
+
+* **Inventory Management (`/inventory`)**
+    * `GET /inventory` — Returns catalog inventory details and costs (`ADMIN`, `MANAGER`).
+    * `GET /inventory/stock` — Retrieves current stock levels and low-stock alerts (`ADMIN`, `MANAGER`).
+    * `POST /inventory/stock-entry` — Processes stock restock entries and records audit movements (`ADMIN`, `MANAGER`).
+    * `PATCH /inventory/{id}/price` — Updates product sale prices inline (`ADMIN`, `MANAGER`).
+
+* **Sales & Point of Sale (`/sales`)**
+    * `POST /sales` — Processes checkout transactions, deducts stock, calculates change breakdown, and logs audit movements (`ADMIN`, `MANAGER`, `CASHIER`).
+    * `POST /sales/printReceipt` — Retrieves detailed receipt data for past transactions (`ADMIN`, `MANAGER`, `CASHIER`).
+
+* **Reporting & Analytics (`/reports`)**
+    * `GET /reports/inventory` — Generates a total inventory catalog report with current stock levels and cost baselines (`ADMIN`, `MANAGER`).
+    * `GET /reports/sales` — Generates a consolidated sales report (revenue, costs, net profit, unit counts) for a date range (`ADMIN`).
+    * `GET /reports/sales/products` — Generates a per-product sales performance and profitability report for a date range (`ADMIN`).
+
+---
 
 ### 2. Standardized API Response Contract
 
@@ -44,34 +59,45 @@ All controllers wrap returned payloads in `common.dto.ApiResponse<T>`:
 ```json
 {
   "success": true,
-  "message": "Products retrieved successfully",
-  "data": [  ],
+  "message": "Sale completed successfully",
+  "data": {
+    "transactionId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "receiptNumber": "BJ-9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "grandTotal": 15.50,
+    "cashReceived": 20.00,
+    "changeDue": 4.50,
+    "paymentMethod": "CASH"
+  },
   "errorCode": null
 }
+
 ```
 
 ---
 
 ## 🏛️ Architecture & Domain-Driven Design (DDD)
 
-Our backend follows a **Clean Architecture (Ports & Adapters)** pattern organized around **Vertical Feature Slices**. Each business module (such as `auth`) isolates its core business domain from framework and persistence infrastructure.
+Our backend follows a **Clean Architecture (Ports & Adapters)** pattern organized around **Vertical Feature Slices**. Each business module isolates its core domain from framework and persistence infrastructure.
 
 ```text
 edu.bu.metcs673.bluejay/
 ├── auth/                      # Authentication & Identity Vertical Slice
-│   └── security/              # Web Security, JWT Filters & Auth Infrastructure
-├── inventory/                 # Stock & Restock Operations Vertical Slice
-├── product/                   # Catalog & Category Vertical Slice
-├── report/                    # Analytics & Inventory Reporting Vertical Slice
+│   └── security/              # Web Security, JWT Filters, Blacklist & Auth Infrastructure
+├── inventory/                 # Stock, Restock & Audit Movement Vertical Slice
+├── product/                   # Catalog & Category Management Vertical Slice
+├── report/                    # Analytics, Profitability & Reporting Vertical Slice
+├── sales/                     # Checkout & POS Transaction Vertical Slice
 └── common/                    # Cross-Cutting Concerns & Shared Infrastructure
     ├── config/                # Framework Configuration Beans
     ├── dto/                   # Unified API Response Wrappers (ApiResponse<T>)
-    └── exception/             # Global RestControllerAdvice Exception Handlers
+    ├── exception/             # Global RestControllerAdvice Exception Handlers
+    └── security/              # Security Context Helpers (SecurityUtils)
+
 ```
 
 ### 📐 Domain Guidelines & Architectural Rules
 
-To maintain consistency across all feature slices (e.g., `sales`, `inventory`, `catalog`), every new domain must adhere to the following Clean Architecture (Ports & Adapters) boundaries:
+To maintain consistency across all feature slices, every domain adheres to the following Clean Architecture boundaries:
 
 #### 1. Clean Architecture Package Mapping
 
@@ -97,6 +123,7 @@ To maintain consistency across all feature slices (e.g., `sales`, `inventory`, `
     |    |    +-----------------------------------------+    |    |
     |    +---------------------------------------------------+    |
     +-------------------------------------------------------------+
+
 ```
 
 #### 2. Standard Sub-Package Responsibilities & Allowed Dependencies
@@ -106,29 +133,32 @@ To maintain consistency across all feature slices (e.g., `sales`, `inventory`, `
 ├── domain/                # Inner Core: Business enums, core objects and domain model contracts
 ├── dto/                   # Middle Layer: API Transport Contracts (*Request.java, *Response.java)
 ├── entity/                # Driven Adapter: JPA Database Entities & Relational Schemas
-├── repository/            # Driven Adapter: Spring Data JPA Interfaces
-└── service/               # Middle Layer: Application Use Cases & Auth Orchestration
+├── repository/            # Driven Adapter: Spring Data JPA Interfaces / JDBC Queries
+└── service/               # Middle Layer: Application Use Cases & Service Orchestration
+
 ```
 
-| Clean Architecture Layer                        | Package Location             | Architectural Role & Primary Purpose                                                                                                                                                        | Allowed Dependencies                         |
-|-------------------------------------------------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
-| **Inner Core** *(Pure Domain)*                  | `domain/`                    | Business enums, core value objects, and pure domain model contracts. **Must remain framework-agnostic** (no `@Entity`, `@RestController`, or `@Autowired`).                                 | None (Java standard library only)            |
-| **Middle Layer** *(Application Use Cases)*      | `service/`<br>`dto/`         | • `service/`: Business use-cases, orchestration, and domain rules.<br>• `dto/`: Request payload objects (`*Request.java`) and Response objects (`*Response.java`) for API transport.        | `domain/`, `dto/`, `repository/`<br>         |
-| **Driving Adapters** *(Inbound Infrastructure)* | `controller/`<br>`security/` | • `controller/`: REST endpoints, HTTP request validation (`@Valid`), and response mapping.<br>• `security/`: Infrastructure for Web Security, JWT filtering, and authentication mechanisms. | `service/`, `dto/`, `common/`<br>            |
-| **Driven Adapters** *(Outbound Infrastructure)* | `repository/`<br>`entity/`   | • `entity/`: JPA/Hibernate entities mapping database tables and relational schemas.<br>• `repository/`: Spring Data JPA interfaces extending `JpaRepository`.                               | `entity/`, `domain/` (for enums/value types) |
+| Clean Architecture Layer                        | Package Location                 | Architectural Role & Primary Purpose                                                                                                                                                       | Allowed Dependencies                         |
+|-------------------------------------------------|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| **Inner Core** *(Pure Domain)*                  | `domain/`                        | Business enums, core value objects, and pure domain model contracts. **Must remain framework-agnostic** (no `@Entity`, `@RestController`, or `@Autowired`).                                | None (Java standard library only)            |
+| **Middle Layer** *(Application Use Cases)*      | `service/`<br><br>`dto/`         | • `service/`: Business use-cases, orchestration, and domain rules.<br><br>• `dto/`: Request payload objects (`*Request.java`) and Response objects (`*Response.java`) for API transport.   | `domain/`, `dto/`, `repository/`<br><br>     |
+| **Driving Adapters** *(Inbound Infrastructure)* | `controller/`<br><br>`security/` | • `controller/`: REST endpoints, HTTP request validation (`@Valid`), and response mapping.<br><br>• `security/`: Infrastructure for Web Security, JWT filtering, and blacklist mechanisms. | `service/`, `dto/`, `common/`<br><br>        |
+| **Driven Adapters** *(Outbound Infrastructure)* | `repository/`<br><br>`entity/`   | • `entity/`: JPA/Hibernate entities mapping database tables and relational schemas.<br><br>• `repository/`: Spring Data JPA / JDBC repositories.                                           | `entity/`, `domain/` (for enums/value types) |
 
 #### 3. Boundary & Dependency Rules
 
 * **Fundamental Dependency Direction:** Dependencies must **always point inward**:
+
 $$\text{controller / repository / entity / security} \longrightarrow \text{service / dto} \longrightarrow \text{domain}$$
-* **No Direct Repository Access Across Domains:** A domain (e.g., `sales`) must **never** autowire or call another domain's repository (`inventory/repository`). Communication between domains must occur through public interfaces in the target domain’s `service/` package.
-* **Domain Autonomy:** A domain should be able to function independently as a logical module. Avoid tight foreign-key constraints across distinct domain entities whenever possible to keep boundaries soft for future microservice extraction.
+
+* **No Direct Repository Access Across Domains:** A domain (e.g., `sales`) must **never** autowire or call another domain's repository (`inventory/repository`) directly. Communication between domains must occur through public interfaces in the target domain’s `service/` package.
+* **Domain Autonomy:** A domain should function independently as a logical module. Soft boundaries ensure smooth future microservice extraction.
 
 #### 4. Cross-Cutting Concerns & Common Utilities
 
 * **Unified API Responses:** Every REST endpoint must wrap its output in `common.dto.ApiResponse<T>`.
-* **Exception Handling:** Throw domain-specific exceptions (e.g., `InsufficientInventoryException`) and handle them globally using `@RestControllerAdvice` in `common.exception`.
-* **Money & Precision:** Always use `BigDecimal` for monetary amounts (prices, discounts, taxes) across DTOs, domain models, and entities—never `double` or `float`.
+* **Exception Handling:** Throw domain-specific exceptions (e.g., `InsufficientProductStockException`) and handle them globally using `@RestControllerAdvice` in `common.exception`.
+* **Money & Precision:** Always use `BigDecimal` for monetary amounts (prices, unit costs, cash calculations) across DTOs, domain models, and entities.
 
 ---
 
@@ -178,52 +208,14 @@ docker compose down -v --rmi local
 
 ---
 
-## 🛠️ IntelliJ Docker Run Configuration
-
-To prevent stale code caching and enforce smooth local builds directly inside IntelliJ:
-
-1. Open **Run/Debug Configurations** $\rightarrow$ **Docker** $\rightarrow$ **Compose**.
-2. Set **Compose files** to `./docker-compose.yml`.
-3. Under **Modify options** (top right):
-   * Enable **Remove orphans on 'down'**.
-   * Enable **Remove volumes on 'down'**.
-4. Set **Remove images on 'down'** to **`Local`** *(preserves the official MySQL 8.4 image while forcing local code image rebuilds)*. 
-5. **Before launch:** Remove any automatic `mvn clean package` host tasks. 
-   * Stage 1 of the multi-stage `Dockerfile` handles compilation inside the container using Docker layer caching.
-
----
-
 ## 🔒 Authentication & API Testing
 
-Testing the system health & api endpoints can be done via **cURL** or using **Postman**.
-
-### Postman Setup
-* Open Postman $\rightarrow$ **Import** both `Bluejay-API.postman_collection.json` and `Bluejay-Local.postman_environment.json` from `api/docs/postman/`.
-* Select the **Bluejay-Local** environment.
-
-
-### Health Check
-
-Verify system status and database connectivity.
-
-#### cURL:
-```bash
-curl -X GET http://localhost:8080/actuator/health
-```
-
-#### Postman: 
-Run `Health -> GET Actuator Health` in the `Bluejay-API` collection.
-
-#### Expected Response (`200 OK`):
-```json
-{ "status": "UP" }
-```
+Testing the system health & API endpoints can be done via **cURL** or using **Postman**.
 
 ### User Login (Obtain JWT Token)
 
 Authenticate against the service to generate a Bearer token.
 
-#### cURL:
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -233,31 +225,8 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
   }'
 ```
 
-#### Postman
-Open the `Auth -> POST Login` request. Under the **Body** tab, select `raw` and add the following JSON:
+### Expected Response (`200 OK`):
 
-```json
-{
-  "username": "admin",
-  "password": "Password123!"
-}
-```
-
-Under the **Scripts** tab, select `post-response` add the following javascript:
-
-```javascript
-if (pm.response.code === 200) {
-    var response = pm.response.json();
-    if (response.success && response.data && response.data.token) {
-        pm.environment.set("jwtToken", response.data.token);
-        console.log("JWT token successfully set in environment.");
-    }
-}
-```
-
-Send the `POST` request.
-
-#### Expected Response (`200 OK`):
 ```json
 {
   "success": true,
@@ -273,22 +242,7 @@ Send the `POST` request.
 
 ---
 
-### Access Protected Endpoints
-
-Pass the retrieved JWT in the `Authorization` header to access RBAC-protected routes.
-
-#### cURL:
-```bash
-curl -X GET http://localhost:8080/api/v1/protected-resource \
-  -H "Authorization: Bearer <YOUR_JWT_TOKEN_HERE>"
-```
-
-#### Postman: 
-Any request executed under the `Bluejay-API` collection will automatically inherit the token stored in `{{jwtToken}}` via collection-level Bearer Auth.
-
----
-
-## 🧪 Junit Testing
+## 🧪 JUnit Testing
 
 Run unit and integration tests using Maven:
 
@@ -297,7 +251,7 @@ Run unit and integration tests using Maven:
 ./mvnw test
 
 # Run a specific test class
-./mvnw test -Dtest=AuthServiceTest
+./mvnw test -Dtest=SaleServiceImplTest
 ```
 
 ---
@@ -306,95 +260,5 @@ Run unit and integration tests using Maven:
 
 The application provides interactive, human-readable API documentation rendered by **Scalar**, powered by our live OpenAPI 3.0 specification.
 
-### Accessing Scalar UI
 * **Interactive Web Docs:** `http://localhost:8080/scalar`
 * **Raw OpenAPI JSON Spec:** `http://localhost:8080/v3/api-docs`
-
-### Postman Integration via OpenAPI
-Instead of manually building requests in Postman, you can directly sync or import the live schema:
-1. Open Postman $\rightarrow$ Click **Import**.
-2. Paste the live spec URL: `http://localhost:8080/v3/api-docs` (or upload the `.json` file).
-3. Postman will automatically generate a complete request collection matching all application endpoints and DTO schemas.
-
----
-
-## 🔑 Environment Variables
-
-The application relies on the following environment variables (with defaults configured in `application.yaml`):
-
-| Variable                     | Description                 | Default Value                                |
-|------------------------------|-----------------------------|----------------------------------------------|
-| `SPRING_DATASOURCE_URL`      | JDBC Connection String      | `jdbc:mysql://bluejay_mysql:3306/bluejay_db` |
-| `SPRING_DATASOURCE_USERNAME` | Database User               | `bluejay_user`                               |
-| `SPRING_DATASOURCE_PASSWORD` | Database Password           | `bluejay_password`                           |
-| `JWT_SECRET`                 | Secret key for signing JWTs | *(Required in Production)*                   |
-| `JWT_EXPIRATION_MS`          | Token validity duration     | `86400000` (24 Hours)                        |
-
----
-
-## 🗄️ Database Migrations (Flyway)
-
-Flyway handles versioned database migrations located in `src/main/resources/db/migration/`.
-
-* **File Naming Convention:** `V<VERSION>__<description>.sql` (e.g., `V1__init_schema.sql`).
-* **Auto-Execution:** Migrations run automatically on application startup.
-* **Manual Execution via Maven:**
-```bash
-./mvnw flyway:migrate
-```
-
----
-## 🎨 Code Style & Standards
-
-To maintain consistency across the entire codebase, the project follows standard Java formatting rules backed by our shared code style scheme in `api/docs/`.
-
-### IntelliJ Code Style Setup
-1. Go to **Settings/Preferences** > **Editor** > **Code Style** > **Java**.
-2. Click the **Gear Icon** next to *Scheme* > **Import Scheme** > **IntelliJ IDEA code style XML**.
-3. Select the code style XML file located at:
-```text
-api/docs/bu-code-style.xml
-```
-4. Click **Apply** to ensure line wrapping, indentation (4 spaces), and import ordering match team standards.
-
-### Auto-Formatting Rules
-Before committing code, run the native formatter:
-* **Mac:** `Cmd + Option + L` (Reformat Code) + `Control + Option + O` (Optimize Imports)
-* **Windows/Linux:** `Ctrl + Alt + L` + `Ctrl + Alt + O`
-
-### Key Design Conventions
-* **Imports:** Do not use wildcard imports (`import java.util.*`). If wildcard imports are still occurring after importing the code style scheme, manually set the threshold: 
-  * Go to **Settings/Preferences** > **Editor** > **Code Style** > **Java** > **Imports** tab. 
-  * Set **Class count to use import with '\*'** and **Names count to use static import with '\*'** to `99`.
-* **Lombok Usage:** Use `@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, and `@Builder` to minimize boilerplate. Avoid `@Data` on JPA entities to prevent unexpected LazyInitialization exceptions in `equals()` and `hashCode()`.
-* **Standardized Responses:** All REST controllers must wrap payloads in the generic `ApiResponse<T>` wrapper located in `common.dto`.
-* **Explicit Annotations:** Always annotate Spring components explicitly (`@RestController`, `@Service`, `@Repository`).
-* **Dependency Injection:** Use constructor injection via `@RequiredArgsConstructor` instead of field `@Autowired`.
-
----
-
-## 🛠️ Troubleshooting & Environment Resets
-
-### Lombok & Compilation Errors (`variable not initialized`)
-
-If running `./mvnw clean package` throws errors about uninitialized `final` fields:
-
-* **IDE Setup:** Verify that **Enable annotation processing** is checked under **Settings $\rightarrow$ Build, Execution, Deployment $\rightarrow$ Compiler $\rightarrow$ Annotation Processors** in IntelliJ.
-
-### Database Access Denied / Stale Credentials (`SQLState: 28000`)
-
-MySQL stores credentials during initial volume creation. If database passwords or seed scripts change, reset the volume to initialize a fresh database:
-
-```bash
-docker compose down -v
-docker compose up -d db
-```
-
-### Full Stack Docker Validation
-
-To test end-to-end containerized execution (app + database) with a completely fresh build:
-
-```bash
-./mvnw clean package -DskipTests
-docker compose up -d --build
-```

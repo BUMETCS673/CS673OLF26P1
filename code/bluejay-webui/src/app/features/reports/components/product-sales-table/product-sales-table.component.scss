@@ -1,0 +1,95 @@
+:host {
+  display: block;
+}
+
+.card-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.table-responsive {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+
+  .recent-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.875rem;
+
+    th {
+      background-color: #fafafa;
+      padding: 0.875rem 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+      color: #0f172a;
+
+      &.font-medium {
+        font-weight: 600;
+      }
+
+      &.text-right {
+        white-space: nowrap;
+      }
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    td.text-success {
+      color: #166534;
+      font-weight: 600;
+    }
+
+    td.text-danger {
+      color: #991b1b;
+      font-weight: 600;
+    }
+
+    tr.no-sales td {
+      color: #94a3b8;
+    }
+  }
+}
+
+.sort-btn {
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  cursor: pointer;
+
+  &:hover,
+  &.active {
+    color: #2563eb;
+  }
+}
+
+.text-right {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-muted {
+  color: #64748b;
+}

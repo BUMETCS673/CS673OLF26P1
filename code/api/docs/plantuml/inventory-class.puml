@@ -1,0 +1,180 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+' --- CONTROLLER ---
+
+class InventoryController {
+  - inventoryService: InventoryService
+  - stockEntryService: StockEntryService
+  + getInventory(): ResponseEntity<ApiResponse<List<InventoryResponse>>>
+  + getInventoryStock(): ResponseEntity<ApiResponse<List<InventoryStockResponse>>>
+  + createStockEntry(StockEntryRequest): ResponseEntity<ApiResponse<StockEntryResponse>>
+  + updateSalePrice(String, UpdateSalePriceRequest): ResponseEntity<ApiResponse<InventoryResponse>>
+}
+
+' --- SERVICES & IMPLEMENTATIONS ---
+
+interface InventoryService << interface >> {
+  + getInventoryStock(): List<InventoryStockResponse>
+  + getInventory(): List<InventoryResponse>
+  + updateSalePrice(String, BigDecimal): InventoryResponse
+}
+
+class InventoryServiceImpl {
+  - productRepository: ProductRepository
+  + getInventoryStock(): List<InventoryStockResponse>
+  + getInventory(): List<InventoryResponse>
+  + updateSalePrice(String, BigDecimal): InventoryResponse
+}
+
+interface StockEntryService << interface >> {
+  + processStockEntry(StockEntryRequest): StockEntryResponse
+}
+
+class StockEntryServiceImpl {
+  - productRepository: ProductRepository
+  - movementRepository: InventoryMovementRepository
+  - movementTypeRepository: MovementTypeRepository
+  - securityUtils: SecurityUtils
+  + processStockEntry(StockEntryRequest): StockEntryResponse
+}
+
+' --- REPOSITORIES ---
+
+interface InventoryMovementRepository << interface >> {
+}
+
+interface MovementTypeRepository << interface >> {
+  + findByCode(String): Optional<MovementType>
+}
+
+' --- ENUMS ---
+
+enum MovementTypeCode << enum >> {
+  SALE
+  RESTOCK
+  ADJUSTMENT
+  RETURN
+}
+
+' --- DTOS & RECORDS ---
+
+record InventoryResponse << record >> {
+  - id: String
+  - barcode: String
+  - productName: String
+  - stockCost: BigDecimal
+  - salePrice: BigDecimal
+  - quantity: int
+}
+
+record InventoryStockResponse << record >> {
+  - id: String
+  - productName: String
+  - currentStock: int
+  - lowStockThreshold: int
+}
+
+record StockEntryRequest << record >> {
+  - barcode: String
+  - stockCost: BigDecimal
+  - salePrice: BigDecimal
+  - quantity: Integer
+}
+
+record StockEntryResponse << record >> {
+  - movementId: Long
+  - productId: String
+  - barcode: String
+  - productName: String
+  - quantityAdded: Integer
+  - newTotalStock: Integer
+  - stockCost: BigDecimal
+  - salePrice: BigDecimal
+  - userId: String
+  - createdAt: LocalDateTime
+  - message: String
+}
+
+record UpdateSalePriceRequest << record >> {
+  - salePrice: BigDecimal
+}
+
+' --- DOMAIN ENTITIES WITH JPA / DB TABLE MAPPINGS ---
+
+entity InventoryMovement << Table: inventory_movements >> {
+  - id: Long <<PK, AutoIncrement>>
+  - productId: UUID <<Not Null>>
+  - quantityChange: Integer <<Not Null>>
+  - movementType: MovementType <<FK, Not Null>>
+  - referenceId: String
+  - userId: UUID
+  - createdAt: LocalDateTime <<Not Null>>
+  # onCreate(): void
+}
+
+entity MovementType << Table: movement_types >> {
+  - id: Long <<PK, AutoIncrement>>
+  - code: String <<UQ, Not Null>>
+  - description: String
+}
+
+' --- EXTERNAL / CROSS-PACKAGE DEPENDENCIES ---
+
+interface JpaRepository << interface >> {
+}
+
+class SecurityUtils {
+  + getCurrentUserId(): UUID
+}
+
+package "product" {
+  interface ProductRepository << interface >> {
+  }
+  entity Product << Table: products >> {
+  }
+}
+
+' --- RELATIONSHIPS & ASSOCIATIONS ---
+
+' Structural Associations (Field Injections / Inclusions)
+InventoryController    "1" --> "1" InventoryService          : inventoryService
+InventoryController    "1" --> "1" StockEntryService         : stockEntryService
+
+InventoryServiceImpl   "1" --> "1" ProductRepository         : productRepository
+
+StockEntryServiceImpl  "1" --> "1" ProductRepository         : productRepository
+StockEntryServiceImpl  "1" --> "1" InventoryMovementRepository : movementRepository
+StockEntryServiceImpl  "1" --> "1" MovementTypeRepository    : movementTypeRepository
+StockEntryServiceImpl  "1" --> "1" SecurityUtils             : securityUtils
+
+InventoryMovement     "*" --> "1" MovementType              : movementType
+
+' Interface Realizations
+InventoryServiceImpl  ..|> InventoryService
+StockEntryServiceImpl ..|> StockEntryService
+InventoryMovementRepository --|> JpaRepository
+MovementTypeRepository     --|> JpaRepository
+
+' Behavioral Dependencies (Method Inputs / Outputs)
+InventoryController   ..> StockEntryRequest       : accepts
+InventoryController   ..> UpdateSalePriceRequest  : accepts
+InventoryController   ..> InventoryResponse       : returns
+InventoryController   ..> InventoryStockResponse  : returns
+InventoryController   ..> StockEntryResponse      : returns
+
+InventoryService      ..> InventoryResponse       : returns
+InventoryService      ..> InventoryStockResponse  : returns
+
+StockEntryService     ..> StockEntryRequest       : accepts
+StockEntryService     ..> StockEntryResponse      : returns
+
+InventoryServiceImpl  ..> Product                 : queries/updates
+StockEntryServiceImpl ..> Product                 : queries/updates
+StockEntryServiceImpl ..> InventoryMovement        : creates
+StockEntryServiceImpl ..> MovementTypeCode         : uses
+
+@enduml

@@ -15,8 +15,9 @@ import edu.bu.metcs673.bluejay.product.domain.Product;
 import edu.bu.metcs673.bluejay.product.dto.CategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.CreateProductWithCategoryDto;
 import edu.bu.metcs673.bluejay.product.dto.ProductDto;
-import edu.bu.metcs673.bluejay.product.dto.ProductQueryDto;
+import edu.bu.metcs673.bluejay.product.dto.ProductPageDto;
 import edu.bu.metcs673.bluejay.common.exception.ProductNotFoundException;
+import edu.bu.metcs673.bluejay.product.dto.UpdateLowStockRequest;
 import edu.bu.metcs673.bluejay.product.service.ProductService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,11 +36,13 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -81,7 +84,8 @@ private static final UUID PRODUCT_ID =
                 "barcode-test-12345",
                 1L,
                 null,
-                null
+                null,
+                1
             );
 
             Product product = new Product();
@@ -104,6 +108,26 @@ private static final UUID PRODUCT_ID =
                 .andExpect(jsonPath("$.data.id").value(PRODUCT_ID.toString()))
                 .andExpect(jsonPath("$.data.name").value("Milk"));
         }
+
+        @Test
+        @DisplayName("Should deny cashier from creating a product")
+        void createProduct_Cashier_Returns403() throws Exception {
+            CreateProductWithCategoryDto request = new CreateProductWithCategoryDto(
+                "Milk",
+                "barcode-test-12345",
+                1L,
+                null,
+                null,
+                1
+            );
+
+            mockMvc.perform(post("/api/v1/product")
+                .with(user("cashier").roles("CASHIER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isForbidden());
+        }
     }
 
     @Nested
@@ -120,7 +144,9 @@ private static final UUID PRODUCT_ID =
                 1L,
                 "test-category",
                 "test-description",
-                3.75
+                3.75,
+                12,
+                1
             );
 
             when(productService.getProducts(argThat(query ->
@@ -129,7 +155,7 @@ private static final UUID PRODUCT_ID =
                     && "test-category".equals(query.categoryName())
                     && Integer.valueOf(1).equals(query.pageNumber())
                     && Integer.valueOf(1).equals(query.pageSize())
-            ))).thenReturn(List.of(product));
+            ))).thenReturn(new ProductPageDto(List.of(product), 1, 1, 1));
 
             mockMvc.perform(get("/api/v1/product")
                     .with(user("manager").roles("MANAGER"))
@@ -140,8 +166,9 @@ private static final UUID PRODUCT_ID =
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Products retrieved successfully"))
-                .andExpect(jsonPath("$.data[0].id").value(PRODUCT_ID.toString()))
-                .andExpect(jsonPath("$.data[0].categoryName").value("test-category"));
+                .andExpect(jsonPath("$.data.totalCount").value(1))
+                .andExpect(jsonPath("$.data.items[0].id").value(PRODUCT_ID.toString()))
+                .andExpect(jsonPath("$.data.items[0].categoryName").value("test-category"));
         }
 
         @Test
@@ -152,6 +179,34 @@ private static final UUID PRODUCT_ID =
                     .param("pageNumber", "1")
                     .param("pageSize", "1"))
                 .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("Should allow cashier to search products by text or barcode")
+        void getProducts_CashierSearch_Returns200() throws Exception {
+            ProductDto product = new ProductDto(
+                PRODUCT_ID,
+                "Spring Water",
+                PRODUCT_BARCODE,
+                1L,
+                "beverages",
+                "drinks",
+                3.75,
+                12,
+                1
+            );
+
+            when(productService.getProducts(argThat(query ->
+                query != null
+                    && PRODUCT_BARCODE.equals(query.searchTerm())
+                    && query.productName() == null
+            ))).thenReturn(new ProductPageDto(List.of(product), 1, 1, 10));
+
+            mockMvc.perform(get("/api/v1/product")
+                    .with(user("cashier").roles("CASHIER"))
+                    .param("searchTerm", PRODUCT_BARCODE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].barcode").value(PRODUCT_BARCODE));
         }
     }
 
@@ -198,7 +253,9 @@ private static final UUID PRODUCT_ID =
                 1L,
                 "test-category",
                 "test-description",
-                3.75
+                3.75,
+                12,
+                1
             );
 
             when(productService.getProductBy(PRODUCT_BARCODE)).thenReturn(product);
@@ -211,6 +268,36 @@ private static final UUID PRODUCT_ID =
                 .andExpect(jsonPath("$.data.id").value(PRODUCT_ID.toString()))
                 .andExpect(jsonPath("$.data.price").value(3.75));
         }
+
+            @Test
+            @DisplayName("Should allow cashier to get a product by barcode")
+            void getProductByBarcode_Cashier_Returns200() throws Exception {
+                ProductDto product = new ProductDto(
+                PRODUCT_ID,
+                "product-mock",
+                PRODUCT_BARCODE,
+                1L,
+                "test-category",
+                "test-description",
+                    3.75,
+                    12,
+                    1
+                );
+                when(productService.getProductBy(PRODUCT_BARCODE)).thenReturn(product);
+
+                mockMvc.perform(get("/api/v1/product/{barcode}", PRODUCT_BARCODE)
+                    .with(user("cashier").roles("CASHIER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.barcode").value(PRODUCT_BARCODE));
+            }
+
+            @Test
+            @DisplayName("Should deny cashier from listing product categories")
+            void getProductCategories_Cashier_Returns403() throws Exception {
+                mockMvc.perform(get("/api/v1/product/categories")
+                    .with(user("cashier").roles("CASHIER")))
+                .andExpect(status().isForbidden());
+            }
 
         @Test
         @DisplayName("Should require authentication to get product by barcode")
@@ -230,6 +317,41 @@ private static final UUID PRODUCT_ID =
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("PRODUCT_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /product/{id}/low-stock Tests")
+    class UpdateLowStockEndpoint {
+
+        @Test
+        @DisplayName("Should allow manager to update low stock threshold and return 200")
+        void updateLowStock_Manager_Returns200() throws Exception {
+            UpdateLowStockRequest request = new UpdateLowStockRequest(15);
+            ProductDto updatedProduct = new ProductDto(
+                PRODUCT_ID,
+                "product-mock",
+                PRODUCT_BARCODE,
+                1L,
+                "test-category",
+                "test-description",
+                3.75,
+                10,
+                15
+            );
+
+            when(productService.updateLowStock(eq(PRODUCT_ID), eq(15))).thenReturn(updatedProduct);
+
+            mockMvc.perform(patch("/api/v1/product/{id}/low-stock", PRODUCT_ID)
+                    .with(user("manager").roles("MANAGER"))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Low stock threshold updated successfully"))
+                .andExpect(jsonPath("$.data.id").value(PRODUCT_ID.toString()))
+                .andExpect(jsonPath("$.data.lowStock").value(15));
         }
     }
 }

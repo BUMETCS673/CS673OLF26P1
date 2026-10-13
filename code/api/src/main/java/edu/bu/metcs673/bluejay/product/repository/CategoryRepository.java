@@ -21,6 +21,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     }
 
     default Optional<Category> getCategoryBy(Long categoryId) {
+        if (categoryId == null) {
+            return Optional.empty();
+        }
         return findById(categoryId);
     }
 

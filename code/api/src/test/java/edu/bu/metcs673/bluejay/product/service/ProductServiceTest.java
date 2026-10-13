@@ -422,6 +422,71 @@ public class ProductServiceTest {
         verify(productRepository, never()).save(any());
     }
 
+    @Test
+    @DisplayName("Should return products with null category when categoryId is null")
+    public void shouldReturnProductsWithNullCategoryWhenCategoryIdIsNull() {
+        ProductQueryDto queryDto = createProductQueryDto(null, null, 1, 1);
+
+        when(productRepository.getProducts(null, null, null, 1, 1))
+            .thenReturn(new PageImpl<>(
+                List.of(createExistingProduct(
+                    "barcode-no-cat", "product-no-cat",
+                    SECOND_PRODUCT_ID, null, 2.5)),
+                PageRequest.of(0, 1),
+                1
+            ));
+
+        ProductPageDto products = productService.getProducts(queryDto);
+
+        assertNotNull(products);
+        assertEquals(1, products.items().size());
+        ProductDto dto = products.items().getFirst();
+        assertNull(dto.categoryId());
+        assertNull(dto.categoryName());
+        assertNull(dto.categoryDescription());
+    }
+
+    @Test
+    @DisplayName("Should return product with null category by barcode")
+    public void shouldReturnProductWithNullCategoryByBarcode() {
+        when(productRepository.getProductBy("barcode-no-cat"))
+            .thenReturn(Optional.of(createExistingProduct(
+                "barcode-no-cat", "product-no-cat",
+                FIRST_PRODUCT_ID, null, 3.75)));
+
+        ProductDto product = productService.getProductBy("barcode-no-cat");
+
+        assertNotNull(product);
+        assertEquals("product-no-cat", product.name());
+        assertNull(product.categoryId());
+        assertNull(product.categoryName());
+        assertNull(product.categoryDescription());
+        assertEquals(3.75, product.price());
+    }
+
+    @Test
+    @DisplayName("Should update low stock when product has null category")
+    public void shouldUpdateLowStockWhenProductHasNullCategory() {
+        Product existing = createExistingProduct(
+            "barcode-no-cat", "product-no-cat",
+            FIRST_PRODUCT_ID, null, 5.00);
+        existing.setLowStock(5);
+
+        when(productRepository.findById(FIRST_PRODUCT_ID))
+            .thenReturn(Optional.of(existing));
+        when(productRepository.save(any(Product.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductDto result = productService
+            .updateLowStock(FIRST_PRODUCT_ID, 20);
+
+        assertNotNull(result);
+        assertEquals(FIRST_PRODUCT_ID, result.id());
+        assertEquals(20, result.lowStock());
+        assertNull(result.categoryName());
+        verify(productRepository).save(existing);
+    }
+
     private Product createExistingProduct(String barcode, String name, UUID id, Long categoryId, double salePrice) {
         Product product = new Product();
         product.setId(id);

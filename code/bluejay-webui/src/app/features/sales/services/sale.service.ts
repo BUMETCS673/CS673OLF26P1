@@ -3,6 +3,7 @@
 // Overall AI Contribution: ~85%
 // AI-Assisted Areas: HttpClient wrapper for sales checkout endpoint and ApiResponse mapping.
 // Human Contributions: Aligned endpoint routes, DTO payload, and error handling with backend SaleController.
+// Authors: Italia Tran
 // Confidence: High
 
 import { HttpClient } from '@angular/common/http';

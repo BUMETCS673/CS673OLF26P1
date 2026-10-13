@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: GitHub Copilot
+    Overall AI Contribution: 90%
+    AI-Assisted Areas: Creation of exception
+    Human Contributions: Prompting for exception if not enough cash is tendered
+    Notes: Exception for insufficient cash
+    Authors: Italia Tran
+*/
+
 package edu.bu.metcs673.bluejay.common.exception;
 
 import org.springframework.http.HttpStatus;

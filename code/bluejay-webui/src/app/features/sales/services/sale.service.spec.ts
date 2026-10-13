@@ -3,6 +3,7 @@
 // Overall AI Contribution: ~80%
 // AI-Assisted Areas: HttpTestingController setup and checkout request/response mapping assertions.
 // Human Contributions: Aligned endpoints and payload structure with backend SaleController.
+// Authors: Italia Tran
 // Confidence: High
 
 import { provideHttpClient } from '@angular/common/http';

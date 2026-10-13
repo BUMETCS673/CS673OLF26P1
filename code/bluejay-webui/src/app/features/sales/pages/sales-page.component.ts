@@ -1,3 +1,13 @@
+/*
+    AI-USAGE SUMMARY
+    Tools: GitHub Copilot
+    Overall AI Contribution: 80%
+    AI-Assisted Areas: Added the sales page feature
+    Human Contributions: Prompted what to work on, how to create things based on the requirements.
+    Notes: The sales page feature
+    Authors: Italia Tran
+*/
+
 import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
